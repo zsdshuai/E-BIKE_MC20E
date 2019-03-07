@@ -139,6 +139,7 @@ void WriteRecord(EEPROM_item_enum addr,uint8_t size, uint8_t* data);
 void delay_open_dianmen(uint16_t msec);
 bool lock_bike(void);
 void motorlock_process(void);
+void dianchi_refresh_process(void);
 void shake_process(void);
 void init_flash(void);
 void open_dianchi_lock(void);

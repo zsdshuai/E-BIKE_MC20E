@@ -67,7 +67,6 @@ typedef enum
 extern char module_recv_buffer[MODULE_BUFFER_SIZE];
 extern short module_recv_buffer_index;
 extern uint8_t flag_quit, quit_cnt;
-extern uint8_t flagconnect;
 
 void module_init(void);
 char* get_imei(void);

@@ -227,6 +227,7 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 			{
 				if(lock_bike())
 				{
+					upload_ebike_data_package();
 					voice_play(VOICE_LOCK);
 					send_ok_cmd(cmd);	
 		  		}
@@ -246,6 +247,7 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 			if(!g_flash.acc)
 			{
 				bt_unlock();
+				upload_ebike_data_package();
 				voice_play(VOICE_UNLOCK);
 				send_ok_cmd(cmd);
 			}

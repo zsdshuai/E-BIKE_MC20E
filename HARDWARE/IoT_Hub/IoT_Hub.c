@@ -29,6 +29,7 @@ BT_CONN_STRUCT bt_conn;
 extern bool parse_bt_cmd(int8_t* buf, uint16_t len);
 void parse_imei_cmd(char* buf, int len);
 void parse_imsi_cmd(char* buf, int len);
+bool parse_gnss_cmd(char* buf, int len);
 
 
 AT_STRUCT at_pack[]={
@@ -51,11 +52,11 @@ AT_STRUCT at_pack[]={
 	{AT_QIOPEN,"","OK",10000,NULL},
 	{AT_QISEND,"",">",500,NULL},
 	{AT_QRECV,"+QIURC: \"recv\"","OK",300,NULL},
-	{AT_QICLOSE,"AT+QICLOSE=1","OK",300,NULL},
+	{AT_QICLOSE,"AT+QICLOSE","OK",300,NULL},
 	{AT_QPING,"AT+QPING=1,\"zcwebx.liabar.cn\",4,1","OK",300,NULL},
 	{AT_QGPS_ON,"AT+QGNSSC=1","OK",300,NULL},
 	{AT_QGPS_OFF,"AT+QGNSSC=0","OK",300,NULL},
-	{AT_QGPS_LOC,"AT+QGNSSRD=\"NMEA/RMC\"","OK",300,NULL},
+	{AT_QGPS_LOC,"AT+QGNSSRD=\"NMEA/RMC\"","OK",300,parse_gnss_cmd},
 	{AT_BT_ON,"AT+QBTPWR=1","OK",3000,NULL},
 	{AT_BT_OFF,"AT+QBTPWR=0","OK",300,NULL},
 	{AT_BT_ADDR,"AT+QBTLEADDR?","OK",300,NULL},
@@ -261,7 +262,7 @@ bool parse_gnss_cmd(char* buf, int len)
 		
 		for(isat = 0; isat < nsat; ++isat)
 		{
-			isi = (n - 1) * 4 + isat;
+			isi = (n - 1) * 4 + isat; 
 			gps_info.gsv.sat_num[isi] = (char)get_double_number(&pnmea[GetComma(4*(isat+1),pnmea)]);
 			
 			if(GetComma(3+4*(isat+1)+1,pnmea)==0)
@@ -390,7 +391,7 @@ uint8_t Send_AT_BT_RSP_Command(AT_CMD cmd, char* buf, int len)
 
 uint8_t Send_AT_Command(AT_CMD cmd)
 {
-	char buf[64]={0};
+	char buf[256]={0};
 	int len;
 	int8_t i=GetATIndex(cmd), ret=0;
 
@@ -413,6 +414,75 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 		if(at_pack[i].fun)
 		{
 			at_pack[i].fun(buf,len);
+		}
+		ret = 1;
+	}
+	return ret;
+}
+
+uint8_t Send_AT_Command_ext(AT_CMD cmd)
+{
+	char buf[256]={0};
+	int len;
+	int8_t i=GetATIndex(cmd), ret=0;
+
+	if(i==-1)
+		Logln(D_INFO, "error cmd");
+	else
+		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
+	
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
+	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),0xffff); 
+	 
+	UART_SendString("\r\n");
+	
+	HAL_Delay(at_pack[i].timeout);
+
+	len = get_uart_data_ext(buf, sizeof(buf));
+
+	if(strstr(buf,at_pack[i].cmd_ret))
+	{
+		if(at_pack[i].fun)
+		{
+			at_pack[i].fun(buf,len);
+		}
+		ret = 1;
+	}
+	return ret;
+}
+uint8_t Send_AT_Command_Buf(AT_CMD cmd,char* buf, int len)
+{
+	int rcv_len;
+	char rcv_buf[256]={0};
+	
+	int8_t i=GetATIndex(cmd), ret=0;
+
+	if(i==-1)
+	{
+		Logln(D_INFO, "error cmd");
+		return 0;
+	}
+	else
+	{
+		memset(at_pack[i].cmd_txt, 0, 64);
+		memcpy(at_pack[i].cmd_txt, buf, len);
+		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
+	}
+	
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
+	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),0xffff); 
+	 
+	UART_SendString("\r\n");
+	
+	HAL_Delay(at_pack[i].timeout);
+
+	rcv_len = get_uart_data_ext(rcv_buf, sizeof(rcv_buf));
+
+	if(strstr(rcv_buf,at_pack[i].cmd_ret))
+	{
+		if(at_pack[i].fun)
+		{
+			at_pack[i].fun(rcv_buf,rcv_len);
 		}
 		ret = 1;
 	}
@@ -471,6 +541,44 @@ int get_recv_len(char *s,char find,int num)
 
 	return rev;
 }
+int get_uart_data_ext(char*buf, int count)
+{
+	uint16_t ulen = module_recv_buffer_index;
+
+	if (ulen > 0)
+	{
+		if (count >= ulen)
+		{
+			Logln(D_INFO,"%s",module_recv_buffer);
+			memcpy(buf, module_recv_buffer, ulen);
+			buf[ulen] = 0;
+			return ulen;
+		}
+		else
+		{
+			char* pDst = module_recv_buffer;
+			char* pSrc = module_recv_buffer + count;
+			char* pDstEnd = pDst + (ulen - count);
+
+			memcpy(buf, module_recv_buffer, count);
+			buf[count] = 0;
+			Logln(D_INFO,"2--%s",buf);
+
+			for (; pDst < pDstEnd; ++pDst, ++pSrc)
+			{
+				*pDst = *pSrc;
+			}
+			
+			module_recv_buffer_index = ulen - count;
+			printf ("2: %d \r\n",module_recv_buffer_index);
+			return count;
+		}
+	}
+	else
+	{
+		return 0;
+	}	
+}
 
 int get_uart_data(char*buf, int count)
 {
@@ -480,7 +588,7 @@ int get_uart_data(char*buf, int count)
 	{
 		if (count >= ulen)
 		{
-			Logln(D_INFO,"1--%s",module_recv_buffer);
+			Logln(D_INFO,"%s",module_recv_buffer);
 			memcpy(buf, module_recv_buffer, ulen);
 			buf[ulen] = 0;
 			module_recv_buffer_index = 0;
@@ -672,10 +780,10 @@ bool at_parse_recv(void)
 
 		ret = protocol_parse(pbuf, rec_len);
 
-		if(!ret)
+		/*if(!ret)
 		{
 			ret = parse_gnss_cmd(pbuf, rec_len);
-		}
+		}*/
 
 		if(!ret)
 		{
@@ -711,7 +819,6 @@ void module_init(void)
 
 	pure_uart1_buf();
 	
-//	MODULE_PWRON();					//module¿ª»úÂö³å
 	HAL_Delay(500);
 	Logln(D_INFO, "IOT_module PWR ON \r\n");
 	while(Send_AT_Command(AT_ATE0)==0); 
@@ -790,19 +897,19 @@ void uart1_process(void)
 
 		if(strcmp(AT_Msg.Data, "AT+QGNSSRD?")==0)
 		{
-			Send_AT_GNSS_Command(AT_QGPS_LOC);
+			Send_AT_Command_ext(AT_QGPS_LOC);
 		}
 		else if(strstr(AT_Msg.Data,"AT+QBTGATSRSP"))
 		{
-			Send_AT_BT_RSP_Command(AT_QBTGATSRSP,AT_Msg.Data,AT_Msg.Len);
+			Send_AT_Command_Buf(AT_QBTGATSRSP,AT_Msg.Data,AT_Msg.Len);
 		}
 		else if(strstr(AT_Msg.Data,"AT+QBTGATSIND"))
 		{
-			Send_AT_BT_RSP_Command(AT_QBTGATSIND,AT_Msg.Data,AT_Msg.Len);
+			Send_AT_Command_Buf(AT_QBTGATSIND,AT_Msg.Data,AT_Msg.Len);
 		}
 		else if(strstr(AT_Msg.Data,"AT+QBTNAME"))
 		{
-			Send_AT_Command(AT_BT_NAME);
+			Send_AT_Command_ext(AT_BT_NAME);
 		}
 		else
 		{

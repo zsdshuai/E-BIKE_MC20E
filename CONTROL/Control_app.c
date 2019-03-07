@@ -17,10 +17,9 @@
 flash_struct g_flash,r_flash;	//={{"zcwebx.liabar.cn",9000},0,0,0,0,0};
 
 extern uint32_t diff_rotate,diff_mileage,diff_shake;
-//extern uint64_t rotate_count,mileage_count;
 extern battery_info_struct curr_bat;
 extern gps_info_struct gps_info;
-
+extern uint8_t flag_alarm;
 	
 /*msec毫秒后PB5拉高*/
 void delay_open_dianmen(uint16_t msec)
@@ -138,6 +137,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					if(lock_bike())
 					{
+						upload_ebike_data_package();
 						voice_play(VOICE_LOCK);
 					}
 				}
@@ -146,6 +146,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 					if(!g_flash.acc)
 					{
 						gprs_unlock();
+						upload_ebike_data_package();
 						voice_play(VOICE_UNLOCK);
 					}
 				}
@@ -389,7 +390,7 @@ printf("ebike.bat.voltage=%d\r\n",ebike.bat.voltage);
 	ebike.sig.gps_viewd = gps_info.sat_view;
 	ebike.sig.gps_used = gps_info.sat_uesd;
     
-    memcpy(ebike_pkg->value,&ebike,sizeof(ebike_struct));
+    	memcpy(ebike_pkg->value,&ebike,sizeof(ebike_struct));
 	ebike_pkg->addr = 0x1d;
 	ebike_pkg->value_len = sizeof(ebike_struct);
 
@@ -397,6 +398,26 @@ printf("ebike.bat.voltage=%d\r\n",ebike.bat.voltage);
 	g_flash.lundong = rotate_count;
 	write_flash(CONFIG_ADDR, &g_flash,sizeof(flash_struct));
 	
+}
+void dianchi_refresh_process(void)
+{
+	static bool flag=false;
+
+	if(get_work_state())
+	{
+		if(get_bat_connect_status() && flag)
+		{
+			printf("BAT CONNECT\r\n");
+			upload_ebike_data_package();
+			flag = false;
+		}
+		else if(!get_bat_connect_status() && !flag)
+		{
+			printf("BAT DISCONNECT\r\n");
+			upload_ebike_data_package();
+			flag = true;
+		}
+	}	
 }
 void motorlock_process(void)
 {
@@ -416,16 +437,14 @@ void motorlock_process(void)
 }
 void shake_process(void)
 {
-        if (flag_shake) // 1秒收集1次数据
-        {
-              flag_shake = 0;
-              collect_shake_data();
-        }
-        if (zt_gsensor_check_is_shake_sharp() && g_flash.acc == 0)
+        if (check_sharp_zhendong() && g_flash.acc == 0 && flag_alarm==0)
         {
         	if(g_flash.zd_alarm)
         	{
+        		printf("shake--%d\r\n",diff_shake);
               		voice_play(VOICE_ALARM);
+			flag_alarm = 1;
+			flag_delay6s = 1;
         	}
         }
 }
@@ -444,8 +463,10 @@ void init_flash(void)
 		g_flash.motor = 0;
 		g_flash.ld_alarm = 0;
 		g_flash.zd_alarm = 0;
-		g_flash.zd_sen = 100;
+		g_flash.zd_sen = 30;
 		memset(g_flash.imei,0,sizeof(g_flash.imei));
 		write_flash(CONFIG_ADDR,&g_flash,sizeof(flash_struct));
 	}
+	mileage_count = g_flash.hall;
+	rotate_count = g_flash.lundong;
 }

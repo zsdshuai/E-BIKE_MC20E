@@ -9,14 +9,9 @@
 
 extern RTC_HandleTypeDef hrtc;
 extern gps_info_struct gps_info;
-extern uint8_t flagconnect;
-extern RTC_DateTypeDef sdatestructure;
-extern RTC_TimeTypeDef stimestructure;
-extern uint16_t testcount1;
 uint16_t kfd_sn;
 config_struct g_config;
 uint8_t g_hb_send_times = 0;
-uint8_t hb_breakcount = 0;
 work_state net_work_state = EN_INIT_STATE;
 
 #define DEV_VER "SW3.0.00_HW3.0.0"
@@ -211,16 +206,7 @@ uint16_t kfd_get_sn(void)
 	kfd_sn++;
 	return kfd_sn;
 }
-void test_crc(void)
-{
-	uint16_t ret;
-	char out[16]={0};
-	char data[]={0x0D,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x05,0x15,0x09,0x24,0x00,0x10,0x37,0x63,0x10,0x00,0x00,0x00,0x00};
-	ret = get_crc16(data,23);
 
-	//sprintf(out,"crc=%d",ret);
-//	trace(out,strlen(out));
-}
 /*****************************************************************************
  * FUNCTION
  *  kfd_format_cb_to_buffer
@@ -278,8 +264,6 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 	sum_len = sizeof(pkg_head_struct)+context_len+sizeof(pkg_tail_struct);		
 
         hex_convert_str(buf,sum_len,outbuf2);
-	//trace(outbuf2,sum_len*2);
-	//trace("\r\n",2);
 	printf("send=%d,%s\n",sum_len,outbuf2);
 	
 //	send_data(buf,sum_len);//yxltest
@@ -287,14 +271,6 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 	return sum_len;
 }
 
-void login_test(void)
-{
-	//FFFFBCF30D0101000F0101000025051509240010376300000000000D0A
-	char data[]={0xFF,0xFF,0xBC,0xF3,0x0D,0x01,0x01,0x00,0x0F,0x01,0x01,0x00,0x00,0x25,0x05,0x15,0x09,0x24,0x00,0x10,0x37,0x63,
-		0x00,0x00,0x00,0x00,0x00,0x0D,0x0A};
-
-	send_data(data,sizeof(data));
-}
 
 bool get_work_state(void)
 {
@@ -322,13 +298,11 @@ void upload_login_package(void)
 
 void upload_hb_package(void)
 {
-	printf("upload_hb_package\r\n");
+	printf("upload_hb_package,times=%d\r\n",g_hb_send_times);
 	if(g_hb_send_times >= 2)
 	{//reconnect
-		hb_breakcount ++;
-		printf ("hb_breakcount=%d \r\n",hb_breakcount);
-		flagconnect = 0;
 		g_hb_send_times = 0;
+		net_work_state = EN_INIT_STATE;
 		AT_reconnect_service();
 	}
 	else
@@ -340,7 +314,7 @@ void upload_hb_package(void)
 
 void upload_alarm_package(void)
 {
-  printf("upload_alarm_package\r\n");
+  	printf("upload_alarm_package\r\n");
 	alarm_pkg_struct alarm_pkg;
 	uint16_t curr_speed = (uint16_t)(gps_info.speed*1.852);
 	uint8_t ind;
@@ -614,7 +588,7 @@ void upload_imsi_package(void)
 
 void upload_ebike_data_package(void)
 {
-  printf("upload_ebike_data_package\r\n");
+  	printf("upload_ebike_data_package\r\n");
 	ebike_pkg_struct ebike_pkg;
 	uint8_t package_len;
 
@@ -708,7 +682,7 @@ void upload_all_data_package(void)
 {
 	static uint8_t delay_index=0;
     
-	if(!flagconnect)
+	if(!get_work_state())
 		return;
 
 	 Logln(D_INFO,"upload_all_data_package");
@@ -803,7 +777,6 @@ bool protocol_proc(char* buf ,int len)
 	{
 		case EN_GT_PT_LOGIN:						
 		{	
-			flagconnect = 1;
 			printf("login rsp sn ok\r\n");
 			calibration_time(buf);
 	//		upload_version_package();

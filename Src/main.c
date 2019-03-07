@@ -96,17 +96,17 @@ CircleQueueExt AT_queue;
 /* Private variables ---------------------------------------------------------*/
 uint8_t usart1_recbuf, bt_recbuf, usart2_recbuf;
 uint8_t tim3_delay5s, tim3_delay15s;
-uint16_t tim14_delay900ms,tim14_delay500ms,tim14_delay10ms, tim14_delay4s;
+uint16_t tim14_delay900ms,tim14_delay500ms,tim14_delay10ms, tim14_delay4s,tim14_delay6s;
 uint8_t flag_delay5s, flag_delay1s, flag_sendlock;
-uint8_t flagconnect = 0;
 uint32_t adc_val[64];
 uint16_t batvol;
 uint8_t pulse_count,flag_checkpulse;
 uint64_t rotate_bak, mileage_bak, shake_bak;
-uint16_t testcount,testcount1;
 uint8_t testreconnect,flagreconnect;
 
 extern uint8_t login_protect_timeout;
+extern uint8_t flag_alarm;
+extern uint8_t flag_delay6s;
 
 /* USER CODE END PV */
 
@@ -729,7 +729,7 @@ void StartTask02(void const * argument)
 	HAL_TIM_Base_Start_IT(&htim14);
 	HAL_ADCEx_Calibration_Start(&hadc);
 	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adc_val, 64);
-	kx023_init();
+//	kx023_init();
 	InitCircleQueue(&RxUart2_Queue);	                           //初始化队列
 	InitCircleQueue(&RxUart3_Queue);	                           //初始化队列
 	/* Infinite loop */
@@ -741,7 +741,7 @@ void StartTask02(void const * argument)
         uart2_process();
 //    bluetooth_process();
         motorlock_process();
-        //shake_process();
+        shake_process();
         osDelay(1);
   }
   /* USER CODE END StartTask02 */
@@ -796,6 +796,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			tim14_delay4s = 0;
 			flag_motorlock2 = 1;
 		}
+
+		if (flag_delay6s)
+			tim14_delay6s++;
+		if (tim14_delay6s >= 600) 
+		{
+			tim14_delay6s = 0;
+			flag_alarm = 0;
+			flag_delay6s = 0;
+		}
 	}
 	
 	/* USER CODE END Callback 0 */
@@ -808,7 +817,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		quit_cnt++;
 		//testreconnect++;
-		flag_shake = 1;
 		tim3_delay15s++;
 		tim3_delay5s++;
 		pulse_count++;
@@ -831,7 +839,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		if (tim3_delay5s >= 5) 
 		{
 			tim3_delay5s = 0;
-			//if (flagconnect == 1)
 			flag_delay5s = 1;
 		}
 		if (pulse_count == 1) 
@@ -846,8 +853,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			diff_rotate = rotate_count - rotate_bak;
 			diff_mileage = mileage_count - mileage_bak;
 			diff_shake = shake_count - shake_bak;
-//			printf("diff_shake=%d,shake_count=%d,shake_bak=%d\r\n",diff_shake,shake_count,shake_bak);
+	//		printf("diff_shake=%d,shake_count=%d,shake_bak=%d\r\n",diff_shake,shake_count,shake_bak);
 		}
+		dianchi_refresh_process();
 		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
 
 	}

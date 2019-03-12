@@ -239,11 +239,11 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 	HAL_RTC_GetTime(&hrtc, &stimestructure, RTC_FORMAT_BIN);
 	HAL_RTC_GetDate(&hrtc, &sdatestructure, RTC_FORMAT_BIN);
 	head.datetime[0] = sdatestructure.Year;//18;
-	head.datetime[1] = sdatestructure.Month;//4;
+	head.datetime[1] = sdatestructure.Month;//4
 	head.datetime[2] = sdatestructure.Date;//17;
 	head.datetime[3] = stimestructure.Hours;//16;
 	head.datetime[4] = stimestructure.Minutes;//6;
-	head.datetime[5] = stimestructure.Seconds;//3;
+	head.datetime[5] = stimestructure.Seconds;//3
 
 
 //	printf ("year=%d,mon=%d,day=%d \r\n", sdatestructure.Year, sdatestructure.Month, sdatestructure.Date);
@@ -264,7 +264,7 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 	sum_len = sizeof(pkg_head_struct)+context_len+sizeof(pkg_tail_struct);		
 
         hex_convert_str(buf,sum_len,outbuf2);
-	printf("send=%d,%s\n",sum_len,outbuf2);
+	printf("send=%d,%s\r\n",sum_len,outbuf2);
 	
 //	send_data(buf,sum_len);//yxltest
 	pushPackage(buf,sum_len);
@@ -598,6 +598,13 @@ void upload_ebike_data_package(void)
 	send_package(EN_GT_PT_CONTROL, (char*)&ebike_pkg, package_len);
 }
 
+void upload_ebike_data_package_network(void)
+{
+	if(get_work_state())
+	{
+		upload_ebike_data_package();
+	}
+}
 void upload_give_back_package(uint8_t gate)
 {
 	uint8_t num=0;
@@ -622,7 +629,7 @@ void upload_give_back_package(uint8_t gate)
 		give_back_pkg.lock_state = 0;
 	}
 	
-	printf("lock_state=%d,gate=%d",give_back_pkg.lock_state,gate);
+	printf("lock_state=%d,gate=%d,gps=%c\r\n",give_back_pkg.lock_state,gate,gps_info.state);
 
 	if(gps_info.state=='A')
 	{
@@ -668,8 +675,7 @@ void upload_give_back_package(uint8_t gate)
 		{
 			give_back_pkg.gps_array[num].property.mode = 3;
 		}
-	
-		num++;
+		num = 1;
 	}
 	
 	give_back_pkg.gps_data_num = num;
@@ -834,7 +840,7 @@ bool protocol_proc(char* buf ,int len)
 
 uint8_t protocol_parse(char *pBuf, int len)
 {
-	char req[BUFLEN]={0};
+	char req[512]={0};
 	int i;
 	char* head,*tail,head_first=1;
 	uint8_t ret=0;

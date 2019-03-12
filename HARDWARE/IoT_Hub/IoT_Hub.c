@@ -11,16 +11,12 @@
 
 extern CircleQueueExt AT_queue;
 extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart2;
 
 char module_recv_buffer[MODULE_BUFFER_SIZE] = {0};
 short module_recv_buffer_index = 0;
 
 gps_info_struct gps_info;
 dev_struct dev_info;
-extern uint8_t flagreconnect;
-uint8_t flag_quit = 0, quit_cnt = 0;
-uint8_t flagesc_send = 0;
 AT_CMD_STATE at_state=AT_INIT;
 uint8_t login_protect_timeout=0;
 extern uint8_t flag_delay5s;
@@ -49,14 +45,15 @@ AT_STRUCT at_pack[]={
 	{AT_COPS,"AT+COPS?","OK",300,NULL},
 	{AT_QIMUX,"AT+QIMUX=0","OK",300,NULL},
 	{AT_QIDNSIP,"AT+QIDNSIP=1","OK",300,NULL},
-	{AT_QIOPEN,"","OK",10000,NULL},
+	{AT_QIOPEN,"","OK",300,NULL},
 	{AT_QISEND,"",">",500,NULL},
 	{AT_QRECV,"+QIURC: \"recv\"","OK",300,NULL},
 	{AT_QICLOSE,"AT+QICLOSE","OK",300,NULL},
 	{AT_QPING,"AT+QPING=1,\"zcwebx.liabar.cn\",4,1","OK",300,NULL},
 	{AT_QGPS_ON,"AT+QGNSSC=1","OK",300,NULL},
 	{AT_QGPS_OFF,"AT+QGNSSC=0","OK",300,NULL},
-	{AT_QGPS_LOC,"AT+QGNSSRD=\"NMEA/RMC\"","OK",300,parse_gnss_cmd},
+	{AT_QGPS_RMC,"AT+QGNSSRD=\"NMEA/RMC\"","OK",300,NULL},
+	{AT_QGPS_GSV,"AT+QGNSSRD=\"NMEA/GSV\"","OK",300,parse_gnss_cmd},	
 	{AT_BT_ON,"AT+QBTPWR=1","OK",3000,NULL},
 	{AT_BT_OFF,"AT+QBTPWR=0","OK",300,NULL},
 	{AT_BT_ADDR,"AT+QBTLEADDR?","OK",300,NULL},
@@ -87,7 +84,7 @@ AT_STRUCT at_pack[]={
 	{AT_QBTGATSRSP,"","OK",300,NULL},
 	{AT_QBTGATSIND,"","OK",300,NULL},
 	{AT_QBTGATSDISC,"AT+QBTGATSDISC=1","OK",300,NULL},
-
+	{ATA,"ATA","OK",300,NULL},
 	{AT_MAX,"","",0,NULL}
 };
 
@@ -243,7 +240,7 @@ bool parse_gnss_cmd(char* buf, int len)
 		Logln(D_INFO,"lat=%f,lon=%f",gps_info.latitude,gps_info.longitude);
 		ret = true;
 	}
-	else if(strncmp(pnmea+1,"GPGGA",5)==0||strncmp(pnmea+1,"GNGGA",5)==0)
+	if(strncmp(pnmea+1,"GPGGA",5)==0||strncmp(pnmea+1,"GNGGA",5)==0)
 	{
 		//$GPGGA,085118.00,2235.87223,N,11359.99731,E,1,03,4.72,138.3,M,-2.6,M,,*4B
 	    	gps_info.sat_uesd = (char)get_double_number(&pnmea[GetComma(7,pnmea)]);
@@ -251,7 +248,7 @@ bool parse_gnss_cmd(char* buf, int len)
 		gps_info.altitude = get_double_number(&pnmea[GetComma(9,pnmea)]);
 		ret = true;
 	}
-	else if(strncmp(pnmea+1,"GPGSV",5)==0)
+	if(strncmp(pnmea+1,"GPGSV",5)==0)
 	{
 		char n,isat, isi, nsat;
 		//$GPGSV,5,1,17,01,45,168,19,03,00,177,,07,53,321,08,08,53,014,*7C
@@ -270,14 +267,16 @@ bool parse_gnss_cmd(char* buf, int len)
 			else
 				gps_info.gsv.sat_db[isi] = (char)get_double_number(&pnmea[GetComma(3+4*(isat+1),pnmea)]); 	
 		}
+		Logln(D_INFO,"gsv=%d",nsat);
+
 		ret = true;
 	}
-	else if(strncmp(pnmea+1,"GPGLL",5)==0)
+	if(strncmp(pnmea+1,"GPGLL",5)==0)
 	{
 		//$GPGLL,4250.5589,S,14718.5084,E,092204.999,A*2D
 		ret = true;
 	}
-	else if(strncmp(pnmea+1,"GPGSA",5)==0||strncmp(pnmea+1,"GNGSA",5)==0)
+	if(strncmp(pnmea+1,"GPGSA",5)==0||strncmp(pnmea+1,"GNGSA",5)==0)
 	{
 		//$GPGSA,A,3,01,20,19,13,,,,,,,,,40.4,24.4,32.2*0A
 		gps_info.type = pnmea[GetComma(2,pnmea)]-'0';
@@ -287,7 +286,7 @@ bool parse_gnss_cmd(char* buf, int len)
 		}
 		ret = true;
 	}
-	else if(strncmp(pnmea+1,"GPVTG",5)==0)
+	if(strncmp(pnmea+1,"GPVTG",5)==0)
 	{
 		//$GPVTG,89.68,T,,M,0.00,N,0.0,K*5F
 		ret = true;
@@ -422,7 +421,7 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 
 uint8_t Send_AT_Command_ext(AT_CMD cmd)
 {
-	char buf[256]={0};
+	char buf[BUFLEN]={0};
 	int len;
 	int8_t i=GetATIndex(cmd), ret=0;
 
@@ -670,7 +669,7 @@ void send_data(char* buf, int len)
 	i = GetATIndex(AT_QISEND);
 	strcpy(at_pack[i].cmd_txt,cmd);
 	
-    	if(Send_AT_Command(AT_QISEND))
+    	if(Send_AT_Command_ext(AT_QISEND))
     	{
 		uart1_send(buf, len);	
 		Logln(D_INFO, "send data1");
@@ -695,9 +694,10 @@ void bt_name_modify(char* name)
 }
 bool parse_bt_at_cmd(char* buf, int len)
 {
-	char *tmp,*tmp1,*tmp2;
+	char *tmp,*tmp1=NULL,*tmp2=NULL;
 	bool ret = false;
-	
+
+	Logln(D_INFO,"parse_bt_at_cmd");	
 	if(tmp=strstr(buf,"+QBTGATSCON:"))
 	{/*+QBTGATSCON: 1,"A001",0,3DD098833C4B,1*/
 		char state;
@@ -719,18 +719,23 @@ bool parse_bt_at_cmd(char* buf, int len)
 		int len;
 
 		Logln(D_INFO,"RCV +QBTGATWREQ:----------1");
-		bt_conn.conn_id = get_double_number(tmp+GetComma(1, tmp));
-		bt_conn.trans_id = get_double_number(tmp+GetComma(2, tmp));
-		bt_conn.attr_handle = get_double_number(tmp+GetComma(4, tmp));
-		tmp1 = tmp+GetComma(5, tmp);
-		tmp2 = tmp+GetComma(6, tmp)-1;
-		len = tmp2-tmp1;
-		str_convert_hex(tmp1,len,data);
-		if(!parse_bt_cmd(data, len/2))
+		if(strstr(tmp,"\r\n"))
 		{
-			pushPackage("AT+QBTGATSRSP=\"A001\",0,1,15,258,\"0000\"",strlen("AT+QBTGATSRSP=\"A001\",0,1,15,258,\"0000\""));
+			bt_conn.conn_id = get_double_number(tmp+GetComma(1, tmp));
+			bt_conn.trans_id = get_double_number(tmp+GetComma(2, tmp));
+			bt_conn.attr_handle = get_double_number(tmp+GetComma(4, tmp));
+			tmp1 = tmp+GetComma(5, tmp);
+			tmp2 = tmp+GetComma(6, tmp)-1;
+		
+			len = tmp2-tmp1;
+			str_convert_hex(tmp1,len,data);
+			if(!parse_bt_cmd(data, len/2))
+			{
+				pushPackage("AT+QBTGATSRSP=\"A001\",0,1,15,258,\"0000\"",strlen("AT+QBTGATSRSP=\"A001\",0,1,15,258,\"0000\""));
+			}
+			ret = true;
 		}
-		ret = true;
+		
 	}
 	else if(tmp=strstr(buf,"+QBTGATRREQ:"))
 	{
@@ -750,7 +755,8 @@ bool parse_another_cmd(char* buf, int len)
 	bool ret = false;
 	char* tmp1=NULL,*tmp2 = NULL;
 
-	if(tmp1=strstr(buf,"CLOSED"))
+	Logln(D_INFO,"parse_another_cmd");	
+	if(strstr(buf,"CLOSED") || strstr(buf,"CONNECT FAIL"))
 	{//NETWORD disconnect
 		at_state = AT_CLOSE;
 		ret = true;
@@ -765,35 +771,43 @@ bool parse_another_cmd(char* buf, int len)
 		Logln(D_INFO,"ERROR code = %d",err);
 		ret = true;
 	}
+	else if(tmp1 = strstr(buf,"+CME ERROR:"))
+	{
+
+	}
+	else if(strstr(buf,"CONNECT OK"))
+	{
+		upload_login_package();
+		at_state = AT_LOGINING;
+		ret = true;
+	}
+	else if(strstr(buf,"ERROR"))
+	{
+		at_state = AT_CLOSE;
+		ret =true;
+	}
+	else if(strstr(buf,"RING"))
+	{
+		pushPackage("ATA", 3);
+	}
+
+	return ret;
 }
 bool at_parse_recv(void)
 {
 	char pbuf[BUFLEN];
 	uint8_t rec_len, ret;
-		HAL_Delay(100);
+	HAL_Delay(100);
 
   	rec_len = get_uart_data(pbuf, BUFLEN);
 	
 	if(rec_len > 0)
 	{
 		Logln(D_INFO, "at_parse_recv :%d",rec_len);		
-
-		ret = protocol_parse(pbuf, rec_len);
-
-		/*if(!ret)
-		{
-			ret = parse_gnss_cmd(pbuf, rec_len);
-		}*/
-
-		if(!ret)
-		{
-			ret = parse_bt_at_cmd(pbuf, rec_len);
-		}
-
-		if(!ret)
-		{
-			ret = parse_another_cmd(pbuf, rec_len);
-		}
+		protocol_parse(pbuf, rec_len);
+		parse_bt_at_cmd(pbuf, rec_len);
+		parse_another_cmd(pbuf, rec_len);
+		
 		return true;	
 	}
 	return false;
@@ -851,11 +865,9 @@ void at_connect_service(void)
 
 	i = GetATIndex(AT_QIOPEN);
 	
-	sprintf(str_buf,"AT+QIOPEN=\"TCP\",\"%s\",%d",g_flash.network.domainorip,g_flash.network.port);
+	sprintf(str_buf,"AT+QIOPEN=\"TCP\",\"%s\",%d",g_net_work.domainorip,g_net_work.port);
 	strcpy(at_pack[i].cmd_txt, str_buf);
 	while(Send_AT_Command(AT_QIOPEN)==0);
-
-	Logln(D_INFO,"Connect service");
 }
 void AT_reconnect_service(void)
 {
@@ -897,7 +909,8 @@ void uart1_process(void)
 
 		if(strcmp(AT_Msg.Data, "AT+QGNSSRD?")==0)
 		{
-			Send_AT_Command_ext(AT_QGPS_LOC);
+			while(Send_AT_Command_ext(AT_QGPS_RMC)==0);
+			while(Send_AT_Command_ext(AT_QGPS_GSV)==0);
 		}
 		else if(strstr(AT_Msg.Data,"AT+QBTGATSRSP"))
 		{
@@ -910,6 +923,10 @@ void uart1_process(void)
 		else if(strstr(AT_Msg.Data,"AT+QBTNAME"))
 		{
 			Send_AT_Command_ext(AT_BT_NAME);
+		}
+		else if(strstr(AT_Msg.Data,"ATA"))
+		{
+			Send_AT_Command_ext(ATA);
 		}
 		else
 		{
@@ -931,46 +948,42 @@ void at_connect_process(void)
 
 void at_process(void)
 {
-	while(1)
+	switch(at_state)
 	{
-		switch(at_state)
-		{
-			case AT_INIT:
-				module_init();
-				at_state = AT_CONNECT;
-				break;
-			case AT_CONNECT:
-				at_connect_service();
-				at_state = AT_LOGIN;
-				break;
-			case AT_LOGIN:
-				upload_login_package();
+		case AT_INIT:
+			module_init();
+			at_state = AT_CONNECT;
+			break;
+		case AT_CONNECT:
+			at_connect_service();
+			at_state = AT_LOGIN;
+			break;
+		case AT_LOGIN:
+			uart1_process();
+			at_parse_recv();
+			break;
+		case AT_LOGINING:
+			uart1_process();
+			at_parse_recv();
+			if(get_work_state())
+			{
+				at_state = AT_CONNECTED;
+			}
+			else if(login_protect_timeout)
+			{
 				at_state = AT_LOGINING;
-				login_protect_timeout = 0;
-				break;
-			case AT_LOGINING:
-				uart1_process();
-				at_parse_recv();
-				if(get_work_state())
-				{
-					at_state = AT_CONNECTED;
-				}
-				else if(login_protect_timeout)
-				{
-					at_state = AT_LOGINING;
-				}
-				
-				break;
-			case AT_CONNECTED:
-				at_connect_process();
-				break;
-			case AT_CLOSE:
-				at_close_service();	
-				at_state = AT_CONNECT;
-				break;
-			default:
-				break;
-		}
+			}
+			
+			break;
+		case AT_CONNECTED:
+			at_connect_process();
+			break;
+		case AT_CLOSE:
+			at_close_service();	
+			at_state = AT_CONNECT;
+			break;
+		default:
+			break;
 	}
 }
    

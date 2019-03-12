@@ -6,6 +6,7 @@
 //#include "flash.h"
 #include "bt_app.h"
 #include "IoT_Hub.h"
+#include "Control_app.h"
 
 battery_info_struct curr_bat;
 
@@ -286,8 +287,8 @@ bool parse_control_cmd(uint8_t* buf, uint16_t len)
 			{
 				memset(g_flash.imei,0,sizeof(g_flash.imei));
 				memcpy(g_flash.imei,head,tail-head);
-				write_flash(CONFIG_ADDR,&g_flash,sizeof(flash_struct));
-				printf("write imei OK\r\n");
+				write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
+				printf("write imei=%sOK\r\n",g_flash.imei);
 				flag = true;
 				reset_system();
 			}

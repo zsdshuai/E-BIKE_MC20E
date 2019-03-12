@@ -85,7 +85,6 @@ TIM_HandleTypeDef htim14;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
-UART_HandleTypeDef huart3;
 
 osThreadId defaultTaskHandle;
 osThreadId myTask02Handle;
@@ -94,15 +93,13 @@ CircleQueueExt AT_queue;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-uint8_t usart1_recbuf, bt_recbuf, usart2_recbuf;
+uint8_t usart1_recbuf, usart2_recbuf;
 uint8_t tim3_delay5s, tim3_delay15s;
 uint16_t tim14_delay900ms,tim14_delay500ms,tim14_delay10ms, tim14_delay4s,tim14_delay6s;
 uint8_t flag_delay5s, flag_delay1s, flag_sendlock;
 uint32_t adc_val[64];
 uint16_t batvol;
-uint8_t pulse_count,flag_checkpulse;
 uint64_t rotate_bak, mileage_bak, shake_bak;
-uint8_t testreconnect,flagreconnect;
 
 extern uint8_t login_protect_timeout;
 extern uint8_t flag_alarm;
@@ -116,12 +113,11 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_USART3_UART_Init(void);
-static void MX_I2C1_Init(void);
 static void MX_ADC_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM14_Init(void);
+static void MX_I2C1_Init(void);
 static void MX_IWDG_Init(void);
 static void MX_RTC_Init(void);
 void StartDefaultTask(void const * argument);
@@ -170,14 +166,15 @@ int main(void)
   MODULE_RST();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
-  MX_I2C1_Init();
+  MX_I2C1_Init(); 
   MX_ADC_Init();
   MX_TIM3_Init();
   MX_TIM1_Init();
   MX_TIM14_Init();
   MX_IWDG_Init();
   MX_RTC_Init();
+  init_flash();
+
   /* USER CODE BEGIN 2 */
 	printf("test start!! \r\n");	
   /* USER CODE END 2 */
@@ -332,40 +329,6 @@ static void MX_ADC_Init(void)
 
 }
 
-/* I2C1 init function */
-static void MX_I2C1_Init(void)
-{
-
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x20303E5D;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-    /**Configure Analogue filter 
-    */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-    /**Configure Digital filter 
-    */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
-
 /* IWDG init function */
 static void MX_IWDG_Init(void)
 {
@@ -509,6 +472,38 @@ static void MX_TIM14_Init(void)
   }
 
 }
+static void MX_I2C1_Init(void)
+{
+
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x20303E5D;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Analogue filter 
+    */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Digital filter 
+    */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
 
 /* USART1 init function */
 static void MX_USART1_UART_Init(void)
@@ -552,26 +547,6 @@ static void MX_USART2_UART_Init(void)
 
 }
 
-/* USART3 init function */
-static void MX_USART3_UART_Init(void)
-{
-
-  huart3.Instance = USART3;
-  huart3.Init.BaudRate = 115200;
-  huart3.Init.WordLength = UART_WORDLENGTH_8B;
-  huart3.Init.StopBits = UART_STOPBITS_1;
-  huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart3) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
 
 /** 
   * Enable DMA controller clock
@@ -692,12 +667,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 		HAL_UART_Receive_IT(&huart2, &usart2_recbuf, 1);
 	}
 	
-	if (UartHandle->Instance == USART3) 
-	{
-		Uart3_buf.Data[0]= bt_recbuf;
-		PushElement(&RxUart3_Queue,Uart3_buf,1);//将接收到的数据压入队列中
-		HAL_UART_Receive_IT(&huart3, &bt_recbuf, 1);
-	}
 }
 /* USER CODE END 4 */
 
@@ -709,15 +678,12 @@ void StartDefaultTask(void const * argument)
 	InitCircleQueueExt(&AT_queue);
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_UART_Receive_IT(&huart1, (uint8_t *)&usart1_recbuf, 1);
-	HAL_UART_Receive_IT(&huart2, (uint8_t *)&usart2_recbuf, 1);
-	HAL_UART_Receive_IT(&huart3, (uint8_t *)&bt_recbuf, 1);
-	init_flash();
 	/* Infinite loop */
 	for(;;)
 	{
 		at_process();
 	    //HAL_IWDG_Refresh(&hiwdg);      				//喂看门狗   Tout=((4*2^prer)*rlr)/40  rlr = 3124 prer = 4 Tout = 5000ms内必须喂狗不然系统会复位
-	    osDelay(1);
+	    	osDelay(1);
 	}
   /* USER CODE END 5 */ 
 }
@@ -729,9 +695,9 @@ void StartTask02(void const * argument)
 	HAL_TIM_Base_Start_IT(&htim14);
 	HAL_ADCEx_Calibration_Start(&hadc);
 	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adc_val, 64);
-//	kx023_init();
 	InitCircleQueue(&RxUart2_Queue);	                           //初始化队列
-	InitCircleQueue(&RxUart3_Queue);	                           //初始化队列
+	HAL_UART_Receive_IT(&huart2, (uint8_t *)&usart2_recbuf, 1);
+
 	/* Infinite loop */
   for(;;)
   {
@@ -739,7 +705,6 @@ void StartTask02(void const * argument)
         tangze_unlock_bike();
         battery_lock();
         uart2_process();
-//    bluetooth_process();
         motorlock_process();
         shake_process();
         osDelay(1);
@@ -815,45 +780,29 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   	/* USER CODE BEGIN Callback 1 */
 	if (htim->Instance == htim3.Instance)
 	{
-		quit_cnt++;
-		//testreconnect++;
 		tim3_delay15s++;
 		tim3_delay5s++;
-		pulse_count++;
-		/*if (testreconnect > 20)
-		{
-			testreconnect = 0;
-			flagreconnect = 1;
-		}*/
-		if (quit_cnt > 15)
-		{
-			quit_cnt = 0;
-			flag_quit = 1;
-		//	printf ("quit run ..\r\n");
-		}
+
 		if (tim3_delay15s >= 5)
 		{
-		    tim3_delay15s = 0;
-		    flag_delay1s = 1;
+			tim3_delay15s = 0;
+			flag_delay1s = 1;
 		}
 		if (tim3_delay5s >= 5) 
 		{
 			tim3_delay5s = 0;
 			flag_delay5s = 1;
 		}
-		if (pulse_count == 1) 
+
 		{
-			rotate_bak = rotate_count;
-			mileage_bak = mileage_count;
-			shake_bak = shake_count;
-		}
-		if (pulse_count >= 2)
-		{
-			pulse_count = 0;
 			diff_rotate = rotate_count - rotate_bak;
 			diff_mileage = mileage_count - mileage_bak;
 			diff_shake = shake_count - shake_bak;
-	//		printf("diff_shake=%d,shake_count=%d,shake_bak=%d\r\n",diff_shake,shake_count,shake_bak);
+//			printf("diff_shake=%d,shake_count=%d,shake_bak=%d\r\n",diff_shake,shake_count,shake_bak);
+			
+			rotate_bak = rotate_count;
+			mileage_bak = mileage_count;
+			shake_bak = shake_count;
 		}
 		dianchi_refresh_process();
 		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位

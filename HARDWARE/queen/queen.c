@@ -12,9 +12,8 @@
 // CircleQueue		 TxCAN_Queue;	/* CAN 发送缓冲区*/
 CircleQueue		 RxUart1_Queue;		/* 串口1接收缓冲区*/
 CircleQueue		 RxUart2_Queue;		/* 串口2接收缓冲区*/
-CircleQueue		 RxUart3_Queue;		/* 串口3接收缓冲区*/
 Circle_buffer    buffer;
-RxMsgTypeDef   Uart1_buf, Uart2_buf, Uart3_buf;
+RxMsgTypeDef   Uart1_buf, Uart2_buf;
 /*********************************************************************************************************
 ** Functoin name:       InitCircleQueue
 ** Descriptions:        初始化队列，使队列头指向队列尾

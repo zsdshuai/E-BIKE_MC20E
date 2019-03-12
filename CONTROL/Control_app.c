@@ -14,31 +14,13 @@
 //#include "flash.h"
 
 
-flash_struct g_flash,r_flash;	//={{"zcwebx.liabar.cn",9000},0,0,0,0,0};
+flash_struct g_flash;
+network_struct g_net_work;
 
 extern uint32_t diff_rotate,diff_mileage,diff_shake;
 extern battery_info_struct curr_bat;
 extern gps_info_struct gps_info;
 extern uint8_t flag_alarm;
-	
-/*msec毫秒后PB5拉高*/
-void delay_open_dianmen(uint16_t msec)
-{
-}
-/*上一个函数延时还没到返回true,延时完成了返回false*/
-bool get_open_dianmen_status(void)
-{
-
-}
-/*写入文件接口，addr 地址，size 字节大小，*data 数据指针*/
-void WriteRecord(EEPROM_item_enum addr,uint8_t size, uint8_t* data)
-{
-}
-
-/*读取文件接口，addr 地址，size 字节大小，*data 数据指针*/
-void ReadRecord(EEPROM_item_enum addr,uint8_t size, uint8_t* data)
-{
-}
 
 /*PB9拉高，500ms之后拉低*/
 void open_dianchi_lock(void)
@@ -104,7 +86,7 @@ bool lock_bike(void)
 			//tangze_lock_bike();
 			flag_tangze_lock = 1;
             		g_flash.acc = 0;
-			write_flash(CONFIG_ADDR, &g_flash,sizeof(flash_struct));
+			write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
 			result = true;
 		}
 	}
@@ -117,7 +99,7 @@ void gprs_unlock(void)
 	//tangze_unlock_bike();
 	flag_tangze_unlock = 1;
     	g_flash.acc  |= GPRS_OPEN;
-	write_flash(CONFIG_ADDR, &g_flash,sizeof(flash_struct));
+	write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
     open_electric_door();
 }
 
@@ -137,7 +119,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					if(lock_bike())
 					{
-						upload_ebike_data_package();
+						upload_ebike_data_package_network();
 						voice_play(VOICE_LOCK);
 					}
 				}
@@ -146,7 +128,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 					if(!g_flash.acc)
 					{
 						gprs_unlock();
-						upload_ebike_data_package();
+						upload_ebike_data_package_network();
 						voice_play(VOICE_UNLOCK);
 					}
 				}
@@ -164,7 +146,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					g_flash.zd_sen = cmd->para[0];
 				}
-				write_flash(CONFIG_ADDR, &g_flash,sizeof(flash_struct));
+				write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
 				break;
 			case DIANCHI_CMD:
 				if(cmd->para[0]==1)
@@ -199,7 +181,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				break;
 			case ALARM_CMD:
 				g_flash.ld_alarm = cmd->para[0];
-				write_flash(CONFIG_ADDR, &g_flash,sizeof(flash_struct));
+				write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
 				break;
 			case TIAOSU_CMD:
 				if(cmd->para[0]==0)
@@ -293,13 +275,13 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				if(cmd->para[0]==0)	//普通电机
 				{
 					g_flash.motor = 0;
-					write_flash(CONFIG_ADDR, &g_flash,sizeof(flash_struct));
+					write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
 					printf("General Motor\n");
 				}
 				else if(cmd->para[0]==1)//高速电机
 				{
 					g_flash.motor = 1;
-					write_flash(CONFIG_ADDR, &g_flash,sizeof(flash_struct));
+					write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
 					printf("High Speed Motor\n");
 				}
 				break;
@@ -396,7 +378,7 @@ printf("ebike.bat.voltage=%d\r\n",ebike.bat.voltage);
 
 	g_flash.hall = mileage_count;
 	g_flash.lundong = rotate_count;
-	write_flash(CONFIG_ADDR, &g_flash,sizeof(flash_struct));
+	write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
 	
 }
 void dianchi_refresh_process(void)
@@ -408,13 +390,13 @@ void dianchi_refresh_process(void)
 		if(get_bat_connect_status() && flag)
 		{
 			printf("BAT CONNECT\r\n");
-			upload_ebike_data_package();
+			upload_ebike_data_package_network();
 			flag = false;
 		}
 		else if(!get_bat_connect_status() && !flag)
 		{
 			printf("BAT DISCONNECT\r\n");
-			upload_ebike_data_package();
+			upload_ebike_data_package_network();
 			flag = true;
 		}
 	}	
@@ -451,12 +433,16 @@ void shake_process(void)
 
 void init_flash(void)
 {
-	read_flash(CONFIG_ADDR,&g_flash,sizeof(flash_struct));
-	printf("imei:%s\r\n",g_flash.imei);
-	if(g_flash.network.port==0xffff)
+	read_flash(CONFIG_ADDR,(uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
+	printf("imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d\r\n",g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
+		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen);
+	
+	strcpy(g_net_work.domainorip,"zcwebx.liabar.cn");
+	g_net_work.port = 9000;
+	printf("dom=%s,port=%d\r\n",g_net_work.domainorip,g_net_work.port);	
+		
+	if(g_flash.acc==0xff)
 	{
-		strcpy(g_flash.network.domainorip,"zcwebx.liabar.cn");
-		g_flash.network.port = 9000;
 		g_flash.acc = 0;
 		g_flash.hall = 0;
 		g_flash.lundong = 0;
@@ -465,7 +451,7 @@ void init_flash(void)
 		g_flash.zd_alarm = 0;
 		g_flash.zd_sen = 30;
 		memset(g_flash.imei,0,sizeof(g_flash.imei));
-		write_flash(CONFIG_ADDR,&g_flash,sizeof(flash_struct));
+		write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
 	}
 	mileage_count = g_flash.hall;
 	rotate_count = g_flash.lundong;

@@ -115,7 +115,7 @@ void read_data(uint8_t operate)
 {
 	read_data_struct data;
 
-	if(curr_bat.voltage>0)	
+	if(curr_bat.voltage>0 && curr_bat.voltage!=0xffff)	
 		data.volt  = curr_bat.voltage/10;
 	else
 		data.volt  = get_bat_vol();
@@ -152,7 +152,7 @@ void bt_unlock(void)
 {	
 	tangze_unlock_bike();
 	g_flash.acc |= BT_OPEN;
-	write_flash(CONFIG_ADDR, &g_flash,sizeof(flash_struct));
+	write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
 	open_electric_door();
 }
 
@@ -227,7 +227,7 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 			{
 				if(lock_bike())
 				{
-					upload_ebike_data_package();
+			//		upload_ebike_data_package_network();
 					voice_play(VOICE_LOCK);
 					send_ok_cmd(cmd);	
 		  		}
@@ -247,7 +247,7 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 			if(!g_flash.acc)
 			{
 				bt_unlock();
-				upload_ebike_data_package();
+				upload_ebike_data_package_network();
 				voice_play(VOICE_UNLOCK);
 				send_ok_cmd(cmd);
 			}

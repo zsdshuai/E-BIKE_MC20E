@@ -66,7 +66,6 @@ typedef enum
 
 extern char module_recv_buffer[MODULE_BUFFER_SIZE];
 extern short module_recv_buffer_index;
-extern uint8_t flag_quit, quit_cnt;
 
 void module_init(void);
 char* get_imei(void);
@@ -102,7 +101,8 @@ typedef enum{
 	AT_QPING,
 	AT_QGPS_ON,
 	AT_QGPS_OFF,
-	AT_QGPS_LOC,
+	AT_QGPS_RMC,
+	AT_QGPS_GSV,
 	AT_BT_ON,
 	AT_BT_OFF,
 	AT_BT_ADDR,
@@ -134,6 +134,7 @@ typedef enum{
 	AT_QBTGATSIND,
 	AT_QBTGATSDISC,
 
+	ATA,
 	AT_TEST,
 
 	AT_MAX,

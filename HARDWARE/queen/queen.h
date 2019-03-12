@@ -41,9 +41,8 @@ typedef struct
 // extern CircleQueue		 TxCAN_Queue;
 extern CircleQueue		 RxUart1_Queue;		/* 串口1接收缓冲区*/
 extern CircleQueue		 RxUart2_Queue;		/* 串口2接收缓冲区*/
-extern CircleQueue		 RxUart3_Queue;		/* 串口3接收缓冲区*/
 extern Circle_buffer buffer;
-extern RxMsgTypeDef Uart1_buf, Uart2_buf, Uart3_buf;
+extern RxMsgTypeDef Uart1_buf, Uart2_buf;
 
 _Bool InitCircleQueue(CircleQueue *pCQ);
 _Bool IsQueueEmpty(CircleQueue *pCQ);

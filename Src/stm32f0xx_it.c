@@ -48,7 +48,6 @@ extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim14;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
-extern UART_HandleTypeDef huart3;
 
 extern TIM_HandleTypeDef htim6;
 
@@ -209,16 +208,7 @@ void USART2_IRQHandler(void)
 /**
 * @brief This function handles USART3 to USART6 global interrupts.
 */
-void USART3_6_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART3_6_IRQn 0 */
 
-  /* USER CODE END USART3_6_IRQn 0 */
-  HAL_UART_IRQHandler(&huart3);
-  /* USER CODE BEGIN USART3_6_IRQn 1 */
-
-  /* USER CODE END USART3_6_IRQn 1 */
-}
 
 /* USER CODE BEGIN 1 */
 

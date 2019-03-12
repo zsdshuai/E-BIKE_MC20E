@@ -86,7 +86,6 @@ typedef struct
 
 typedef struct
 {
-	network_struct network;
 	uint8_t acc;
 	uint32_t hall;
 	uint32_t lundong;
@@ -144,7 +143,7 @@ void shake_process(void);
 void init_flash(void);
 void open_dianchi_lock(void);
 
-#define CONFIG_ADDR 0x0800FC00
-extern flash_struct g_flash,r_flash;
-
+#define CONFIG_ADDR 0x0800D000
+extern flash_struct g_flash;
+extern network_struct g_net_work;
 #endif

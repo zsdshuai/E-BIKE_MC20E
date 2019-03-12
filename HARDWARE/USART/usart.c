@@ -81,31 +81,24 @@ void uart2_process(void)
 {
 	  RxMsgTypeDef Uart2_Rxbuf;
 	  if (PopElement(&RxUart2_Queue,&Uart2_Rxbuf) == TRUE)  //
-	  {
-			  usart2_recv_buffer[usart2_recv_buffer_index] = Uart2_Rxbuf.Data[0]; //将接收到的字符串存到缓存中
-			  usart2_recv_buffer_index++;
-				if(usart2_recv_buffer_index > 125)       														//如果缓存满,将缓存指针指向缓存的首地址
-				{
-					usart2_recv_buffer_index = 0;
-				}
+  	 {
+		usart2_recv_buffer[usart2_recv_buffer_index] = Uart2_Rxbuf.Data[0]; //将接收到的字符串存到缓存中
+		usart2_recv_buffer_index++;
+		if(usart2_recv_buffer_index > 125)       														//如果缓存满,将缓存指针指向缓存的首地址
+		{
+			usart2_recv_buffer_index = 0;
 		}
-		else
-		{   
-			  if (usart2_recv_buffer_index > 0)
-				{
-				/*	if (strstr(usart2_recv_buffer, "515") != NULL)*/
-					if(parse_control_cmd(usart2_recv_buffer,usart2_recv_buffer_index))
-					{
-							//printf ("usart2_recv=%d \r\n",usart2_recv_buffer_index);
-			//			  bt_send(usart2_recv_buffer,usart2_recv_buffer_index);
-						  usart2_recv_buffer_index = 0;
-							memset(usart2_recv_buffer, 0, strlen(usart2_recv_buffer));
-					}
-				}
+	}
+	else
+	{   
+		 if (usart2_recv_buffer_index > 0)
+		{
+			if(parse_control_cmd(usart2_recv_buffer,usart2_recv_buffer_index))
+			{
+				usart2_recv_buffer_index = 0;
+				memset(usart2_recv_buffer, 0, strlen(usart2_recv_buffer));
+			}
 		}
+	}
 }
-
-
-
-
 

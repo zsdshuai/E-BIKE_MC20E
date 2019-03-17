@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "stm32f0xx_hal.h"
-
+#include "IoT_Hub.h"
 #define TRUE		1
 #define FALSE		0
 #define _FRONT		0
@@ -12,15 +12,10 @@
 #define ON  1		/*高电平*/
 #define OFF 0		/*低电平*/
 
-#define QueueExtSIZE     20    //定义队列的大小
+#define QueueExtSIZE     5	//20    //定义队列的大小
 
 typedef int DataType;
-//typedef char bool;
-typedef struct
-{
-	uint8_t Len;              //数据长度
-	uint8_t Data[256];        //数组
-}RxMsgTypeDefExt;
+
 typedef struct  
 {      
 	RxMsgTypeDefExt circle_buffer[QueueExtSIZE]; //

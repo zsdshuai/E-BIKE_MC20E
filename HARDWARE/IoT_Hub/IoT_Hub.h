@@ -8,7 +8,7 @@
 #include "stm32f0xx_hal.h"
 #include "usart.h"
 
-#define BUFLEN 512 //128
+#define BUFLEN 512
 
 typedef struct
 {
@@ -20,7 +20,6 @@ typedef enum
 {
 	AT_INIT,
 	AT_CONNECT,
-	AT_LOGIN,
 	AT_LOGINING,
 	AT_CONNECTED,
 	AT_CLOSE,
@@ -66,14 +65,6 @@ typedef enum
 
 extern char module_recv_buffer[MODULE_BUFFER_SIZE];
 extern short module_recv_buffer_index;
-
-void module_init(void);
-char* get_imei(void);
-char* get_imsi(void);
-void send_data(char* buf, int len);
-void AT_reconnect_service(void);
-void at_process(void);
-void pushPackage(char* buf, int len);
 
 typedef void (*parseFun)(void*,int);
 
@@ -151,8 +142,40 @@ typedef struct
 
 typedef struct
 {
+	AT_STRUCT at;
+	char data[64];
+	int len;
+}RxMsgTypeDefExt;
+
+typedef enum
+{
+	RET_A=1<<1,		//应答
+	RET_P=1<<2,		//协议
+	RET_B1=1<<3,		//蓝牙返回OK
+	RET_B0=1<<4,	//蓝牙没接收完全
+	RET_G=1<<5,		//GPS
+	RET_AN=1<<6,	//其他
+}RET_TYPE;
+
+typedef struct
+{
 	unsigned char conn_id;
 	unsigned char trans_id;
 	unsigned int attr_handle;
 }BT_CONN_STRUCT;
+
+typedef struct
+{
+	unsigned int delay_time;
+	unsigned int delay_count;
+	char delay_flag;	//0 初始化，1延时计时中，2延时到达
+	char retry_times;
+}AT_PROCE_STRUCT;
+
+void module_init(void);
+char* get_imei(void);
+char* get_imsi(void);
+void send_data(char* buf, int len);
+void AT_reconnect_service(void);
+void at_process(void);
 #endif

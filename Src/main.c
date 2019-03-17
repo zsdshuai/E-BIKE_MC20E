@@ -59,13 +59,11 @@
 #include "exti.h"
 #include "voice.h"
 #include "gpio.h"
-#include "kx023.h"
 #include "flash.h"
 #include "bluetooth.h"
 #include "bt_app.h"
 #include "queen.h"
 #include "control_app.h"
-#include "QueenExt.h"
 
 /* USER CODE END Includes */
 
@@ -89,14 +87,13 @@ UART_HandleTypeDef huart2;
 osThreadId defaultTaskHandle;
 osThreadId myTask02Handle;
 
-CircleQueueExt AT_queue;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 uint8_t usart1_recbuf, usart2_recbuf;
-uint8_t tim3_delay5s, tim3_delay15s;
+uint8_t tim3_delay5s;
 uint16_t tim14_delay900ms,tim14_delay500ms,tim14_delay10ms, tim14_delay4s,tim14_delay6s;
-uint8_t flag_delay5s, flag_delay1s, flag_sendlock;
+uint8_t flag_delay5s, flag_delay1s, flag_sendlock,flag_delay5s_2;
 uint32_t adc_val[64];
 uint16_t batvol;
 uint64_t rotate_bak, mileage_bak, shake_bak;
@@ -104,6 +101,7 @@ uint64_t rotate_bak, mileage_bak, shake_bak;
 extern uint8_t login_protect_timeout;
 extern uint8_t flag_alarm;
 extern uint8_t flag_delay6s;
+
 
 /* USER CODE END PV */
 
@@ -675,7 +673,6 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
 	InitCircleQueue(&RxUart1_Queue);	                           //初始化队列*/
-	InitCircleQueueExt(&AT_queue);
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_UART_Receive_IT(&huart1, (uint8_t *)&usart1_recbuf, 1);
 	/* Infinite loop */
@@ -770,6 +767,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			flag_alarm = 0;
 			flag_delay6s = 0;
 		}
+		
 	}
 	
 	/* USER CODE END Callback 0 */
@@ -780,20 +778,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   	/* USER CODE BEGIN Callback 1 */
 	if (htim->Instance == htim3.Instance)
 	{
-		tim3_delay15s++;
 		tim3_delay5s++;
 
-		if (tim3_delay15s >= 5)
-		{
-			tim3_delay15s = 0;
-			flag_delay1s = 1;
-		}
 		if (tim3_delay5s >= 5) 
 		{
 			tim3_delay5s = 0;
 			flag_delay5s = 1;
 		}
-
+		flag_delay1s = 1;
+		
 		{
 			diff_rotate = rotate_count - rotate_bak;
 			diff_mileage = mileage_count - mileage_bak;
@@ -804,7 +797,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			mileage_bak = mileage_count;
 			shake_bak = shake_count;
 		}
-		dianchi_refresh_process();
 		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
 
 	}

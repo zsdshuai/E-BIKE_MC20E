@@ -80,12 +80,6 @@ typedef struct
 
 typedef struct
 {
-	uint8_t domainorip[32];
-	uint16_t port;
-}network_struct;
-
-typedef struct
-{
 	uint8_t acc;
 	uint32_t hall;
 	uint32_t lundong;
@@ -145,5 +139,4 @@ void open_dianchi_lock(void);
 
 #define CONFIG_ADDR 0x0800D000
 extern flash_struct g_flash;
-extern network_struct g_net_work;
 #endif

@@ -60,7 +60,7 @@ void bt_send_data(uint8_t* data,uint16_t len)
 
 void bt_prepare_send_data(uint8_t operate, uint8_t param_len, uint8_t* param)
 {
-	uint8_t buffer[128]={0};
+	uint8_t buffer[32]={0};
 	uint32_t ts = GetTimeStamp();
 	uint16_t crc;
 	
@@ -87,7 +87,7 @@ void bt_prepare_send_data(uint8_t operate, uint8_t param_len, uint8_t* param)
 
 void bt_prepare_send_data_ext(uint8_t operate, uint8_t param_len, uint8_t* param)
 {
-	uint8_t buffer[128]={0};
+	uint8_t buffer[32]={0};
 	uint32_t ts = GetTimeStamp();
 	uint16_t crc;
 	
@@ -136,7 +136,7 @@ void read_data(uint8_t operate)
 void send_ok_cmd(uint8_t operate)
 {
 	//char param[6]={0}; 
-  uint8_t param[6]={0};
+  uint8_t param[1]={0};
 	param[0] = 0;
 	bt_prepare_send_data(operate, 1, param);
 }
@@ -192,13 +192,13 @@ void bt_giveback_package(uint8_t operate)
 
 void bt_parse_proc(uint8_t* buf, uint16_t len)
 {
-	uint8_t out[32]={0};
+//	uint8_t out[32]={0};
 	uint16_t crc1,crc2;
 	uint8_t cmd = buf[2];
 	uint32_t timestamp1 = GetTimeStamp();
 	uint32_t timestamp2 = buf[len-8]+buf[len-7]*0x100+buf[len-6]*0x10000+buf[len-5]*0x1000000;
 
-	 hex_convert_str(buf,len,out);
+//	 hex_convert_str(buf,len,out);
 	 	
 	crc1 = get_crc16(buf+1,len-5);
 	crc2 = buf[len-4]+buf[len-3]*0x100;
@@ -227,7 +227,6 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 			{
 				if(lock_bike())
 				{
-			//		upload_ebike_data_package_network();
 					voice_play(VOICE_LOCK);
 					send_ok_cmd(cmd);	
 		  		}
@@ -247,7 +246,6 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 			if(!g_flash.acc)
 			{
 				bt_unlock();
-				upload_ebike_data_package_network();
 				voice_play(VOICE_UNLOCK);
 				send_ok_cmd(cmd);
 			}
@@ -318,7 +316,7 @@ uint8_t get_int_number_two(char * s)
 bool parse_bt_cmd(int8_t* buf, uint16_t len)
 {
 	uint8_t i,*head=NULL,*tail=NULL;
-	uint8_t req[64]={0};
+	uint8_t req[32]={0};
 	uint8_t head_first = 1;
 	bool flag = false;
 

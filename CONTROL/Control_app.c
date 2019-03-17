@@ -10,12 +10,10 @@
 #include "exti.h"
 #include "voice.h"
 #include "adc.h"
-#include "kx023.h"
 //#include "flash.h"
 
 
 flash_struct g_flash;
-network_struct g_net_work;
 
 extern uint32_t diff_rotate,diff_mileage,diff_shake;
 extern battery_info_struct curr_bat;
@@ -119,7 +117,6 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					if(lock_bike())
 					{
-						upload_ebike_data_package_network();
 						voice_play(VOICE_LOCK);
 					}
 				}
@@ -128,7 +125,6 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 					if(!g_flash.acc)
 					{
 						gprs_unlock();
-						upload_ebike_data_package_network();
 						voice_play(VOICE_UNLOCK);
 					}
 				}
@@ -389,13 +385,13 @@ void dianchi_refresh_process(void)
 	{
 		if(get_bat_connect_status() && flag)
 		{
-			printf("BAT CONNECT\r\n");
+			printf("\r\nBAT CONNECT\r\n");
 			upload_ebike_data_package_network();
 			flag = false;
 		}
 		else if(!get_bat_connect_status() && !flag)
 		{
-			printf("BAT DISCONNECT\r\n");
+			printf("\r\nBAT DISCONNECT\r\n");
 			upload_ebike_data_package_network();
 			flag = true;
 		}
@@ -436,10 +432,7 @@ void init_flash(void)
 	read_flash(CONFIG_ADDR,(uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
 	printf("imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d\r\n",g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
 		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen);
-	
-	strcpy(g_net_work.domainorip,"zcwebx.liabar.cn");
-	g_net_work.port = 9000;
-	printf("dom=%s,port=%d\r\n",g_net_work.domainorip,g_net_work.port);	
+		
 		
 	if(g_flash.acc==0xff)
 	{

@@ -266,8 +266,7 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
         hex_convert_str(buf,sum_len,outbuf2);
 	printf("send=%d,%s\r\n",sum_len,outbuf2);
 	
-//	send_data(buf,sum_len);//yxltest
-	pushPackage(buf,sum_len);
+	send_data(buf,sum_len);
 	return sum_len;
 }
 
@@ -691,33 +690,42 @@ void upload_all_data_package(void)
 	if(!get_work_state())
 		return;
 
-	 Logln(D_INFO,"upload_all_data_package");
-	/*if((delay_index+1)%6==0)
-	{
-//		upload_gps_package();
-		upload_alarm_package();
-	}*/
-	if ((delay_index+1)%3 == 0)
+//	Logln(D_INFO,"upload_all_data_package");
+
+	if ((delay_index)%15 == 0)	//15Ãë
 	{
 		upload_gps_package();
-		if((delay_index+1)%6==0)
-		{
-		    upload_alarm_package();
-		} 
 	}
-	else if((delay_index+2)%6==0)
+	else 	if((delay_index+1)%30==0)
+	{
+	    	upload_alarm_package();
+	} 
+	else if((delay_index+2)%30==0)
 	{
 		upload_ebike_data_package();
 	}
-	
-	if(delay_index%10==0)
+	else if((delay_index+3)%60==0)
 	{
 		upload_hb_package();
+	}
+	else
+	{
+		static uint8_t last_acc=0;
+
+		if(last_acc != get_electric_gate_status())
+		{
+			last_acc = get_electric_gate_status();
+			upload_ebike_data_package();
+		}
+		else
+		{
+			dianchi_refresh_process();
+		}
 	}
 	
 	delay_index++;
 
-	if(delay_index>252)
+	if(delay_index>63)
 		delay_index = 0;
 }
 
@@ -801,7 +809,7 @@ bool protocol_proc(char* buf ,int len)
 		case EN_GT_PT_HB: 
 		{	
 			g_hb_send_times = 0;
-			printf ("HB rsp sn ok.......................... \r\n");
+			printf ("HB rsp sn ok################ \r\n");
 			break; 
 		}
 		case EN_GT_PT_ALARM: 					
@@ -840,7 +848,7 @@ bool protocol_proc(char* buf ,int len)
 
 uint8_t protocol_parse(char *pBuf, int len)
 {
-	char req[512]={0};
+	char req[256]={0};
 	int i;
 	char* head,*tail,head_first=1;
 	uint8_t ret=0;

@@ -3,5 +3,6 @@
 
 #include "stm32f0xx_hal.h"
 void voice_play(uint8_t plusenum);
+void voice_process(void);
 
 #endif

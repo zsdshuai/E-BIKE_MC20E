@@ -15,6 +15,7 @@
 
 flash_struct g_flash;
 
+uint32_t last_mileage;
 extern uint32_t diff_rotate,diff_mileage,diff_shake;
 extern battery_info_struct curr_bat;
 extern gps_info_struct gps_info;
@@ -352,9 +353,7 @@ void get_ebike_data(ebike_pkg_struct* ebike_pkg)
 		ebike.bat.voltage = curr_bat.voltage/10;
 	else
 		ebike.bat.voltage = get_bat_vol();
-	
-printf("ebike.bat.voltage=%d\r\n",ebike.bat.voltage);
-	
+		
 	ebike.bat.current= curr_bat.current;
 	ebike.bat.residual_cap= curr_bat.residual_cap;
 	ebike.bat.total_cap= curr_bat.total_cap;
@@ -372,7 +371,14 @@ printf("ebike.bat.voltage=%d\r\n",ebike.bat.voltage);
 
 	g_flash.hall = mileage_count;
 	g_flash.lundong = rotate_count;
-	write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+
+	printf("ebike.bat.voltage=%d,mile=%d,last mile=%d\r\n",ebike.bat.voltage,mileage_count,last_mileage);
+
+	if(mileage_count-last_mileage>100)
+	{
+		last_mileage = mileage_count; 
+		write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+	}
 	
 }
 void dianchi_refresh_process(void)
@@ -449,7 +455,7 @@ void init_flash(void)
 	printf("imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,size=%d\r\n",g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
 		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen,sizeof(flash_struct));
 		
-//	if(g_flash.acc==0)
+	if(g_flash.zd_sen==0)
 	{
 		g_flash.acc = 0;
 		g_flash.hall = 0;

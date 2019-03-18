@@ -704,6 +704,7 @@ void StartTask02(void const * argument)
         uart2_process();
         motorlock_process();
         shake_process();
+	voice_process();
         osDelay(1);
   }
   /* USER CODE END StartTask02 */

@@ -12,23 +12,26 @@ void write_flash(uint32_t write_addr, uint8_t *buffer, uint16_t size)
 {
 //	STMFLASH_Write(write_addr,buffer,size);
 	uint16_t i;
+	uint8_t ret;
 
 	for(i=0; i<size/16; i++)
 	{
-	 	HAL_I2C_Mem_Write(&hi2c1, ADDR_W, write_addr+i*16, I2C_MEMADD_SIZE_8BIT, buffer+i*16, 16, 0x10);
+	 	ret = HAL_I2C_Mem_Write(&hi2c1, ADDR_W, write_addr+i*16, I2C_MEMADD_SIZE_8BIT, buffer+i*16, 16, 0x10);
 		HAL_Delay(1);
-
+		printf("\r\nwrite ret=%d\r\n",ret);
 	}
 
 }
 void read_flash(uint32_t read_addr, uint8_t* buffer, uint16_t size)
 {
 	uint16_t i;
+	uint8_t ret;
 
 	for(i=0; i<size/16; i++)
 	{
-		HAL_I2C_Mem_Read(&hi2c1, ADDR_R, read_addr+i*16, I2C_MEMADD_SIZE_8BIT, buffer+i*16, 16, 0x10);
+		ret = HAL_I2C_Mem_Read(&hi2c1, ADDR_R, read_addr+i*16, I2C_MEMADD_SIZE_8BIT, buffer+i*16, 16, 0x10);
 		HAL_Delay(1);
+		printf("\r\nread ret=%d\r\n",ret);
 	}
 //	STMFLASH_Read(read_addr, buffer,size);   	
 }

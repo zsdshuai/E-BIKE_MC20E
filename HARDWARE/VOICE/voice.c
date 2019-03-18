@@ -8,28 +8,39 @@
 
 extern TIM_HandleTypeDef htim1;
 uint16_t delay_nus;
+uint8_t voice_pluse;
 
 void delay_us(uint32_t n_us);
 
 //语音播放
 void voice_play(uint8_t plusenum)
 {
-	uint8_t i;
-	if (!HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7))
-		return;
-	VOICE_RST_H;
-	delay_us(660);
-	VOICE_RST_L;
-	delay_us(660);
-	
-	for (i = 0; i < plusenum; i++)
+	voice_pluse = plusenum;
+}
+
+void voice_process(void)
+{
+	if(voice_pluse>0)
 	{
-		VOICE_DATA_H;
-		delay_us(330);
-		VOICE_DATA_L;
-		delay_us(330);
+		uint8_t i;
+		if (!HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7))
+			return;
+		VOICE_RST_H;
+		delay_us(660);
+		VOICE_RST_L;
+		delay_us(660);
+		
+		for (i = 0; i < voice_pluse; i++)
+		{
+			VOICE_DATA_H;
+			delay_us(330);
+			VOICE_DATA_L;
+			delay_us(330);
+		}
+		voice_pluse = 0;
 	}
 }
+
 //定时器轮询实现延时n_us,
 void delay_us(uint32_t n_us)  
 {  

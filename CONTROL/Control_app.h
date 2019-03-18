@@ -80,14 +80,14 @@ typedef struct
 
 typedef struct
 {
-	uint8_t acc;
 	uint32_t hall;
 	uint32_t lundong;
 	uint8_t motor;	//0 普通电机 1高速电机
-	uint8_t ld_alarm;
-	uint8_t imei[16];
 	uint8_t zd_alarm;
 	uint8_t zd_sen;
+	uint8_t acc;
+	uint8_t ld_alarm;
+	uint8_t imei[16];
 }flash_struct;
 	
 #pragma pack (1)
@@ -137,6 +137,6 @@ void shake_process(void);
 void init_flash(void);
 void open_dianchi_lock(void);
 
-#define CONFIG_ADDR 0x0800D000
+#define CONFIG_ADDR 0x20	//0x0800D000
 extern flash_struct g_flash;
 #endif

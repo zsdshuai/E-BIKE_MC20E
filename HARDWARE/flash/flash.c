@@ -1,14 +1,35 @@
 #include "flash.h"
 #include "stmflash.h"
+#include "Stm32f0xx_hal_i2c.h"
 
+#define ADDR_W 0xA0
+#define ADDR_R 0xA1
 #define PAGE_SIZE  256    //字节  //每个地址写入为的长度为4个字节，一页为1K字节
 
-void write_flash(uint32_t write_addr, uint16_t *buffer, uint16_t size)
+extern I2C_HandleTypeDef hi2c1;
+
+void write_flash(uint32_t write_addr, uint8_t *buffer, uint16_t size)
 {
 //	STMFLASH_Write(write_addr,buffer,size);
+	uint16_t i;
+
+	for(i=0; i<size/16; i++)
+	{
+	 	HAL_I2C_Mem_Write(&hi2c1, ADDR_W, write_addr+i*16, I2C_MEMADD_SIZE_8BIT, buffer+i*16, 16, 0x10);
+		HAL_Delay(1);
+
+	}
+
 }
-void read_flash(uint32_t read_addr, uint16_t* buffer, uint16_t size)
+void read_flash(uint32_t read_addr, uint8_t* buffer, uint16_t size)
 {
+	uint16_t i;
+
+	for(i=0; i<size/16; i++)
+	{
+		HAL_I2C_Mem_Read(&hi2c1, ADDR_R, read_addr+i*16, I2C_MEMADD_SIZE_8BIT, buffer+i*16, 16, 0x10);
+		HAL_Delay(1);
+	}
 //	STMFLASH_Read(read_addr, buffer,size);   	
 }
 #if 0

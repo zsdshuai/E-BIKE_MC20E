@@ -152,7 +152,7 @@ void bt_unlock(void)
 {	
 	tangze_unlock_bike();
 	g_flash.acc |= BT_OPEN;
-	write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
+	write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 	open_electric_door();
 }
 

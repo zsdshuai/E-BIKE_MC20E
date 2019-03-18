@@ -864,7 +864,7 @@ void module_init(void)
 
 	pure_uart1_buf();
 	
-	HAL_Delay(500);
+	HAL_Delay(2000);
 	Logln(D_INFO, "IOT_module PWR ON \r\n");
 	while(Send_AT_Command(AT_ATE0)==0); 
 	while(Send_AT_Command(AT_IPR)==0);

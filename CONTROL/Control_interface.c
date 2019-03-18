@@ -287,9 +287,10 @@ bool parse_control_cmd(uint8_t* buf, uint16_t len)
 			{
 				memset(g_flash.imei,0,sizeof(g_flash.imei));
 				memcpy(g_flash.imei,head,tail-head);
-				write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
-				printf("write imei=%sOK\r\n",g_flash.imei);
+				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+				printf("write imei=%s----OK\r\n",g_flash.imei);
 				flag = true;
+				HAL_Delay(1000);
 				reset_system();
 			}
 		}

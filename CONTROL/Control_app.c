@@ -76,15 +76,13 @@ bool lock_bike(void)
 	
 	if(!(g_flash.acc&KEY_OPEN)&&(g_flash.acc&(BT_OPEN|GPRS_OPEN)))
 	{
-        printf ("close electric \r\n");
 		if((!zt_smart_check_hall_is_run()&&g_flash.motor==0)||(!zt_smart_check_lundong_is_run()&&g_flash.motor==1))
 		{
-            printf ("close door\r\n");
 			close_electric_door();
 			//tangze_lock_bike();
 			flag_tangze_lock = 1;
             		g_flash.acc = 0;
-			write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
+			write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 			result = true;
 		}
 	}
@@ -97,8 +95,8 @@ void gprs_unlock(void)
 	//tangze_unlock_bike();
 	flag_tangze_unlock = 1;
     	g_flash.acc  |= GPRS_OPEN;
-	write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
-    open_electric_door();
+	write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+    	open_electric_door();
 }
 
 void parse_network_cmd(ebike_cmd_struct *cmd)
@@ -142,7 +140,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					g_flash.zd_sen = cmd->para[0];
 				}
-				write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
+				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 				break;
 			case DIANCHI_CMD:
 				if(cmd->para[0]==1)
@@ -177,7 +175,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				break;
 			case ALARM_CMD:
 				g_flash.ld_alarm = cmd->para[0];
-				write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
+				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 				break;
 			case TIAOSU_CMD:
 				if(cmd->para[0]==0)
@@ -271,13 +269,13 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				if(cmd->para[0]==0)	//普通电机
 				{
 					g_flash.motor = 0;
-					write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
+					write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 					printf("General Motor\n");
 				}
 				else if(cmd->para[0]==1)//高速电机
 				{
 					g_flash.motor = 1;
-					write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
+					write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 					printf("High Speed Motor\n");
 				}
 				break;
@@ -374,7 +372,7 @@ printf("ebike.bat.voltage=%d\r\n",ebike.bat.voltage);
 
 	g_flash.hall = mileage_count;
 	g_flash.lundong = rotate_count;
-	write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
+	write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 	
 }
 void dianchi_refresh_process(void)
@@ -426,15 +424,32 @@ void shake_process(void)
         	}
         }
 }
+void test1()
+{
+	uint8_t i;
+	uint8_t a[]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32},b[32];
+	
+	write_flash(CONFIG_ADDR, a, 32);
+	HAL_Delay(5);
 
+	read_flash(CONFIG_ADDR, b, 32);
+	HAL_Delay(5);
+
+
+	
+	for(i=0;i<32;i++)
+	printf("\r\nb[%d]=%d\r\n",i,b[i]);
+
+}
 void init_flash(void)
 {
-	read_flash(CONFIG_ADDR,(uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
-	printf("imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d\r\n",g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
-		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen);
+//	test1(); return;
+	read_flash(CONFIG_ADDR,(uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+	HAL_Delay(1);
+	printf("imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,size=%d\r\n",g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
+		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen,sizeof(flash_struct));
 		
-		
-	if(g_flash.acc==0xff)
+//	if(g_flash.acc==0)
 	{
 		g_flash.acc = 0;
 		g_flash.hall = 0;
@@ -444,8 +459,11 @@ void init_flash(void)
 		g_flash.zd_alarm = 0;
 		g_flash.zd_sen = 30;
 		memset(g_flash.imei,0,sizeof(g_flash.imei));
-		write_flash(CONFIG_ADDR, (uint16_t*)&g_flash,(uint16_t)sizeof(flash_struct)/2);
+		write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+		HAL_Delay(1);
 	}
+
 	mileage_count = g_flash.hall;
 	rotate_count = g_flash.lundong;
 }
+

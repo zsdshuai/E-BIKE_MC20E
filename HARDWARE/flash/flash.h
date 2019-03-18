@@ -9,8 +9,8 @@ static FLASH_EraseInitTypeDef EraseInitStruct;
 
 //void writeFlash(uint32_t addr, uint32_t data);
 //void readflash(uint32_t addr);
-void write_flash(uint32_t write_addr, uint16_t *buffer, uint16_t size);
-void read_flash(uint32_t read_addr, uint16_t* buffer, uint16_t size);
+void write_flash(uint32_t write_addr, uint8_t *buffer, uint16_t size);
+void read_flash(uint32_t read_addr, uint8_t* buffer, uint16_t size);
 
 
 #endif

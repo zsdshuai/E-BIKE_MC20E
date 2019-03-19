@@ -372,7 +372,7 @@ void get_ebike_data(ebike_pkg_struct* ebike_pkg)
 	g_flash.hall = mileage_count;
 	g_flash.lundong = rotate_count;
 
-	printf("ebike.bat.voltage=%d,mile=%d,last mile=%d\r\n",ebike.bat.voltage,mileage_count,last_mileage);
+	printf("ebike.bat.voltage=%d,mile=%d,last mile=%d,ACC=%d,lock=%d\r\n",ebike.bat.voltage,mileage_count,last_mileage,g_flash.acc,ebike.status.lock);
 
 	if(mileage_count-last_mileage>100)
 	{

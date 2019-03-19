@@ -325,6 +325,14 @@ void parse_at_open_cmd(char* buf)
 		upload_login_package();
 		at_state = AT_LOGINING;
 	}
+	else if(strstr(buf, "ALREADY CONNECT"))
+	{
+		at_state = AT_CONNECTED;
+	}
+	else if(strstr(buf, "CONNECT FAIL"))
+	{
+		at_state = AT_CONNECT;
+	}
 }
 int8_t GetATIndex(AT_CMD cmd)
 {
@@ -649,7 +657,8 @@ void send_data(char* buf, int len)
 	{
 		esc_val = 0x1B;		
 		uart1_send(&esc_val, 1);		
-		Logln(D_INFO, "send data2");			
+		Logln(D_INFO, "send data2");	
+		at_state = AT_CLOSE;
 	}
 }
 
@@ -800,7 +809,7 @@ bool at_parse_recv(void)
 	char* p = NULL;
 	uint8_t rec_len;
 	uint32_t ret=0;
-	HAL_Delay(10);
+	static uint8_t index = 0;
 
   	rec_len = get_uart_data_ext(pbuf, BUFLEN);
 
@@ -832,11 +841,33 @@ bool at_parse_recv(void)
 		
 		if(ret&RET_B0)	//蓝牙接收数据未完成，不清空数据
 		{
+			HAL_Delay(10);
+			index++;
+			Logln(D_INFO,"RET_B0 index = %d",index);
+
+			if(index > 10)	//如果100MS还没接收完全数据，清空数据
+			{
+				index = 0;
+				module_recv_buffer_index = 0;
+			}
 		}
 		else if(ret>0)
 		{
+			index = 0;
 			module_recv_buffer_index = 0;
 			return true;	
+		}
+		else
+		{
+			HAL_Delay(10);
+			index++;
+			Logln(D_INFO,"NONE index = %d",index);
+
+			if(index > 10)	//如果100MS还没接收完全数据，清空数据
+			{
+				index = 0;
+				module_recv_buffer_index = 0;
+			}
 		}
 	}
 
@@ -867,7 +898,10 @@ void module_init(void)
 	HAL_Delay(2000);
 	Logln(D_INFO, "IOT_module PWR ON \r\n");
 	while(Send_AT_Command(AT_ATE0)==0); 
-	while(Send_AT_Command(AT_IPR)==0);
+	if(g_flash.zd_sen == 0)
+	{
+		while(Send_AT_Command(AT_IPR)==0);
+	}
 	while(Send_AT_Command(AT_W)==0);
 	while(Send_AT_Command(AT_ATI)==0);	
 	while(Send_AT_Command(AT_CPIN)==0);
@@ -968,6 +1002,7 @@ void at_process(void)
 			break;
 		case AT_CLOSE:
 			at_close_service();	
+			set_work_state(0);
 			at_state = AT_CONNECT;
 			break;
 		default:

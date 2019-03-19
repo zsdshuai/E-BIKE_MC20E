@@ -270,10 +270,6 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 	return sum_len;
 }
 
-void set_work_state(uint8_t state)
-{
-	net_work_state = state;
-}
 bool get_work_state(void)
 {
 	if(net_work_state==EN_CONNECT_STATE)

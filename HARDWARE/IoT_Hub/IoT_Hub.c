@@ -15,11 +15,11 @@ short module_recv_buffer_index = 0;
 
 gps_info_struct gps_info;
 dev_struct dev_info;
-AT_CMD_STATE at_state=AT_INIT;
 uint8_t login_protect_timeout=0;
 extern uint8_t flag_delay1s;
 extern uint8_t flag_delay5s;
 BT_CONN_STRUCT bt_conn;
+extern work_state net_work_state;
 
 #define DOMAIN "zcwebx.liabar.cn"
 #define PORT 9000
@@ -30,7 +30,6 @@ extern bool parse_bt_cmd(int8_t* buf, uint16_t len);
 void parse_imei_cmd(char* buf, int len);
 void parse_imsi_cmd(char* buf, int len);
 bool parse_gnss_cmd(char* buf, int len);
-void parse_at_open_cmd(char* buf);
 
 
 AT_STRUCT at_pack[]={
@@ -50,7 +49,7 @@ AT_STRUCT at_pack[]={
 	{AT_COPS,"AT+COPS?","OK",300,NULL},
 	{AT_QIMUX,"AT+QIMUX=0","OK",300,NULL},
 	{AT_QIDNSIP,"AT+QIDNSIP=1","OK",300,NULL},
-	{AT_QIOPEN,"","CONNECT OK",3000,parse_at_open_cmd},
+	{AT_QIOPEN,"","CONNECT OK",3000,NULL},
 	{AT_QISEND,"",">",500,NULL},
 	{AT_QRECV,"+QIURC: \"recv\"","OK",300,NULL},
 	{AT_QICLOSE,"AT+QICLOSE","CLOSE OK",300,NULL},
@@ -317,23 +316,6 @@ void parse_gps_data(char* buf)
     //printf("nYear:%d,nMonth:%d,nDay:%d\n",gps_info.dt.nYear,gps_info.dt.nMonth,gps_info.dt.nDay);
 }
 
-void parse_at_open_cmd(char* buf)
-{
-	Logln(D_INFO, "%s",buf);
-	if(strstr(buf, "CONNECT OK"))
-	{
-		upload_login_package();
-		at_state = AT_LOGINING;
-	}
-	else if(strstr(buf, "ALREADY CONNECT"))
-	{
-		at_state = AT_CONNECTED;
-	}
-	else if(strstr(buf, "CONNECT FAIL"))
-	{
-		at_state = AT_CONNECT;
-	}
-}
 int8_t GetATIndex(AT_CMD cmd)
 {
 	int8_t i=0;
@@ -417,6 +399,7 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	HAL_Delay(at_pack[i].timeout);
 
 	len = get_uart_data(buf, sizeof(buf));
+	Logln(D_INFO, "rcv %s", buf);
 
 	if(strstr(buf,at_pack[i].cmd_ret))
 	{
@@ -425,11 +408,6 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 			at_pack[i].fun(buf,len);
 		}
 		ret = 1;
-	}
-	else
-	{
-		end = 0x1b;
-		HAL_UART_Transmit(&huart1, &end, 1,0xffff); 
 	}
 	return ret;
 }
@@ -453,6 +431,7 @@ uint8_t Send_AT_Command_ext(AT_CMD cmd)
 	HAL_Delay(at_pack[i].timeout);
 
 	len = get_uart_data_ext(buf, sizeof(buf));
+	Logln(D_INFO, "ext rcv %s", buf);
 
 	if(strstr(buf,at_pack[i].cmd_ret))
 	{
@@ -462,11 +441,8 @@ uint8_t Send_AT_Command_ext(AT_CMD cmd)
 		}
 		ret = 1;
 	}
-	else
-	{
-		end = 0x1b;
-		HAL_UART_Transmit(&huart1, &end, 1,0xffff); 
-	}
+
+	return ret;
 }
 
 int find(char* buf, int count, char* substr)
@@ -568,7 +544,6 @@ int get_uart_data(char*buf, int count)
 	{
 		if (count >= ulen)
 		{
-			Logln(D_INFO,"%s",module_recv_buffer);
 			memcpy(buf, module_recv_buffer, ulen);
 			buf[ulen] = 0;
 			module_recv_buffer_index = 0;
@@ -658,7 +633,6 @@ void send_data(char* buf, int len)
 		esc_val = 0x1B;		
 		uart1_send(&esc_val, 1);		
 		Logln(D_INFO, "send data2");	
-		at_state = AT_CLOSE;
 	}
 }
 
@@ -777,7 +751,7 @@ bool parse_another_cmd(char* buf, int len)
 	if(strstr(buf,"CLOSED") || strstr(buf,"CONNECT FAIL"))
 	{//NETWORD disconnect
 		Logln(D_INFO,"CLOSED ---%s",buf);
-		at_state = AT_CLOSE;
+		net_work_state=EN_INIT_STATE;
 		ret = true;
 	}
 	else if(tmp1 = strstr(buf,"+CMS ERROR:"))
@@ -794,6 +768,22 @@ bool parse_another_cmd(char* buf, int len)
 	{
 
 	}
+	else if(strstr(buf, "CONNECT OK"))
+	{
+		upload_login_package();
+	}
+	else if(strstr(buf, "ALREADY CONNECT"))
+	{
+		net_work_state=EN_CONNECT_STATE;
+	}
+	else if(strstr(buf, "CONNECT FAIL"))
+	{
+		net_work_state=EN_INIT_STATE;
+	}
+	else if(strstr(buf,"RDY"))
+	{
+		module_init();	
+	}
 	else if(strstr(buf,"RING"))
 	{
 		ret = true;
@@ -809,7 +799,6 @@ bool at_parse_recv(void)
 	char* p = NULL;
 	uint8_t rec_len;
 	uint32_t ret=0;
-	static uint8_t index = 0;
 
   	rec_len = get_uart_data_ext(pbuf, BUFLEN);
 
@@ -841,37 +830,20 @@ bool at_parse_recv(void)
 		
 		if(ret&RET_B0)	//蓝牙接收数据未完成，不清空数据
 		{
-			HAL_Delay(10);
-			index++;
-			Logln(D_INFO,"RET_B0 index = %d",index);
-
-			if(index > 10)	//如果100MS还没接收完全数据，清空数据
-			{
-				index = 0;
-				module_recv_buffer_index = 0;
-			}
+			return false;
 		}
 		else if(ret>0)
 		{
-			index = 0;
 			module_recv_buffer_index = 0;
 			return true;	
 		}
 		else
 		{
-			HAL_Delay(10);
-			index++;
-			Logln(D_INFO,"NONE index = %d",index);
-
-			if(index > 10)	//如果100MS还没接收完全数据，清空数据
-			{
-				index = 0;
-				module_recv_buffer_index = 0;
-			}
+			return false;
 		}
 	}
 
-	return false;
+	return true;
 }
 
 void bt_init(void)
@@ -927,7 +899,7 @@ void at_connect_service(void)
 
 	Logln(D_INFO,"%s,%d",DOMAIN,PORT);
 	sprintf(at_pack[i].cmd_txt,"AT+QIOPEN=\"TCP\",\"%s\",%d",DOMAIN,PORT);
-	Send_AT_Command(AT_QIOPEN);
+	Send_AT_Command_ext(AT_QIOPEN);
 }
 void AT_reconnect_service(void)
 {
@@ -955,7 +927,7 @@ void send_gps_gsv_cmd(void)
 	Send_AT_Command_ext(AT_QGPS_GSV);
 }
 
-void at_connect_process(void)
+void at_connected_process(void)
 {
   	if (flag_delay1s == 1) 
 	{
@@ -968,45 +940,32 @@ void at_connect_process(void)
 		send_gps_rmc_cmd();
 		send_gps_gsv_cmd();
 	}
-
-	at_parse_recv();
 }
 
 void at_process(void)
-{
-	HAL_Delay(10);
-	
-	switch(at_state)
+{	
+	if(net_work_state==EN_INIT_STATE)
 	{
-		case AT_INIT:
-			module_init();
-			at_state = AT_CONNECT;
-			break;
-		case AT_CONNECT:
-			at_connect_service();
-			break;
-		case AT_LOGINING:
-			at_parse_recv();
-			if(get_work_state())
-			{
-				at_state = AT_CONNECTED;
-			}
-			else if(login_protect_timeout)
-			{
-				at_state = AT_LOGINING;
-			}
-			
-			break;
-		case AT_CONNECTED:
-			at_connect_process();
-			break;
-		case AT_CLOSE:
-			at_close_service();	
-			set_work_state(0);
-			at_state = AT_CONNECT;
-			break;
-		default:
-			break;
+	//	at_close_service();
+		at_connect_service();
 	}
+	else if(net_work_state==EN_LOGING_STATE)
+	{
+
+	}
+	else if(net_work_state==EN_CONNECT_STATE)
+	{
+		at_connected_process();
+	}
+	if(!at_parse_recv())	//数据没接收完全，等待100ms再接收
+	{
+		HAL_Delay(100);
+		if(!at_parse_recv())	//如果还没接收完全，清空接收buffer
+		{
+			module_recv_buffer_index = 0;
+		}
+			
+	}
+	HAL_Delay(50);
 }
    

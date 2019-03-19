@@ -121,7 +121,7 @@ static void MX_RTC_Init(void);
 void StartDefaultTask(void const * argument);
 void StartTask02(void const * argument);
 extern void MODULE_RST(void);
-
+extern void module_init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -675,6 +675,7 @@ void StartDefaultTask(void const * argument)
 	InitCircleQueue(&RxUart1_Queue);	                           //初始化队列*/
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_UART_Receive_IT(&huart1, (uint8_t *)&usart1_recbuf, 1);
+	module_init();
 	/* Infinite loop */
 	for(;;)
 	{

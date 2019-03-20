@@ -808,13 +808,8 @@ bool parse_another_cmd(char* buf, int len)
 	char* tmp1=NULL,*tmp2 = NULL;
 
 //	Logln(D_INFO,"parse_another_cmd");	
-	if(datafind(buf,len,"CLOSED") || datafind(buf,len,"CONNECT FAIL"))
-	{//NETWORD disconnect
-		Logln(D_INFO,"CLOSED ---%s",buf);
-		net_work_state=EN_INIT_STATE;
-		ret = true;
-	}
-	else if(tmp1 = datafind(buf,len,"+CMS ERROR:"))
+
+	if(tmp1 = datafind(buf,len,"+CMS ERROR:"))
 	{
 		char data[6]={0};
 		int err;
@@ -836,10 +831,6 @@ bool parse_another_cmd(char* buf, int len)
 	{
 		net_work_state=EN_CONNECT_STATE;
 	}
-	else if(datafind(buf, len,"CONNECT FAIL"))
-	{
-		net_work_state=EN_INIT_STATE;
-	}
 	else if(datafind(buf,len,"RDY"))
 	{
 		module_init();	
@@ -848,7 +839,12 @@ bool parse_another_cmd(char* buf, int len)
 	{
 		ret = true;
 	}
-
+	else if(datafind(buf,len,"CLOSED") || datafind(buf,len,"CONNECT FAIL"))
+	{//NETWORD disconnect
+		Logln(D_INFO,"CLOSED ---%s",buf);
+		net_work_state=EN_INIT_STATE;
+		ret = true;
+	}
 	return ret;
 }
 

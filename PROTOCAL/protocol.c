@@ -223,7 +223,7 @@ uint16_t kfd_get_sn(void)
 uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context_len)
 {
 	char buf[128]={0};
-	char outbuf2[128]={0};
+//	char outbuf2[128]={0};
 	uint16_t* crc = NULL;
 	uint8_t crc_len,sum_len = 0;
 	pkg_head_struct head;
@@ -263,8 +263,8 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 	
 	sum_len = sizeof(pkg_head_struct)+context_len+sizeof(pkg_tail_struct);		
 
-        hex_convert_str(buf,sum_len,outbuf2);
-	printf("send=%d,%s\r\n",sum_len,outbuf2);
+//        hex_convert_str(buf,sum_len,outbuf2);
+//	printf("send=%d,%s\r\n",sum_len,outbuf2);
 	
 	send_data(buf,sum_len);
 	return sum_len;
@@ -765,7 +765,7 @@ void parse_dev_data(data_pkg_struct* data)
 bool protocol_proc(char* buf ,int len)
 {	
 	pkg_head_struct* head;
-	char out[256]={0};
+//	char out[256]={0};
 	int crc1,crc2;
 
 	if (buf == NULL)
@@ -776,7 +776,7 @@ bool protocol_proc(char* buf ,int len)
 
 	crc2 = buf[2]*0x100+buf[3];
 	crc1 = get_crc16(buf+4, len-6);
-	hex_convert_str(buf,len, out);
+//	hex_convert_str(buf,len, out);
 //	trace(out,strlen(out));
     //printf("rcv=%s\n",out);
 

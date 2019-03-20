@@ -30,6 +30,7 @@ extern bool parse_bt_cmd(int8_t* buf, uint16_t len);
 void parse_imei_cmd(char* buf, int len);
 void parse_imsi_cmd(char* buf, int len);
 bool parse_gnss_cmd(char* buf, int len);
+void parse_location_cmd(char* buf, int len);
 
 
 AT_STRUCT at_pack[]={
@@ -43,9 +44,9 @@ AT_STRUCT at_pack[]={
 	{AT_GSN,"AT+GSN","OK",300,parse_imei_cmd},
 	{AT_CIMI,"AT+CIMI","OK",300,parse_imsi_cmd},
 	{AT_QIMODE,"AT+QIMODE=0","OK",300,NULL},
-	{AT_QICSP,"AT+QICSGP=1,\"CMNET\",\"\",\"\"","OK",300,NULL},
+	{AT_QICSGP,"AT+QICSGP=1,\"CMNET\",\"\",\"\"","OK",300,NULL},
 	{AT_QIREGAPP,"AT+QIREGAPP","OK",300,NULL},
-	{AT_QIACT,"AT+QIACT","OK",1000,NULL},
+	{AT_QIACT,"AT+QIACT","OK",3000,NULL},
 	{AT_COPS,"AT+COPS?","OK",300,NULL},
 	{AT_QIMUX,"AT+QIMUX=0","OK",300,NULL},
 	{AT_QIDNSIP,"AT+QIDNSIP=1","OK",300,NULL},
@@ -54,10 +55,18 @@ AT_STRUCT at_pack[]={
 	{AT_QRECV,"+QIURC: \"recv\"","OK",300,NULL},
 	{AT_QICLOSE,"AT+QICLOSE","CLOSE OK",300,NULL},
 	{AT_QPING,"AT+QPING=1,\"zcwebx.liabar.cn\",4,1","OK",300,NULL},
+	
 	{AT_QGPS_ON,"AT+QGNSSC=1","OK",300,NULL},
 	{AT_QGPS_OFF,"AT+QGNSSC=0","OK",300,NULL},
 	{AT_QGPS_RMC,"AT+QGNSSRD=\"NMEA/RMC\"","OK",500,NULL},
 	{AT_QGPS_GSV,"AT+QGNSSRD=\"NMEA/GSV\"","OK",500,NULL},	
+	{AT_QIFGCNT1,"AT+QIFGCNT=1","OK",300,NULL},
+	{AT_QIFGCNT2,"AT+QIFGCNT=2","OK",300,NULL},	
+	{AT_QGNSSTS,"AT+QGNSSTS?","OK",500,NULL},	
+	{AT_QGNSSEPO,"AT+QGNSSEPO=1","OK",500,NULL},	
+	{AT_QGEPOAID,"AT+QGEPOAID","OK",500,NULL},	
+	{AT_QGEPOF,"", "OK", 500,NULL},
+	
 	{AT_BT_ON,"AT+QBTPWR=1","OK",3000,NULL},
 	{AT_BT_OFF,"AT+QBTPWR=0","OK",300,NULL},
 	{AT_BT_ADDR,"AT+QBTLEADDR?","OK",300,NULL},
@@ -92,6 +101,20 @@ void MODULE_PWRON(void)
 	HAL_Delay(100);
 }
 
+char* datafind(char* data, int len, char* find)
+{
+	int i;
+
+	for(i=0; i<len; i++)
+	{
+		if(*(data+i)==*find)
+		{
+			return strstr(data+i,find);
+		}
+	}
+
+	return NULL;
+}
 void pure_uart1_buf(void)
 {
 	Logln(D_INFO, "pure_uart1_buf");		
@@ -191,6 +214,14 @@ char GetLastSnr(char* buf)
 
 	return atoi(tmp);
 }
+void parse_location_cmd(char* buf, int len)
+{
+	char* tmp;
+	if(tmp=strstr(buf, "+QGREFLOC:"))
+	{
+		Logln(D_INFO,"%s",tmp);
+	}
+}
 bool parse_gnss_cmd(char* buf, int len)
 {
 	char* pnmea = buf;
@@ -199,7 +230,7 @@ bool parse_gnss_cmd(char* buf, int len)
 	bool ret = false;
 
 //	Logln(D_INFO, "parse_gnss_cmd");
-	if((tmp1=strstr(pnmea+1,"GPRMC"))||(tmp2=strstr(pnmea+1,"GNRMC")))
+	if((tmp1=datafind(pnmea+1,len,"GPRMC"))||(tmp2=datafind(pnmea+1,len,"GNRMC")))
 	{
 		if(tmp1)
 			pnmea = tmp1;
@@ -229,18 +260,25 @@ bool parse_gnss_cmd(char* buf, int len)
 		Logln(D_INFO,"lat=%f,lon=%f",gps_info.latitude,gps_info.longitude);
 		ret = true;
 	}
-	if(strncmp(pnmea+1,"GPGGA",5)==0||strncmp(pnmea+1,"GNGGA",5)==0)
+	if((tmp1=datafind(pnmea+1,len,"GPGGA"))||(tmp2=datafind(pnmea+1,len,"GNGGA")))
 	{
 		//$GPGGA,085118.00,2235.87223,N,11359.99731,E,1,03,4.72,138.3,M,-2.6,M,,*4B
+		if(tmp1)
+			pnmea = tmp1;
+		else if(tmp2)
+			pnmea = tmp2;
 	    	gps_info.sat_uesd = (char)get_double_number(&pnmea[GetComma(7,pnmea)]);
 		gps_info.hdop = get_double_number(&pnmea[GetComma(8,pnmea)]);;
 		gps_info.altitude = get_double_number(&pnmea[GetComma(9,pnmea)]);
 		ret = true;
 	}
-	if(strncmp(pnmea+1,"GPGSV",5)==0)
+	if(tmp1 = datafind(pnmea+1,len,"GPGSV"))
 	{
 		char n,isat, isi, nsat;
 		//$GPGSV,5,1,17,01,45,168,19,03,00,177,,07,53,321,08,08,53,014,*7C
+
+		if(tmp1)
+			pnmea = tmp1;
 		gps_info.sat_view = (char)get_double_number(&pnmea[GetComma(3,pnmea)]);
 		n = (char)get_double_number(&pnmea[GetComma(2,pnmea)]);
 		nsat = (n-1)*4;
@@ -260,14 +298,19 @@ bool parse_gnss_cmd(char* buf, int len)
 
 		ret = true;
 	}
-	if(strncmp(pnmea+1,"GPGLL",5)==0)
+	if(datafind(pnmea+1,len,"GPGLL"))
 	{
 		//$GPGLL,4250.5589,S,14718.5084,E,092204.999,A*2D
 		ret = true;
 	}
-	if(strncmp(pnmea+1,"GPGSA",5)==0||strncmp(pnmea+1,"GNGSA",5)==0)
+	if((tmp1=datafind(pnmea+1,len,"GPGSA"))||(tmp2=datafind(pnmea+1,len,"GNGSA")))
 	{
 		//$GPGSA,A,3,01,20,19,13,,,,,,,,,40.4,24.4,32.2*0A
+		if(tmp1)
+			pnmea = tmp1;
+		else if(tmp2)
+			pnmea = tmp2;
+		
 		gps_info.type = pnmea[GetComma(2,pnmea)]-'0';
 		if(gps_info.type==2)
 		{
@@ -275,7 +318,7 @@ bool parse_gnss_cmd(char* buf, int len)
 		}
 		ret = true;
 	}
-	if(strncmp(pnmea+1,"GPVTG",5)==0)
+	if(datafind(pnmea+1,len,"GPVTG"))
 	{
 		//$GPVTG,89.68,T,,M,0.00,N,0.0,K*5F
 		ret = true;
@@ -399,7 +442,7 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	HAL_Delay(at_pack[i].timeout);
 
 	len = get_uart_data(buf, sizeof(buf));
-	Logln(D_INFO, "rcv %s", buf);
+	Logln(D_INFO, "rcv %d,%s", len,buf);
 
 	if(strstr(buf,at_pack[i].cmd_ret))
 	{
@@ -431,9 +474,9 @@ uint8_t Send_AT_Command_ext(AT_CMD cmd)
 	HAL_Delay(at_pack[i].timeout);
 
 	len = get_uart_data_ext(buf, sizeof(buf));
-	Logln(D_INFO, "ext rcv %s", buf);
+	Logln(D_INFO, "ext rcv %d,%s", len,buf);
 
-	if(strstr(buf,at_pack[i].cmd_ret))
+	if(datafind(buf,len,at_pack[i].cmd_ret))
 	{
 		if(at_pack[i].fun)
 		{
@@ -442,7 +485,7 @@ uint8_t Send_AT_Command_ext(AT_CMD cmd)
 		ret = 1;
 	}
 
-	return ret;
+	return 1;//ret;
 }
 
 int find(char* buf, int count, char* substr)
@@ -636,6 +679,23 @@ void send_data(char* buf, int len)
 	}
 }
 
+void QGEPOF1(void)
+{
+	int8_t i;
+	
+	i = GetATIndex(AT_QGEPOF);
+	strcpy(at_pack[i].cmd_txt, "AT+QGEPOF=0,255");
+	Send_AT_Command(AT_QGEPOF);
+}
+void QGEPOF2(void)
+{
+	int8_t i;
+	
+	i = GetATIndex(AT_QGEPOF);
+	strcpy(at_pack[i].cmd_txt, "AT+QGEPOF=2");
+	Send_AT_Command(AT_QGEPOF);
+}
+
 void bt_name_modify(char* name)
 {
 	int8_t i;
@@ -652,7 +712,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 	RET_TYPE ret = 0;
 
 //	Logln(D_INFO,"parse_bt_at_cmd");	
-	if(tmp=strstr(buf,"+QBTGATSCON:"))
+	if(tmp=datafind(buf,len,"+QBTGATSCON:"))
 	{/*+QBTGATSCON: 1,"A001",0,3DD098833C4B,1*/
 		char state;
 
@@ -676,7 +736,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 			ret |= RET_B0;
 		}
 	}
-	else if(tmp=strstr(buf,"+QBTGATWREQ:"))
+	else if(tmp=datafind(buf,len,"+QBTGATWREQ:"))
 	{/*+QBTGATWREQ: "A001",1,16,4746D5A60659,258,56,1,0,0*/
 
 		if(strstr(tmp,"\r\n"))
@@ -708,7 +768,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 		}
 		
 	}
-	else if(tmp=strstr(buf,"+QBTGATRREQ:"))
+	else if(tmp=datafind(buf,len,"+QBTGATRREQ:"))
 	{
 		int8_t i = GetATIndex(AT_QBTGATSRSP);
 		
@@ -725,7 +785,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 			ret |= RET_B0;
 		}
 	}
-	else if(tmp=strstr(buf,"+QBTGATSRSP:"))
+	else if(tmp=datafind(buf,len,"+QBTGATSRSP:"))
 	{/*+QBTGATSRSP: 0,"A001",1,258*/
 		if(strstr(tmp,"\r\n"))
 		{
@@ -748,13 +808,13 @@ bool parse_another_cmd(char* buf, int len)
 	char* tmp1=NULL,*tmp2 = NULL;
 
 //	Logln(D_INFO,"parse_another_cmd");	
-	if(strstr(buf,"CLOSED") || strstr(buf,"CONNECT FAIL"))
+	if(datafind(buf,len,"CLOSED") || datafind(buf,len,"CONNECT FAIL"))
 	{//NETWORD disconnect
 		Logln(D_INFO,"CLOSED ---%s",buf);
 		net_work_state=EN_INIT_STATE;
 		ret = true;
 	}
-	else if(tmp1 = strstr(buf,"+CMS ERROR:"))
+	else if(tmp1 = datafind(buf,len,"+CMS ERROR:"))
 	{
 		char data[6]={0};
 		int err;
@@ -764,27 +824,27 @@ bool parse_another_cmd(char* buf, int len)
 		Logln(D_INFO,"ERROR code = %d",err);
 		ret = true;
 	}
-	else if(tmp1 = strstr(buf,"+CME ERROR:"))
+	else if(tmp1 = datafind(buf,len,"+CME ERROR:"))
 	{
 
 	}
-	else if(strstr(buf, "CONNECT OK"))
+	else if(datafind(buf, len,"CONNECT OK"))
 	{
 		upload_login_package();
 	}
-	else if(strstr(buf, "ALREADY CONNECT"))
+	else if(datafind(buf, len,"ALREADY CONNECT"))
 	{
 		net_work_state=EN_CONNECT_STATE;
 	}
-	else if(strstr(buf, "CONNECT FAIL"))
+	else if(datafind(buf, len,"CONNECT FAIL"))
 	{
 		net_work_state=EN_INIT_STATE;
 	}
-	else if(strstr(buf,"RDY"))
+	else if(datafind(buf,len,"RDY"))
 	{
 		module_init();	
 	}
-	else if(strstr(buf,"RING"))
+	else if(datafind(buf,len,"RING"))
 	{
 		ret = true;
 	}
@@ -796,7 +856,6 @@ bool parse_another_cmd(char* buf, int len)
 bool at_parse_recv(void)
 {
 	char pbuf[BUFLEN]={0};
-	char* p = NULL;
 	uint8_t rec_len;
 	uint32_t ret=0;
 
@@ -810,22 +869,18 @@ bool at_parse_recv(void)
 			ret |=RET_P;
 		}
 
-	//去掉前面的0，有时来了非法数据，前面有0不能用strstr
-		p = pbuf;
-		while(*p=='\0')p++;
-
 	//只收到应答，要清空数据
-		if(strstr(pbuf, "OK") || strstr(pbuf, "SEND OK") || strstr(pbuf, "SEND FAIL")|| strstr(pbuf, "ERROR"))
+		if(datafind(pbuf, rec_len,"OK") || datafind(pbuf, rec_len,"SEND OK") || datafind(pbuf, rec_len,"SEND FAIL")|| datafind(pbuf,rec_len, "ERROR"))
 			ret |=RET_A;
 
 	//蓝牙连接，接收数据	
-		ret |= parse_bt_at_cmd(p, rec_len);
+		ret |= parse_bt_at_cmd(pbuf, rec_len);
 	
 	//模块自主通知的事件	
-		if(parse_another_cmd(p, rec_len))
+		if(parse_another_cmd(pbuf, rec_len))
 			ret |=RET_AN;
 
-		if(parse_gnss_cmd(p,rec_len))
+		if(parse_gnss_cmd(pbuf,rec_len))
 			ret |= RET_G;
 		
 		if(ret&RET_B0)	//蓝牙接收数据未完成，不清空数据
@@ -880,14 +935,23 @@ void module_init(void)
 	while(Send_AT_Command(AT_GSN)==0);
 	while(Send_AT_Command(AT_CIMI)==0);
 	while(Send_AT_Command(AT_CREG)==0);
-	while(Send_AT_Command(AT_QGPS_ON)==0);     
+	while(Send_AT_Command(AT_QGPS_ON)==0);   
 	bt_init();
 	while(Send_AT_Command(AT_CSQ)==0);
 	while(Send_AT_Command(AT_QIMODE)==0);
-	while(Send_AT_Command(AT_QICSP)==0);	
+	while(Send_AT_Command(AT_QICSGP)==0);     
 	while(Send_AT_Command(AT_QIREGAPP)==0);	
 	while(Send_AT_Command(AT_QIACT)==0);		
 	while(Send_AT_Command(AT_COPS)==0);
+	while(Send_AT_Command(AT_QIFGCNT2)==0);     
+	while(Send_AT_Command(AT_QGNSSTS)==0);     
+	while(Send_AT_Command(AT_QGNSSEPO)==0);     
+	while(Send_AT_Command(AT_QGEPOAID)==0);  
+	QGEPOF1();
+	QGEPOF2();
+	while(Send_AT_Command(AT_QGPS_GSV)==0);
+	
+	while(Send_AT_Command(AT_QIFGCNT1)==0);     
 	while(Send_AT_Command(AT_QIDNSIP)==0);
 
 	Logln(D_INFO,"Init Complete");

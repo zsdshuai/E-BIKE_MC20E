@@ -649,15 +649,14 @@ char* get_imsi(void)
 }
 void send_data(char* buf, int len)
 {    	
-	char cmd[64]={0};	
 	char buffer[BUFLEN]={0};
 	uint8_t esc_val = 0;	
 	int i,lenth;	
 	
-	sprintf(cmd,"AT+QISEND=%d",len);	
 	i = GetATIndex(AT_QISEND);	
-	strcpy(at_pack[i].cmd_txt,cmd);
-	
+	memset(at_pack[i].cmd_txt, 0, sizeof(at_pack[i].cmd_txt));
+	sprintf(at_pack[i].cmd_txt,"AT+QISEND=%d",len);
+	Logln(D_INFO, "send data %d byte", len);
 	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
 	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),0xffff); 
 	UART_SendString("\r\n");

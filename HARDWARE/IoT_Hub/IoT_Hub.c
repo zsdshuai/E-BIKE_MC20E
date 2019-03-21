@@ -20,6 +20,10 @@ extern uint8_t flag_delay1s;
 extern uint8_t flag_delay5s;
 BT_CONN_STRUCT bt_conn;
 extern work_state net_work_state;
+uint8_t bt_rsp_flag=0;
+uint8_t bt_cmd_flag=0;	//蓝牙业务命令标志
+uint8_t bt_cmd_data[20];
+uint8_t bt_cmd_len;
 
 #define DOMAIN "zcwebx.liabar.cn"
 #define PORT 9000
@@ -60,6 +64,7 @@ AT_STRUCT at_pack[]={
 	{AT_QGPS_OFF,"AT+QGNSSC=0","OK",300,NULL},
 	{AT_QGPS_RMC,"AT+QGNSSRD=\"NMEA/RMC\"","OK",500,NULL},
 	{AT_QGPS_GSV,"AT+QGNSSRD=\"NMEA/GSV\"","OK",500,NULL},	
+	{AT_QGNSSRD,"AT+QGNSSRD?","OK",500,NULL},	
 	{AT_QIFGCNT1,"AT+QIFGCNT=1","OK",300,NULL},
 	{AT_QIFGCNT2,"AT+QIFGCNT=2","OK",300,NULL},	
 	{AT_QGNSSTS,"AT+QGNSSTS?","OK",500,NULL},	
@@ -455,12 +460,11 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	return ret;
 }
 
-uint8_t Send_AT_Command_ext(AT_CMD cmd)
+void Send_AT_Command_ext(AT_CMD cmd)
 {
-	char buf[BUFLEN]={0};
 	int len;
 	uint8_t end;	
-	int8_t i=GetATIndex(cmd), ret=0;
+	int8_t i=GetATIndex(cmd);
 
 	if(i==-1)
 		Logln(D_INFO, "error cmd");
@@ -472,20 +476,6 @@ uint8_t Send_AT_Command_ext(AT_CMD cmd)
 	UART_SendString("\r\n");
 
 	HAL_Delay(at_pack[i].timeout);
-
-	len = get_uart_data_ext(buf, sizeof(buf));
-	Logln(D_INFO, "ext rcv %d,%s", len,buf);
-
-	if(datafind(buf,len,at_pack[i].cmd_ret))
-	{
-		if(at_pack[i].fun)
-		{
-			at_pack[i].fun(buf,len);
-		}
-		ret = 1;
-	}
-
-	return 1;//ret;
 }
 
 int find(char* buf, int count, char* substr)
@@ -660,13 +650,21 @@ char* get_imsi(void)
 void send_data(char* buf, int len)
 {    	
 	char cmd[64]={0};	
+	char buffer[BUFLEN]={0};
 	uint8_t esc_val = 0;	
-	int i;	
+	int i,lenth;	
 	
 	sprintf(cmd,"AT+QISEND=%d",len);	
 	i = GetATIndex(AT_QISEND);	
 	strcpy(at_pack[i].cmd_txt,cmd);
-	if(Send_AT_Command_ext(AT_QISEND))
+	
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
+	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),0xffff); 
+	UART_SendString("\r\n");
+	HAL_Delay(at_pack[i].timeout);
+
+	lenth = get_uart_data_ext(buffer, BUFLEN);
+	if(datafind(buffer, lenth, at_pack[i].cmd_ret))
 	{		
 		uart1_send(buf, len);
 		Logln(D_INFO, "send data1");
@@ -718,17 +716,27 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 
 		if(strstr(tmp,"\r\n"))
 		{
-			Logln(D_INFO,"RCV +QBTGATSCON:----------0-T");
+			Logln(D_INFO,"RCV +QBTGATSCON:----------0\r\n%s",tmp);
 			state = tmp[GetComma(1,tmp)-2];
 			if(state=='1')
 			{
-				Logln(D_INFO,"BT CONNECT");
+				if(strstr(tmp,"+QBTGATWREQ:"))	//连接成功要等待+QBTGATWREQ:接收
+				{
+					Logln(D_INFO,"BT CONNECT");
+					Logln(D_INFO,"RCV +QBTGATSCON:----------0-T");
+					ret |= RET_B1;
+				}
+				else
+				{
+					Logln(D_INFO,"RCV +QBTGATSCON:----------0-F");
+					ret |= RET_B0;
+				}
 			}
 			else
 			{
 				Logln(D_INFO,"BT DISCONNECT");
+				ret |= RET_B1;
 			}
-			ret |= RET_B1;
 		}
 		else
 		{
@@ -736,7 +744,8 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 			ret |= RET_B0;
 		}
 	}
-	else if(tmp=datafind(buf,len,"+QBTGATWREQ:"))
+	
+	if(tmp=datafind(buf,len,"+QBTGATWREQ:"))
 	{/*+QBTGATWREQ: "A001",1,16,4746D5A60659,258,56,1,0,0*/
 
 		if(strstr(tmp,"\r\n"))
@@ -752,13 +761,11 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 		
 			len = tmp2-tmp1;
 			str_convert_hex(tmp1,len,data);
-			if(!parse_bt_cmd(data, len/2))
-			{
-				int8_t i = GetATIndex(AT_QBTGATSRSP);
-		
-				memcpy(at_pack[i].cmd_txt, "AT+QBTGATSRSP=\"A001\",0,1,15,258,\"0000\"",strlen("AT+QBTGATSRSP=\"A001\",0,1,15,258,\"0000\""));
-				Send_AT_Command_ext(AT_QBTGATSRSP);
-			}
+			memset(bt_cmd_data, 0, sizeof(bt_cmd_data));
+			memcpy(bt_cmd_data, data, len/2);
+			bt_cmd_len = len/2;
+			bt_cmd_flag = 1;
+			
 			ret |= RET_B1;
 		}
 		else
@@ -768,14 +775,11 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 		}
 		
 	}
-	else if(tmp=datafind(buf,len,"+QBTGATRREQ:"))
+	if(tmp=datafind(buf,len,"+QBTGATRREQ:"))
 	{
-		int8_t i = GetATIndex(AT_QBTGATSRSP);
-		
-		memcpy(at_pack[i].cmd_txt, "AT+QBTGATSRSP=\"A001\",0,1,15,258,\"0000\"",strlen("AT+QBTGATSRSP=\"A001\",0,1,15,258,\"0000\""));
-		Send_AT_Command_ext(AT_QBTGATSRSP);
 		if(strstr(tmp,"\r\n"))
 		{
+			bt_rsp_flag = 1;
 			Logln(D_INFO,"RCV +QBTGATRREQ:---------2-T");
 			ret |= RET_B1;
 		}
@@ -785,7 +789,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 			ret |= RET_B0;
 		}
 	}
-	else if(tmp=datafind(buf,len,"+QBTGATSRSP:"))
+	if(tmp=datafind(buf,len,"+QBTGATSRSP:"))
 	{/*+QBTGATSRSP: 0,"A001",1,258*/
 		if(strstr(tmp,"\r\n"))
 		{
@@ -986,6 +990,39 @@ void send_gps_gsv_cmd(void)
 	
 	Send_AT_Command_ext(AT_QGPS_GSV);
 }
+void send_gps_QGNSSRD_cmd(void)
+{
+	int8_t i = GetATIndex(AT_QGNSSRD);
+	
+	Send_AT_Command_ext(AT_QGNSSRD);
+}
+
+void send_bt_rsp_cmd(void)
+{
+	int8_t i = GetATIndex(AT_QBTGATSRSP);
+		
+	memcpy(at_pack[i].cmd_txt, "AT+QBTGATSRSP=\"A001\",0,1,15,258,\"0000\"",strlen("AT+QBTGATSRSP=\"A001\",0,1,15,258,\"0000\""));
+	Send_AT_Command_ext(AT_QBTGATSRSP);
+}
+
+void bt_cmd_process(void)
+{
+	if(bt_rsp_flag)
+	{
+		bt_rsp_flag = 0;
+		send_bt_rsp_cmd();
+	}
+
+	if(bt_cmd_flag)
+	{
+		bt_cmd_flag = 0;
+
+		if(!parse_bt_cmd(bt_cmd_data, bt_cmd_len))
+		{
+			send_bt_rsp_cmd();
+		}
+	}
+}
 
 void at_connected_process(void)
 {
@@ -997,8 +1034,7 @@ void at_connected_process(void)
 	else if(flag_delay5s==1)
 	{
 		flag_delay5s = 0;
-		send_gps_rmc_cmd();
-		send_gps_gsv_cmd();
+		send_gps_QGNSSRD_cmd();
 	}
 }
 
@@ -1017,15 +1053,22 @@ void at_process(void)
 	{
 		at_connected_process();
 	}
-	if(!at_parse_recv())	//数据没接收完全，等待100ms再接收
+
+	while(!at_parse_recv())	//数据没接收完全，等待100ms再接收
 	{
+		uint8_t i=0;
+
+		Logln(D_INFO,"i=%d",i);
 		HAL_Delay(100);
-		if(!at_parse_recv())	//如果还没接收完全，清空接收buffer
+		if(i++>5)		//500ms还没接收完，清空buf
 		{
 			module_recv_buffer_index = 0;
+			break;
 		}
-			
 	}
+	
+	bt_cmd_process();
+	
 	HAL_Delay(50);
 }
    

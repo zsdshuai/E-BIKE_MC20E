@@ -521,6 +521,7 @@ static void MX_USART1_UART_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
+  HAL_UART_Receive_IT(&huart1, (uint8_t *)&usart1_recbuf, 1);
 
 }
 
@@ -655,9 +656,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 		{
 			module_recv_buffer_index = 0;
 		}
-                        
-		HAL_UART_Receive_IT(&huart1, &usart1_recbuf, 1);
-	}
+       	}
 	if (UartHandle->Instance == USART2) 
 	{
 		Uart2_buf.Data[0]= usart2_recbuf;
@@ -672,9 +671,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
-	InitCircleQueue(&RxUart1_Queue);	                           //初始化队列*/
 	HAL_TIM_Base_Start_IT(&htim3);
-	HAL_UART_Receive_IT(&huart1, (uint8_t *)&usart1_recbuf, 1);
 	module_init();
 	/* Infinite loop */
 	for(;;)

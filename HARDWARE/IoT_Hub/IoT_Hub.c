@@ -872,6 +872,7 @@ bool at_parse_recv(void)
 	char pbuf[BUFLEN]={0};
 	uint8_t rec_len;
 	uint32_t ret=0;
+	bool result = true;
 
   	rec_len = get_uart_data_ext(pbuf, BUFLEN);
 
@@ -900,20 +901,20 @@ bool at_parse_recv(void)
 		Logln(D_INFO,"rcv ret=%x",ret);
 		if(ret&RET_B0)	//蓝牙接收数据未完成，不清空数据
 		{
-			return false;
+			result = false;
 		}
 		else if(ret>0)
 		{
 			module_recv_buffer_index = 0;
-			return true;	
+			result =  true;	
 		}
 		else
 		{
-			return false;
+			result =  false;
 		}
 	}
 
-	return true;
+	return result;
 }
 
 void bt_init(void)

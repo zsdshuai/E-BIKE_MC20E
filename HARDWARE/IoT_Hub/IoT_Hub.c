@@ -24,6 +24,7 @@ uint8_t bt_rsp_flag=0;
 uint8_t bt_cmd_flag=0;	//蓝牙业务命令标志
 uint8_t bt_cmd_data[20];
 uint8_t bt_cmd_len;
+cell_location_struct cell_loc;
 
 #define DOMAIN "zcwebx.liabar.cn"
 #define PORT 9000
@@ -35,7 +36,7 @@ void parse_imei_cmd(char* buf, int len);
 void parse_imsi_cmd(char* buf, int len);
 bool parse_gnss_cmd(char* buf, int len);
 void parse_location_cmd(char* buf, int len);
-
+void parse_cell_location_cmd(char* buf, int len);
 
 AT_STRUCT at_pack[]={
 	{AT_ATI,"ATI","OK",300,NULL},
@@ -52,6 +53,7 @@ AT_STRUCT at_pack[]={
 	{AT_QIREGAPP,"AT+QIREGAPP","OK",300,NULL},
 	{AT_QIACT,"AT+QIACT","OK",3000,NULL},
 	{AT_COPS,"AT+COPS?","OK",300,NULL},
+	{AT_QCELLLOC,"AT+QCELLLOC=1","OK",300,parse_cell_location_cmd},
 	{AT_QIMUX,"AT+QIMUX=0","OK",300,NULL},
 	{AT_QIDNSIP,"AT+QIDNSIP=1","OK",300,NULL},
 	{AT_QIOPEN,"","CONNECT OK",3000,NULL},
@@ -63,12 +65,13 @@ AT_STRUCT at_pack[]={
 	{AT_QGPS_ON,"AT+QGNSSC=1","OK",300,NULL},
 	{AT_QGPS_OFF,"AT+QGNSSC=0","OK",300,NULL},
 	{AT_QGPS_RMC,"AT+QGNSSRD=\"NMEA/RMC\"","OK",500,NULL},
-	{AT_QGPS_GSV,"AT+QGNSSRD=\"NMEA/GSV\"","OK",500,NULL},	
+	{AT_QGPS_GGA,"AT+QGNSSRD=\"NMEA/GGA\"","OK",500,NULL},	
 	{AT_QGNSSRD,"AT+QGNSSRD?","OK",500,NULL},	
 	{AT_QIFGCNT1,"AT+QIFGCNT=1","OK",300,NULL},
 	{AT_QIFGCNT2,"AT+QIFGCNT=2","OK",300,NULL},	
 	{AT_QGNSSTS,"AT+QGNSSTS?","OK",500,NULL},	
 	{AT_QGNSSEPO,"AT+QGNSSEPO=1","OK",500,NULL},	
+	{AT_QGREFLOC,"","OK",500,NULL},	
 	{AT_QGEPOAID,"AT+QGEPOAID","OK",500,NULL},	
 	{AT_QGEPOF,"", "OK", 500,NULL},
 	
@@ -225,6 +228,20 @@ void parse_location_cmd(char* buf, int len)
 	if(tmp=strstr(buf, "+QGREFLOC:"))
 	{
 		Logln(D_INFO,"%s",tmp);
+	}
+}
+
+void parse_cell_location_cmd(char* buf, int len)
+{
+	char* tmp,*tmp1,*tmp2;
+	if(tmp=strstr(buf, "+QCELLLOC: "))
+	{
+		tmp+=strlen("+QCELLLOC: ");
+		memset(&cell_loc, 0, sizeof(cell_location_struct));
+		tmp1 = strstr(tmp, ",");
+		strncpy(cell_loc.lon, tmp, tmp1-tmp);
+		tmp2 = strstr(tmp1, "\r\n");
+		strncpy(cell_loc.lat, tmp1+1, tmp2-(tmp1+1));
 	}
 }
 bool parse_gnss_cmd(char* buf, int len)
@@ -536,12 +553,12 @@ int get_uart_data_ext(char*buf, int count)
 
 	if (ulen > 0)
 	{
-		Logln(D_INFO,"get_uart_data_ext rcv=%d,%d",ulen,count);
+	//	Logln(D_INFO,"get_uart_data_ext rcv=%d,%d",ulen,count);
 		if (count >= ulen)
 		{
 			memcpy(buf, module_recv_buffer, ulen);
 			buf[ulen] = 0;
-	//		Logln(D_INFO,"rcv=%d,%s|",ulen,buf);
+			Logln(D_INFO,"rcv=%d,%s",ulen,buf);
 			return ulen;
 		}
 		else
@@ -696,11 +713,9 @@ void QGEPOF2(void)
 void bt_name_modify(char* name)
 {
 	int8_t i;
-	char buf[32]={0};
 	
 	i = GetATIndex(AT_BT_NAME);
-	sprintf(buf,"AT+QBTNAME=\"%s\"",name);
-	strcpy(at_pack[i].cmd_txt, buf);
+	sprintf(at_pack[i].cmd_txt,"AT+QBTNAME=\"%s\"",name);
 	Send_AT_Command_ext(AT_BT_NAME);
 }
 RET_TYPE parse_bt_at_cmd(char* buf, int len)
@@ -715,7 +730,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 
 		if(strstr(tmp,"\r\n"))
 		{
-			Logln(D_INFO,"RCV +QBTGATSCON:----------0\r\n%s",tmp);
+			Logln(D_INFO,"RCV +QBTGATSCON:----------0",);
 			state = tmp[GetComma(1,tmp)-2];
 			if(state=='1')
 			{
@@ -881,7 +896,8 @@ bool at_parse_recv(void)
 
 		if(parse_gnss_cmd(pbuf,rec_len))
 			ret |= RET_G;
-		
+
+		Logln(D_INFO,"rcv ret=%x",ret);
 		if(ret&RET_B0)	//蓝牙接收数据未完成，不清空数据
 		{
 			return false;
@@ -915,6 +931,25 @@ void bt_init(void)
 //	while(Send_AT_Command(AT_QBTGATSDISC)==0);
 
 }
+
+void AT_QGREFLOC_FUN(void)
+{
+	int8_t i = GetATIndex(AT_QGREFLOC);
+	
+	sprintf(at_pack[i].cmd_txt,"AT+QGREFLOC=%s,%s",cell_loc.lat,cell_loc.lon);
+	while(Send_AT_Command(AT_QGREFLOC)==0);
+}
+void gnss_init(void)
+{
+	while(Send_AT_Command(AT_QIFGCNT2)==0);  
+	while(Send_AT_Command(AT_QGPS_ON)==0);   	
+	while(Send_AT_Command(AT_QGNSSTS)==0); 
+	AT_QGREFLOC_FUN();
+	while(Send_AT_Command(AT_QGNSSEPO)==0);     
+//	while(Send_AT_Command(AT_QGEPOAID)==0); 
+//	QGEPOF1();
+//	QGEPOF2();
+}
 void module_init(void)
 {
 	Logln(D_INFO, "IOT_module Start test!! \r\n");
@@ -934,7 +969,6 @@ void module_init(void)
 	while(Send_AT_Command(AT_GSN)==0);
 	while(Send_AT_Command(AT_CIMI)==0);
 	while(Send_AT_Command(AT_CREG)==0);
-	while(Send_AT_Command(AT_QGPS_ON)==0);   
 	bt_init();
 	while(Send_AT_Command(AT_CSQ)==0);
 	while(Send_AT_Command(AT_QIMODE)==0);
@@ -942,13 +976,9 @@ void module_init(void)
 	while(Send_AT_Command(AT_QIREGAPP)==0);	
 	while(Send_AT_Command(AT_QIACT)==0);		
 	while(Send_AT_Command(AT_COPS)==0);
-	while(Send_AT_Command(AT_QIFGCNT2)==0);     
-	while(Send_AT_Command(AT_QGNSSTS)==0);     
-	while(Send_AT_Command(AT_QGNSSEPO)==0);     
-	while(Send_AT_Command(AT_QGEPOAID)==0);  
-	QGEPOF1();
-	QGEPOF2();
-	while(Send_AT_Command(AT_QGPS_GSV)==0);
+	while(Send_AT_Command(AT_QIFGCNT1)==0);     	
+	while(Send_AT_Command(AT_QCELLLOC)==0);
+	gnss_init();
 	
 	while(Send_AT_Command(AT_QIFGCNT1)==0);     
 	while(Send_AT_Command(AT_QIDNSIP)==0);
@@ -983,11 +1013,11 @@ void send_gps_rmc_cmd(void)
 	Send_AT_Command_ext(AT_QGPS_RMC);
 }
 
-void send_gps_gsv_cmd(void)
+void send_gps_gga_cmd(void)
 {
-	int8_t i = GetATIndex(AT_QGPS_GSV);
+	int8_t i = GetATIndex(AT_QGPS_GGA);
 	
-	Send_AT_Command_ext(AT_QGPS_GSV);
+	Send_AT_Command_ext(AT_QGPS_GGA);
 }
 void send_gps_QGNSSRD_cmd(void)
 {
@@ -1025,6 +1055,7 @@ void bt_cmd_process(void)
 
 void at_connected_process(void)
 {
+	static uint8_t flag_rmc=0;
   	if (flag_delay1s == 1) 
 	{
               	flag_delay1s = 0;
@@ -1032,13 +1063,25 @@ void at_connected_process(void)
 	}
 	else if(flag_delay5s==1)
 	{
-		flag_delay5s = 0;
-		send_gps_QGNSSRD_cmd();
+		//send_gps_QGNSSRD_cmd();
+		if(flag_rmc==0)
+		{
+			send_gps_rmc_cmd();
+			flag_rmc = 1;
+		}
+		else if(flag_rmc==1)
+		{
+			send_gps_gga_cmd();
+			flag_delay5s = 0;
+			flag_rmc = 0;
+		}
 	}
 }
 
 void at_process(void)
 {	
+	uint8_t i=0;
+
 	if(net_work_state==EN_INIT_STATE)
 	{
 	//	at_close_service();
@@ -1055,11 +1098,9 @@ void at_process(void)
 
 	while(!at_parse_recv())	//数据没接收完全，等待100ms再接收
 	{
-		uint8_t i=0;
-
 		Logln(D_INFO,"i=%d",i);
 		HAL_Delay(100);
-		if(i++>5)		//500ms还没接收完，清空buf
+		if(i++>=5)		//500ms还没接收完，清空buf
 		{
 			module_recv_buffer_index = 0;
 			break;

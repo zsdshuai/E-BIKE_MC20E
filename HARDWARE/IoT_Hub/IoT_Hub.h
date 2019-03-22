@@ -81,6 +81,7 @@ typedef enum{
 	AT_QIREGAPP,
 	AT_QIACT,
 	AT_COPS,
+	AT_QCELLLOC,
 	AT_QIMUX,
 	AT_QIDNSIP,
 	AT_QIOPEN,
@@ -92,13 +93,14 @@ typedef enum{
 	AT_QGPS_ON,
 	AT_QGPS_OFF,
 	AT_QGPS_RMC,
-	AT_QGPS_GSV,
+	AT_QGPS_GGA,
 	AT_QGNSSRD,
 	AT_QIFGCNT1,
 	AT_QIFGCNT2,
 	AT_QICSGP,
 	AT_QGNSSTS,
 	AT_QGNSSEPO,
+	AT_QGREFLOC,
 	AT_QGEPOAID,
 	AT_QGEPOF,
 	
@@ -142,12 +144,12 @@ typedef struct
 
 typedef enum
 {
-	RET_A=1<<1,		//应答
-	RET_P=1<<2,		//协议
-	RET_B1=1<<3,		//蓝牙返回OK
-	RET_B0=1<<4,	//蓝牙没接收完全
-	RET_G=1<<5,		//GPS
-	RET_AN=1<<6,	//其他
+	RET_A=1<<0,		//应答
+	RET_P=1<<1,		//协议
+	RET_B1=1<<2,		//蓝牙返回OK
+	RET_B0=1<<3,	//蓝牙没接收完全
+	RET_G=1<<4,		//GPS
+	RET_AN=1<<5,	//其他
 }RET_TYPE;
 
 typedef struct
@@ -164,6 +166,11 @@ typedef struct
 	char delay_flag;	//0 初始化，1延时计时中，2延时到达
 	char retry_times;
 }AT_PROCE_STRUCT;
+typedef struct
+{
+	char lat[11];
+	char lon[11];
+}cell_location_struct;
 
 void module_init(void);
 char* get_imei(void);

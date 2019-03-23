@@ -396,52 +396,6 @@ int8_t GetATIndex(AT_CMD cmd)
 	}
 	return i;
 }
-uint8_t Send_AT_GNSS_Command(AT_CMD cmd)
-{
-	int8_t i=GetATIndex(cmd);
-
-	if(i==-1)
-	{
-		Logln(D_INFO, "error cmd");
-		return 0;
-	}
-	else
-	{
-		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
-	}
-	
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
-	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),0xffff); 
-	 
-	UART_SendString("\r\n");
-	Logln(D_INFO, "Send_AT_GNSS_Command Complete");
-
-	return 1;
-}
-uint8_t Send_AT_BT_RSP_Command(AT_CMD cmd, char* buf, int len)
-{
-	int8_t i=GetATIndex(cmd);
-
-	if(i==-1)
-	{
-		Logln(D_INFO, "error cmd");
-		return 0;
-	}
-	else
-	{
-		memset(at_pack[i].cmd_txt, 0, 64);
-		memcpy(at_pack[i].cmd_txt, buf, len);
-		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
-	}
-	
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
-	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),0xffff); 
-	 
-	UART_SendString("\r\n");
-	Logln(D_INFO, "Send_AT_BT_RSP_Command Complete");
-
-	return 1;
-}
 
 uint8_t Send_AT_Command(AT_CMD cmd)
 {
@@ -695,17 +649,15 @@ void send_data(char* buf, int len)
 
 void QGEPOF1(void)
 {
-	int8_t i;
-	
-	i = GetATIndex(AT_QGEPOF);
+	int8_t i = GetATIndex(AT_QGEPOF);;
+
 	strcpy(at_pack[i].cmd_txt, "AT+QGEPOF=0,255");
 	Send_AT_Command(AT_QGEPOF);
 }
 void QGEPOF2(void)
 {
-	int8_t i;
+	int8_t i = GetATIndex(AT_QGEPOF);
 	
-	i = GetATIndex(AT_QGEPOF);
 	strcpy(at_pack[i].cmd_txt, "AT+QGEPOF=2");
 	Send_AT_Command(AT_QGEPOF);
 }
@@ -948,8 +900,8 @@ void gnss_init(void)
 	AT_QGREFLOC_FUN();
 	while(Send_AT_Command(AT_QGNSSEPO)==0);     
 //	while(Send_AT_Command(AT_QGEPOAID)==0); 
-//	QGEPOF1();
-//	QGEPOF2();
+	QGEPOF1();
+	QGEPOF2();
 }
 void module_init(void)
 {

@@ -57,24 +57,17 @@ void UART_SendString(uint8_t* s)
 * 返回    : 无 
 * 说明    : 无
 *******************************************************************************/
-void UART_Data(uint8_t byte)
-{
-		while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
-		HAL_UART_Transmit(&huart1,&byte,1,0xffff);
-}
+
 void uart1_send(uint8_t* pData, uint16_t Size)
 {
-	//while(HAL_OK != HAL_UART_Transmit(&huart1 , pData, Size, 0xffff));
-	//uint8_t val = 0x08;
 	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
-		HAL_UART_Transmit(&huart1, pData, Size, 0xffff);
-    //HAL_UART_Transmit_IT(&huart1, pData, Size);
+	HAL_UART_Transmit(&huart1, pData, Size, 0xffff);
 }
 
 void uart2_send(uint8_t* pData, uint16_t Size)
 {
 	while(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_TC)==RESET); 
-		HAL_UART_Transmit(&huart2, pData, Size, 0xffff);
+	HAL_UART_Transmit(&huart2, pData, Size, 0xffff);
 }
 
 void uart2_process(void)

@@ -86,6 +86,7 @@ typedef struct
 	uint8_t zd_alarm;
 	uint8_t zd_sen;
 	uint8_t acc;
+	uint8_t flag;
 	uint8_t ld_alarm;
 	uint8_t imei[16];
 }flash_struct;

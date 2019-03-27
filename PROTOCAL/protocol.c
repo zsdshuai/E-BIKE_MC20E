@@ -246,8 +246,8 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 	head.datetime[5] = stimestructure.Seconds;//3
 
 
-//	printf ("year=%d,mon=%d,day=%d \r\n", sdatestructure.Year, sdatestructure.Month, sdatestructure.Date);
-//	printf ("hours=%d,min=%d,sec=%d \r\n", stimestructure.Hours,stimestructure.Minutes,stimestructure.Seconds);
+	printf ("year=%d,mon=%d,day=%d \r\n", sdatestructure.Year, sdatestructure.Month, sdatestructure.Date);
+	printf ("hours=%d,min=%d,sec=%d \r\n", stimestructure.Hours,stimestructure.Minutes,stimestructure.Seconds);
 	tail.stop = 0x0a0d;
 	//包头
 	memcpy(buf,&head,sizeof(pkg_head_struct));
@@ -739,12 +739,21 @@ void calibration_time(uint8_t* buf)
 	sdatestructure.Year = date_time[0];
 	sdatestructure.Month = date_time[1];
 	sdatestructure.Date = date_time[2];
+	sdatestructure.WeekDay = 0x01;
 	stimestructure.Hours = date_time[3];
 	stimestructure.Minutes = date_time[4];
 	stimestructure.Seconds = date_time[5];
-	
+	stimestructure.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+	stimestructure.StoreOperation = RTC_STOREOPERATION_RESET;
+
+Logln(D_INFO, "cali %d-%d-%d %d:%d:%d",sdatestructure.Year,sdatestructure.Month,sdatestructure.Date,stimestructure.Hours,stimestructure.Minutes,stimestructure.Seconds);
   	HAL_RTC_SetTime(&hrtc, &stimestructure, RTC_FORMAT_BIN);//设置时分秒
 	HAL_RTC_SetDate(&hrtc, &sdatestructure, RTC_FORMAT_BIN);//设置年月日
+
+		HAL_RTC_GetTime(&hrtc, &stimestructure, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &sdatestructure, RTC_FORMAT_BIN);
+Logln(D_INFO, " %d-%d-%d %d:%d:%d",sdatestructure.Year,sdatestructure.Month,sdatestructure.Date,stimestructure.Hours,stimestructure.Minutes,stimestructure.Seconds);
+
 }
 
 void parse_dev_data(data_pkg_struct* data)

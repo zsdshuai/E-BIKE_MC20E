@@ -452,11 +452,16 @@ void init_flash(void)
 //	test1(); return;
 	read_flash(CONFIG_ADDR,(uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 	HAL_Delay(1);
-	printf("imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,size=%d\r\n",g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
+	printf("flag=%d,imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,size=%d\r\n",g_flash.flag,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
 		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen,sizeof(flash_struct));
 		
-	if(g_flash.zd_sen==0)
+	if(g_flash.flag !=1)
 	{
+		memset(&g_flash, 0, sizeof(flash_struct));
+		write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+		HAL_Delay(1);
+
+		g_flash.flag = 1;
 		g_flash.acc = 0;
 		g_flash.hall = 0;
 		g_flash.lundong = 0;
@@ -469,6 +474,11 @@ void init_flash(void)
 		HAL_Delay(1);
 	}
 
+	if(g_flash.acc>0)
+	{
+		open_electric_door();
+	}
+	
 	mileage_count = g_flash.hall;
 	rotate_count = g_flash.lundong;
 }

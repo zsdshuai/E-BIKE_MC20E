@@ -93,7 +93,6 @@ bool lock_bike(void)
 
 void gprs_unlock(void)
 {
-	//tangze_unlock_bike();
 	flag_tangze_unlock = 1;
     	g_flash.acc  |= GPRS_OPEN;
 	write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
@@ -474,7 +473,7 @@ void init_flash(void)
 		HAL_Delay(1);
 	}
 
-	if(g_flash.acc>0)
+	if(g_flash.acc&(BT_OPEN|GPRS_OPEN|KEY_OPEN))
 	{
 		open_electric_door();
 	}

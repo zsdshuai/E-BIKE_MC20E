@@ -90,6 +90,9 @@ AT_STRUCT at_pack[]={
 	{AT_QBTGATSRSP,"","OK",300,NULL},
 	{AT_QBTGATSIND,"","OK",300,NULL},
 	{AT_QBTGATSDISC,"AT+QBTGATSDISC=1","OK",300,NULL},
+	{AT_QBTLETXPWR,"AT+QBTLETXPWR=7","OK",300,NULL},
+	{AT_QBTLETXPWR_Q,"AT+QBTLETXPWR?","OK",300,NULL},
+
 	{ATA,"ATA","OK",300,NULL},
 	{AT_MAX,"","",0,NULL}
 };
@@ -449,30 +452,6 @@ void Send_AT_Command_ext(AT_CMD cmd)
 	HAL_Delay(at_pack[i].timeout);
 }
 
-int find(char* buf, int count, char* substr)
-{
-	int i;
-	char* pPos = NULL;
-	char buffer[257];
-	memcpy(buffer, buf, count);
-	buffer[count] = 0;//保证字符串为0结尾
-	for (i = 0; i < count; ++i)
-	{//如果字符串中有0值，设置为*，设置为*号，不影响查找substr
-		if (0 == buffer[i])
-		{
-			buffer[i] = '*';
-		}
-	}
-	pPos = strstr(buffer, substr);
-	if (NULL == pPos)
-	{
-		return -1;
-	}
-	else
-	{
-		return (pPos - buffer);
-	}
-}
 int get_connect_id(char *s,char find,int num)
 {
 	char buf[16]={0};
@@ -686,7 +665,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 			state = tmp[GetComma(1,tmp)-2];
 			if(state=='1')
 			{
-				if(strstr(tmp,"+QBTGATWREQ:"))	//连接成功要等待+QBTGATWREQ:接收
+				if(1)//strstr(tmp,"+QBTGATWREQ:"))	//连接成功要等待+QBTGATWREQ:接收
 				{
 					Logln(D_INFO,"BT CONNECT");
 					Logln(D_INFO,"RCV +QBTGATSCON:----------0-T");
@@ -881,6 +860,9 @@ void bt_init(void)
 	while(Send_AT_Command(AT_QBTGATSC)==0);
 	while(Send_AT_Command(AT_QBTGATSD)==0);
 	while(Send_AT_Command(AT_QBTGATSST)==0);
+	while(Send_AT_Command(AT_QBTLETXPWR)==0);
+		while(Send_AT_Command(AT_QBTLETXPWR_Q)==0);
+
 //	while(Send_AT_Command(AT_QBTGATSDISC)==0);
 
 }

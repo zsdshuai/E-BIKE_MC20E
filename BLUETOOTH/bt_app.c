@@ -150,7 +150,7 @@ void send_error_cmd(uint8_t operate,uint8_t type)
 }
 void bt_unlock(void)
 {	
-	tangze_unlock_bike();
+	flag_tangze_unlock = 1;
 	g_flash.acc |= BT_OPEN;
 	write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 	open_electric_door();

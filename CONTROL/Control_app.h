@@ -138,6 +138,6 @@ void shake_process(void);
 void init_flash(void);
 void open_dianchi_lock(void);
 
-#define CONFIG_ADDR 0x20	//0x0800D000
+#define CONFIG_ADDR 0x03	//0x0800D000
 extern flash_struct g_flash;
 #endif

@@ -183,71 +183,76 @@ void get_int_num(uint8_t*buf,uint8_t*ip1,uint8_t*ip2,uint8_t*ip3,uint8_t*ip4)
 	*ip4 = atoi(tmp);
 }
 
-void modify_service_address(uint8_t* buf)
+bool modify_service_address(uint8_t* buf)
 {
 	//type:2,domain:www.liabar.com,port:9000#
 	//type:1,ip:139.224.3.220,port:9000#
-/*	network_info_struct network={0};
 	uint8_t tmp[64]={0};
 	uint8_t *head=NULL,*tail=NULL;
+	uint8_t type;
+	bool flag=false;
 	
 	head = (uint8_t*)strstr(buf,"type:");
 	tail = (uint8_t*)strstr(buf,"#");
 	if(head&&tail)
 	{
-		printf("%s",buf);
 		head += strlen("type:");
 		tail = (uint8_t*)strstr(head,",");
 		memcpy(tmp, head,tail-head);
-		network.ym_type = atoi(tmp);
-		printf("network.ym_type=%d",network.ym_type);
-		if(network.ym_type==2)
+		type = atoi(tmp);
+		if(type==2)
 		{
 			head = (uint8_t*)strstr(buf,"domain:");
 			if(head)
 			{
 				head+= strlen("domain:");
 				tail = (uint8_t*)strstr(head,",");
-				memcpy(network.domain,head,tail-head);
+				memset(&g_flash.net, 0, sizeof(network_struct));
+				memcpy(g_flash.net.domain,head,tail-head);
 
 				head = (uint8_t*)strstr(buf,"port:");
 				head+=strlen("port:");
 				tail = (uint8_t*)strstr(head,"#");
 				memset(tmp,0,sizeof(tmp));
 				memcpy(tmp,head,tail-head);
-				network.port = atoi(tmp);
+				g_flash.net.port = atoi(tmp);
 
-				sprintf(tmp,"OK type:%d,%s,%d\r\n",network.ym_type,network.domain,network.port);
-				control_send_data(tmp,strlen(tmp));
-				zt_write_config_in_fs(NETWORK_FILE, (uint8_t*)&network,  sizeof(network_info_struct));
-				StartTimer(GetTimerID(ZT_DELAY_RESTART_TIMER),1000,restartSystem);
+				sprintf(tmp,"\r\nWrite OK %s,%d\r\n",g_flash.net.domain,g_flash.net.port);
+				printf("%s",tmp);
+
+				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+				flag = true;
+				HAL_Delay(1000);
+				reset_system();
 			}
 		}
-		else if(network.ym_type==1)
+		else if(type==1)
 		{
 			head = (uint8_t*)strstr(buf,"ip:");
 			if(head)
 			{
 				head+= strlen("ip:");
 				tail = (uint8_t*)strstr(head,",")+1;
-				memcpy(tmp, head, tail-head);
-				get_int_num(tmp,&network.ip[0],&network.ip[1],&network.ip[2],&network.ip[3]);
+				memset(&g_flash.net, 0, sizeof(network_struct));
+				memcpy(g_flash.net.domain, head, tail-head);
 							
 				head = (uint8_t*)strstr(buf,"port:");
 				head+=strlen("port:");
 				tail = (uint8_t*)strstr(head,"#");
 				memset(tmp,0,sizeof(tmp));
 				memcpy(tmp,head,tail-head);
-				network.port = atoi(tmp);
+				g_flash.net.port = atoi(tmp);
 
-				sprintf(tmp,"OK type:%d,%d:%d:%d:%d,%d",network.ym_type,network.ip[0],network.ip[1],network.ip[2],network.ip[3],network.port);
-				control_send_data(tmp,strlen(tmp));
+				sprintf(tmp,"\r\nWrite OK %s:%d\r\n",g_flash.net.domain,g_flash.net.port);
 				printf("%s",tmp);
-				zt_write_config_in_fs(NETWORK_FILE, (uint8_t*)&network,  sizeof(network_info_struct));
-				StartTimer(GetTimerID(ZT_DELAY_RESTART_TIMER),1000,restartSystem);
+				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+				flag = true;
+				HAL_Delay(1000);
+				reset_system();
 			}
 		}
-	}*/
+	}
+	return flag;
 }
 
 bool parse_control_cmd(uint8_t* buf, uint16_t len)
@@ -310,8 +315,12 @@ bool parse_control_cmd(uint8_t* buf, uint16_t len)
 			}
 		}
 	}
+
+	if(!flag)
+	{
+		flag = modify_service_address(buf);
+	}
 	return flag;
-//	modify_service_address(buf);
 	
 }
 

@@ -26,8 +26,6 @@ uint8_t bt_cmd_data[20];
 uint8_t bt_cmd_len;
 cell_location_struct cell_loc;
 
-#define DOMAIN "zcwebx.liabar.cn"
-#define PORT 9000
 
 RxMsgTypeDefExt at_curr_node={0};
 
@@ -90,7 +88,7 @@ AT_STRUCT at_pack[]={
 	{AT_QBTGATSRSP,"","OK",300,NULL},
 	{AT_QBTGATSIND,"","OK",300,NULL},
 	{AT_QBTGATSDISC,"AT+QBTGATSDISC=1","OK",300,NULL},
-	{AT_QBTLETXPWR,"AT+QBTLETXPWR=7","OK",300,NULL},
+	{AT_QBTLETXPWR,"AT+QBTLETXPWR=5","OK",300,NULL},
 	{AT_QBTLETXPWR_Q,"AT+QBTLETXPWR?","OK",300,NULL},
 
 	{ATA,"ATA","OK",300,NULL},
@@ -925,8 +923,8 @@ void at_connect_service(void)
 {
 	int8_t i = GetATIndex(AT_QIOPEN);
 
-	Logln(D_INFO,"%s,%d",DOMAIN,PORT);
-	sprintf(at_pack[i].cmd_txt,"AT+QIOPEN=\"TCP\",\"%s\",%d",DOMAIN,PORT);
+	Logln(D_INFO,"%s,%d",g_flash.net.domain,g_flash.net.port);
+	sprintf(at_pack[i].cmd_txt,"AT+QIOPEN=\"TCP\",\"%s\",%d",g_flash.net.domain,g_flash.net.port);
 	Send_AT_Command_ext(AT_QIOPEN);
 }
 void AT_reconnect_service(void)

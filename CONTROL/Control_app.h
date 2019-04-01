@@ -73,10 +73,16 @@ typedef enum
 typedef struct
 {
 	uint8_t addr;
-    uint8_t len;
+    	uint8_t len;
 	ebike_cmd_enum type;		
 	uint8_t para[18];
 }ebike_cmd_struct;
+
+typedef struct
+{
+	char domain[32];
+	uint16_t port;
+}network_struct;
 
 typedef struct
 {
@@ -89,6 +95,7 @@ typedef struct
 	uint8_t flag;
 	uint8_t ld_alarm;
 	uint8_t imei[16];
+	network_struct net;
 }flash_struct;
 	
 #pragma pack (1)

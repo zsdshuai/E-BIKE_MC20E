@@ -12,6 +12,8 @@
 #include "adc.h"
 //#include "flash.h"
 
+#define DOMAIN "zcwebx.liabar.cn"
+#define PORT 9000
 
 flash_struct g_flash;
 
@@ -452,8 +454,8 @@ void init_flash(void)
 //	test1(); return;
 	read_flash(CONFIG_ADDR,(uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 	HAL_Delay(1);
-	printf("flag=%d,imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,size=%d\r\n",g_flash.flag,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
-		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen,sizeof(flash_struct));
+	printf("flag=%d,imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,%s:%d,size=%d\r\n",g_flash.flag,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
+		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen, g_flash.net.domain, g_flash.net.port, sizeof(flash_struct));
 		
 	if(g_flash.flag !=1)
 	{
@@ -470,6 +472,8 @@ void init_flash(void)
 		g_flash.zd_alarm = 0;
 		g_flash.zd_sen = 50;
 		memset(g_flash.imei,0,sizeof(g_flash.imei));
+		strcpy(g_flash.net.domain, DOMAIN);
+		g_flash.net.port = PORT;
 		write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 		HAL_Delay(1);
 	}

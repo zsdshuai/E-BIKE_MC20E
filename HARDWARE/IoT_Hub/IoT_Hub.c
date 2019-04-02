@@ -478,6 +478,23 @@ int get_recv_len(char *s,char find,int num)
 
 	return rev;
 }
+void move_rcv_buf(uint16_t drop, uint16_t sum)
+{
+	if(sum > drop)
+	{
+		char* pDst = module_recv_buffer;
+		char* pSrc = module_recv_buffer + drop;
+		char* pDstEnd = pDst + (sum-drop);
+
+
+		for (; pDst < pDstEnd; ++pDst, ++pSrc)
+		{
+			*pDst = *pSrc;
+		}
+		
+		module_recv_buffer_index = sum-drop;
+	}
+}
 int get_uart_data_ext(char*buf, int count)
 {
 	uint16_t ulen = module_recv_buffer_index;
@@ -663,7 +680,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 			state = tmp[GetComma(1,tmp)-2];
 			if(state=='1')
 			{
-				if(1)//strstr(tmp,"+QBTGATWREQ:"))	//连接成功要等待+QBTGATWREQ:接收
+				if(strstr(tmp,"+QBTGATWREQ:"))	//连接成功要等待+QBTGATWREQ:接收
 				{
 					Logln(D_INFO,"BT CONNECT");
 					Logln(D_INFO,"RCV +QBTGATSCON:----------0-T");
@@ -834,7 +851,15 @@ bool at_parse_recv(void)
 		}
 		else if(ret>0)
 		{
-			module_recv_buffer_index = 0;
+			Logln(D_INFO,"&%d,%d",rec_len,module_recv_buffer_index);
+			if(module_recv_buffer_index > rec_len)
+			{
+				move_rcv_buf(rec_len, module_recv_buffer_index);
+			}
+			else
+			{
+				module_recv_buffer_index = 0;
+			}
 			result =  true;	
 		}
 		else

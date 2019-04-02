@@ -232,7 +232,7 @@ bool modify_service_address(uint8_t* buf)
 			if(head)
 			{
 				head+= strlen("ip:");
-				tail = (uint8_t*)strstr(head,",")+1;
+				tail = (uint8_t*)strstr(head,",");
 				memset(&g_flash.net, 0, sizeof(network_struct));
 				memcpy(g_flash.net.domain, head, tail-head);
 							

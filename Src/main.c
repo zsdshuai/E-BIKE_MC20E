@@ -692,6 +692,8 @@ void StartTask02(void const * argument)
 	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adc_val, 64);
 	InitCircleQueue(&RxUart2_Queue);	                           //初始化队列
 	HAL_UART_Receive_IT(&huart2, (uint8_t *)&usart2_recbuf, 1);
+	HAL_Delay(2000);
+	flag_alarm = 0;	//延时一会再启动震动告警
 
 	/* Infinite loop */
   for(;;)
@@ -786,16 +788,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 		flag_delay1s = 1;
 		
-		{
-			diff_rotate = rotate_count - rotate_bak;
-			diff_mileage = mileage_count - mileage_bak;
-			diff_shake = shake_count - shake_bak;
-//			printf("diff_shake=%d,shake_count=%d,shake_bak=%d\r\n",diff_shake,shake_count,shake_bak);
-			
-			rotate_bak = rotate_count;
-			mileage_bak = mileage_count;
-			shake_bak = shake_count;
-		}
+		diff_rotate = rotate_count - rotate_bak;
+		diff_mileage = mileage_count - mileage_bak;
+		diff_shake = shake_count - shake_bak;
+		
+		rotate_bak = rotate_count;
+		mileage_bak = mileage_count;
+		shake_bak = shake_count;
+		
 		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
 
 	}

@@ -8,7 +8,7 @@
 
 uint8_t batlock_status = 0,motorlock_status = 0;
 uint8_t flag_lock = 0, flag_startlock = 0, flag_startunlock = 0, f_start_batlock = 0, f_start_motorlock = 0;
-uint8_t flag_delay_lock, flag_delay_unlock, flag_batlock, flag_motorlock, flag_motorlock2,flag_alarm;
+uint8_t flag_delay_lock, flag_delay_unlock, flag_batlock, flag_motorlock, flag_motorlock2,flag_alarm=1;
 uint8_t flag_delay500ms, flag_delay900ms, flag_delay10ms, flag_delay4s,flag_delay6s; 
 uint8_t f_motorlock;
 uint8_t flag_tangze_unlock = 0,flag_tangze_lock = 0, flag_battery_lock = 0;

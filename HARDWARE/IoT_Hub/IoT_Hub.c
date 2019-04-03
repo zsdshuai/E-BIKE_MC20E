@@ -78,9 +78,10 @@ AT_STRUCT at_pack[]={
 	{AT_BT_ADDR,"AT+QBTLEADDR?","OK",300,NULL},
 	{AT_BT_NAME,"","OK",300,NULL},
 	{AT_BT_Q_NAME,"AT+QBTNAME?","OK",300,NULL},
-	{AT_BT_VISB,"AT+QBTVISB?","OK",300,NULL},
+	{AT_BT_VISB,"AT+QBTVISB=0","OK",300,NULL},
 
 	{AT_QBTGATSREG,"AT+QBTGATSREG=1,\"A001\"","OK",300,NULL},
+	{AT_QBTGATSL,"AT+QBTGATSL=\"A001\",1","OK",300,NULL},
 	{AT_QBTGATSS,"AT+QBTGATSS=1,\"A001\",\"1234\",50,1,254","OK",300,NULL},
 	{AT_QBTGATSC,"AT+QBTGATSC=1,\"A001\",256,\"C001\",2,22,17","OK",300,NULL},
 	{AT_QBTGATSD,"AT+QBTGATSD=1,\"A001\",256,\"0229\",1,17","OK",300,NULL},
@@ -90,7 +91,8 @@ AT_STRUCT at_pack[]={
 	{AT_QBTGATSDISC,"AT+QBTGATSDISC=1","OK",300,NULL},
 	{AT_QBTLETXPWR,"AT+QBTLETXPWR=5","OK",300,NULL},
 	{AT_QBTLETXPWR_Q,"AT+QBTLETXPWR?","OK",300,NULL},
-
+	{AT_QBTGATADV,"AT+QBTGATADV=64,128","OK",300,NULL},
+	
 	{ATA,"ATA","OK",300,NULL},
 	{AT_MAX,"","",0,NULL}
 };
@@ -680,7 +682,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 			state = tmp[GetComma(1,tmp)-2];
 			if(state=='1')
 			{
-				if(strstr(tmp,"+QBTGATWREQ:"))	//连接成功要等待+QBTGATWREQ:接收
+				if(1)//strstr(tmp,"+QBTGATWREQ:"))	//连接成功要等待+QBTGATWREQ:接收
 				{
 					Logln(D_INFO,"BT CONNECT");
 					Logln(D_INFO,"RCV +QBTGATSCON:----------0-T");
@@ -803,7 +805,7 @@ bool parse_another_cmd(char* buf, int len)
 	{
 		ret = true;
 	}
-	else if(datafind(buf,len,"CLOSED") || datafind(buf,len,"CONNECT FAIL"))
+	else if(/*datafind(buf,len,"CLOSED") ||*/ datafind(buf,len,"CONNECT FAIL"))
 	{//NETWORD disconnect
 		Logln(D_INFO,"CLOSED ---%s",buf);
 		net_work_state=EN_INIT_STATE;
@@ -877,14 +879,18 @@ void bt_init(void)
 	while(Send_AT_Command(AT_BT_ADDR)==0);
 //	while(Send_AT_Command(AT_BT_NAME)==0);
 	while(Send_AT_Command(AT_BT_Q_NAME)==0);
-	while(Send_AT_Command(AT_BT_VISB)==0);
 	while(Send_AT_Command(AT_QBTGATSREG)==0);
+	while(Send_AT_Command(AT_QBTGATSL)==0);
+	
 	while(Send_AT_Command(AT_QBTGATSS)==0);
 	while(Send_AT_Command(AT_QBTGATSC)==0);
 	while(Send_AT_Command(AT_QBTGATSD)==0);
 	while(Send_AT_Command(AT_QBTGATSST)==0);
+	while(Send_AT_Command(AT_BT_VISB)==0);
+	
 	while(Send_AT_Command(AT_QBTLETXPWR)==0);
-		while(Send_AT_Command(AT_QBTLETXPWR_Q)==0);
+	while(Send_AT_Command(AT_QBTLETXPWR_Q)==0);
+	while(Send_AT_Command(AT_QBTGATADV)==0);
 
 //	while(Send_AT_Command(AT_QBTGATSDISC)==0);
 

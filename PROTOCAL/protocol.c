@@ -300,8 +300,8 @@ void upload_hb_package(void)
 	if(g_hb_send_times >= 2)
 	{//reconnect
 		g_hb_send_times = 0;
+		Logln(D_INFO,"hb reconnect");
 		net_work_state = EN_INIT_STATE;
-		AT_reconnect_service();
 	}
 	else
 	{

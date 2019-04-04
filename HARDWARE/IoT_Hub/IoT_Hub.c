@@ -645,7 +645,7 @@ void send_data(char* buf, int len)
 
 void QGEPOF1(void)
 {
-	int8_t i = GetATIndex(AT_QGEPOF);;
+	int8_t i = GetATIndex(AT_QGEPOF);
 
 	strcpy(at_pack[i].cmd_txt, "AT+QGEPOF=0,255");
 	Send_AT_Command(AT_QGEPOF);
@@ -958,35 +958,23 @@ void at_connect_service(void)
 	sprintf(at_pack[i].cmd_txt,"AT+QIOPEN=\"TCP\",\"%s\",%d",g_flash.net.domain,g_flash.net.port);
 	Send_AT_Command_ext(AT_QIOPEN);
 }
-void AT_reconnect_service(void)
-{
-        Logln(D_INFO, "AT_reconnect_service");
 
-	Send_AT_Command(AT_QICLOSE);        //πÿ±’¡¨Ω”TCP
-	at_connect_service();
-}
 void at_close_service(void)
 {
 	Send_AT_Command(AT_QICLOSE);
 }
 
 void send_gps_rmc_cmd(void)
-{
-	int8_t i = GetATIndex(AT_QGPS_RMC);
-	
+{	
 	Send_AT_Command_ext(AT_QGPS_RMC);
 }
 
 void send_gps_gga_cmd(void)
-{
-	int8_t i = GetATIndex(AT_QGPS_GGA);
-	
+{	
 	Send_AT_Command_ext(AT_QGPS_GGA);
 }
 void send_gps_QGNSSRD_cmd(void)
-{
-	int8_t i = GetATIndex(AT_QGNSSRD);
-	
+{	
 	Send_AT_Command_ext(AT_QGNSSRD);
 }
 

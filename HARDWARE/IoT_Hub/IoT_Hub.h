@@ -180,6 +180,5 @@ void module_init(void);
 char* get_imei(void);
 char* get_imsi(void);
 void send_data(char* buf, int len);
-void AT_reconnect_service(void);
 void at_process(void);
 #endif

@@ -805,7 +805,7 @@ bool parse_another_cmd(char* buf, int len)
 	{
 		ret = true;
 	}
-	else if(/*datafind(buf,len,"CLOSED") ||*/ datafind(buf,len,"CONNECT FAIL"))
+	else if(datafind(buf,len,"+PDP DEACT") || datafind(buf,len,"CONNECT FAIL"))
 	{//NETWORD disconnect
 		Logln(D_INFO,"CLOSED ---%s",buf);
 		net_work_state=EN_INIT_STATE;

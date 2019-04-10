@@ -60,7 +60,7 @@ typedef enum
 #define Log(level, format, ...)
 #endif
 
-#define MODULE_BUFFER_SIZE  1024
+#define MODULE_BUFFER_SIZE  512	//1024
 
 extern char module_recv_buffer[MODULE_BUFFER_SIZE];
 extern short module_recv_buffer_index;

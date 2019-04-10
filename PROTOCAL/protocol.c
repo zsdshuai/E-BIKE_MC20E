@@ -272,7 +272,7 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 
 bool get_work_state(void)
 {
-	if(net_work_state==EN_CONNECT_STATE)
+	if(net_work_state==EN_CONNECTED_STATE)
 		return true;
 	else
 		return false;
@@ -301,7 +301,7 @@ void upload_hb_package(void)
 	{//reconnect
 		g_hb_send_times = 0;
 		Logln(D_INFO,"hb reconnect");
-		net_work_state = EN_INIT_STATE;
+		net_work_state = EN_CONNECT_STATE;
 	}
 	else
 	{
@@ -803,7 +803,7 @@ bool protocol_proc(char* buf ,int len)
 			calibration_time(buf);
 	//		upload_version_package();
 	//		upload_imsi_package();
-			net_work_state = EN_CONNECT_STATE;
+			net_work_state = EN_CONNECTED_STATE;
 			break;																	
 		}		
 		case EN_GT_PT_GPS: 			

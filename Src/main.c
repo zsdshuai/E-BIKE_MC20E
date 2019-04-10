@@ -161,7 +161,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MODULE_RST();
+//  MODULE_RST();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init(); 
@@ -584,7 +584,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0|GPIO_PIN_15, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0|GPIO_PIN_15|GPIO_PIN_12, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_12|GPIO_PIN_13 
@@ -598,7 +598,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PA0 PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_15;
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_15|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -672,7 +672,7 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
 	HAL_TIM_Base_Start_IT(&htim3);
-	module_init();
+//	module_init();
 	/* Infinite loop */
 	for(;;)
 	{
@@ -768,7 +768,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			flag_alarm = 0;
 			flag_delay6s = 0;
 		}
-		
+		gsm_led_process();
 	}
 	
 	/* USER CODE END Callback 0 */
@@ -795,7 +795,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		rotate_bak = rotate_count;
 		mileage_bak = mileage_count;
 		shake_bak = shake_count;
-		
+
 		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
 
 	}

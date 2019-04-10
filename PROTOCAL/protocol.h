@@ -12,8 +12,9 @@
 typedef enum
 {
 	EN_INIT_STATE = 0,
+	EN_CONNECT_STATE,
 	EN_LOGING_STATE,
-	EN_CONNECT_STATE,	
+	EN_CONNECTED_STATE,	
 }work_state;
 typedef enum
 {	

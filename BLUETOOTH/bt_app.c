@@ -14,7 +14,6 @@
 //#include "flash.h"
 
 extern uint32_t diff_rotate,diff_mileage,diff_shake;
-//extern uint64_t rotate_count,mileage_count;
 extern battery_info_struct curr_bat;
 extern gps_info_struct gps_info;
 

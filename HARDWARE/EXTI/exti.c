@@ -1,6 +1,6 @@
 #include "exti.h"
 
-unsigned long rotate_count = 0, mileage_count = 10000, shake_count = 0;
+volatile unsigned long rotate_count = 0, mileage_count = 10000, shake_count = 0;
 uint32_t diff_rotate, diff_mileage, diff_shake;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)

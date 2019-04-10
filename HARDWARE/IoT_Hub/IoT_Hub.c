@@ -24,6 +24,7 @@ uint8_t bt_rsp_flag=0;
 uint8_t bt_cmd_flag=0;	//蓝牙业务命令标志
 uint8_t bt_cmd_data[20];
 uint8_t bt_cmd_len;
+uint8_t connect_times;
 cell_location_struct cell_loc;
 
 
@@ -51,7 +52,7 @@ AT_STRUCT at_pack[]={
 	{AT_QIREGAPP,"AT+QIREGAPP","OK",300,NULL},
 	{AT_QIACT,"AT+QIACT","OK",3000,NULL},
 	{AT_COPS,"AT+COPS?","OK",300,NULL},
-	{AT_QCELLLOC,"AT+QCELLLOC=1","OK",300,parse_cell_location_cmd},
+	{AT_QCELLLOC,"AT+QCELLLOC=1","OK",1000,parse_cell_location_cmd},
 	{AT_QIMUX,"AT+QIMUX=0","OK",300,NULL},
 	{AT_QIDNSIP,"AT+QIDNSIP=1","OK",300,NULL},
 	{AT_QIOPEN,"","CONNECT OK",3000,NULL},
@@ -787,7 +788,15 @@ bool parse_another_cmd(char* buf, int len)
 	}
 	else if(tmp1 = datafind(buf,len,"+CME ERROR:"))
 	{
-
+		char data[6]={0};
+		int err;
+		tmp2 = strstr(tmp1,"\r\n");
+		memcpy(data,tmp1+strlen("+CME ERROR:"),tmp2-(tmp1+strlen("+CME ERROR:")));
+		err = atoi(data);
+		Logln(D_INFO,"CME ERROR code = %d",err);
+		ret = true;
+		if(err == 7103)
+			net_work_state=EN_INIT_STATE;
 	}
 	else if(datafind(buf, len,"CONNECT OK"))
 	{
@@ -795,7 +804,7 @@ bool parse_another_cmd(char* buf, int len)
 	}
 	else if(datafind(buf, len,"ALREADY CONNECT"))
 	{
-		net_work_state=EN_CONNECT_STATE;
+		net_work_state=EN_CONNECTED_STATE;
 	}
 	else if(datafind(buf,len,"RDY"))
 	{
@@ -805,10 +814,10 @@ bool parse_another_cmd(char* buf, int len)
 	{
 		ret = true;
 	}
-	else if(datafind(buf,len,"+PDP DEACT") || datafind(buf,len,"CONNECT FAIL"))
+	else if(datafind(buf,len,"+PDP DEACT") /*|| datafind(buf,len,"CONNECT FAIL")*/)
 	{//NETWORD disconnect
 		Logln(D_INFO,"CLOSED ---%s",buf);
-		net_work_state=EN_INIT_STATE;
+		net_work_state=EN_CONNECT_STATE;
 		ret = true;
 	}
 	return ret;
@@ -916,18 +925,17 @@ void gnss_init(void)
 }
 void module_init(void)
 {
-	Logln(D_INFO, "IOT_module Start test!! \r\n");
+	Logln(D_INFO, "IOT_module Start Init \r\n");
 
 	pure_uart1_buf();
+	connect_times = 0;
 	
-	HAL_Delay(2000);
-	Logln(D_INFO, "IOT_module PWR ON \r\n");
 	while(Send_AT_Command(AT_ATE0)==0); 
-	if(g_flash.zd_sen == 0)
+	if(g_flash.flag!= 1)
 	{
 		while(Send_AT_Command(AT_IPR)==0);
+		while(Send_AT_Command(AT_W)==0);
 	}
-	while(Send_AT_Command(AT_W)==0);
 	while(Send_AT_Command(AT_ATI)==0);	
 	while(Send_AT_Command(AT_CPIN)==0);
 	while(Send_AT_Command(AT_GSN)==0);
@@ -957,6 +965,7 @@ void at_connect_service(void)
 	Logln(D_INFO,"%s,%d",g_flash.net.domain,g_flash.net.port);
 	sprintf(at_pack[i].cmd_txt,"AT+QIOPEN=\"TCP\",\"%s\",%d",g_flash.net.domain,g_flash.net.port);
 	Send_AT_Command_ext(AT_QIOPEN);
+	connect_times++;
 }
 
 void at_close_service(void)
@@ -1036,15 +1045,32 @@ void at_process(void)
 
 	if(net_work_state==EN_INIT_STATE)
 	{
-	//	at_close_service();
+		gsm_led_flag = 0;
+		MODULE_RST();
+		HAL_Delay(3000);
+		gsm_led_flag = 1;
+		module_init();
+		net_work_state = EN_CONNECT_STATE;
+	}
+	else if(net_work_state==EN_CONNECT_STATE)
+	{
+		gsm_led_flag = 1;
+		at_close_service();
 		at_connect_service();
+		if(connect_times > 5)
+		{
+			Logln(D_INFO, "reconnect 5 times, restart ME");
+			net_work_state=EN_INIT_STATE;
+		}
 	}
 	else if(net_work_state==EN_LOGING_STATE)
 	{
 
 	}
-	else if(net_work_state==EN_CONNECT_STATE)
+	else if(net_work_state==EN_CONNECTED_STATE)
 	{
+		gsm_led_flag = 2;
+		connect_times = 0;
 		at_connected_process();
 	}
 

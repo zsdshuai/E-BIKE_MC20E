@@ -7,7 +7,7 @@
 #define MAXSHAKE 2147483648
 
 extern uint32_t diff_rotate, diff_mileage,diff_shake;
-extern unsigned long rotate_count, mileage_count, shake_count;	
+extern volatile unsigned long rotate_count, mileage_count, shake_count;	
 
 #endif
 

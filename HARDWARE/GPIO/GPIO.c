@@ -13,7 +13,8 @@ uint8_t flag_delay500ms, flag_delay900ms, flag_delay10ms, flag_delay4s,flag_dela
 uint8_t f_motorlock;
 uint8_t flag_tangze_unlock = 0,flag_tangze_lock = 0, flag_battery_lock = 0;
 extern uint16_t tim14_delay900ms, tim14_delay500ms, tim14_delay10ms, tim14_delay4s;
-
+uint8_t gsm_led_flag = 0;//0 Ãð£¬1 ³£ÁÁ£¬2½»ÌæÉÁË¸
+uint8_t gsm_led_count=0, gsm_led_on_off = 0;
 //ÌÆÔóÉÏËø
 void tangze_lock_bike(void)
 {
@@ -144,6 +145,38 @@ void close_electric_door(void)
     ACC_off;
 }
 
+void gsm_led_process(void)
+{
+	if(gsm_led_flag ==2)	//½»ÌæÉÁË¸
+	{
+		gsm_led_count++;
+		
+		if(gsm_led_on_off && gsm_led_count>=20)	//ÁÁ200ms
+		{
+			gsm_led_off;
+			gsm_led_on_off = 0;
+			gsm_led_count = 0;
+//			printf("\r\nLED_OFF\r\n");
+		}
+		else if(!gsm_led_on_off && gsm_led_count >=80)	//Ãð800ms
+		{
+			gsm_led_on;
+			gsm_led_on_off = 1;
+			gsm_led_count = 0;
+//			printf("\r\nLED_ON\r\n");
 
+		}
+	}
+	else if(gsm_led_flag ==1)
+	{
+		if(gsm_led_on_off==0)
+			gsm_led_on;
+	}
+	else 
+	{
+		if(gsm_led_on_off==1)
+			gsm_led_off;
+	}
+}
 
 

@@ -92,7 +92,7 @@ osThreadId myTask02Handle;
 /* Private variables ---------------------------------------------------------*/
 uint8_t usart1_recbuf, usart2_recbuf;
 uint8_t tim3_delay5s;
-uint16_t tim14_delay900ms,tim14_delay500ms,tim14_delay10ms, tim14_delay4s,tim14_delay6s;
+uint16_t tim14_delay900ms,tim14_delay500ms,tim14_delay10ms, tim14_delay4s,tim14_delay8s;
 uint8_t flag_delay5s, flag_delay1s, flag_sendlock,flag_delay5s_2;
 uint32_t adc_val[64];
 uint16_t batvol;
@@ -100,7 +100,7 @@ uint64_t rotate_bak, mileage_bak, shake_bak;
 
 extern uint8_t login_protect_timeout;
 extern uint8_t flag_alarm;
-extern uint8_t flag_delay6s;
+extern uint8_t flag_delay8s;
 
 
 /* USER CODE END PV */
@@ -704,6 +704,7 @@ void StartTask02(void const * argument)
         uart2_process();
         motorlock_process();
         shake_process();
+	key_check_process();
 	voice_process();
         osDelay(1);
   }
@@ -760,13 +761,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			flag_motorlock2 = 1;
 		}
 
-		if (flag_delay6s)
-			tim14_delay6s++;
-		if (tim14_delay6s >= 600) 
+		if (flag_delay8s)
+			tim14_delay8s++;
+		if (tim14_delay8s >= 800) 
 		{
-			tim14_delay6s = 0;
+			tim14_delay8s = 0;
 			flag_alarm = 0;
-			flag_delay6s = 0;
+			flag_delay8s = 0;
 		}
 		gsm_led_process();
 	}

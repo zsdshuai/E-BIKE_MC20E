@@ -427,9 +427,41 @@ void shake_process(void)
         		printf("shake--%d\r\n",diff_shake);
               		voice_play(VOICE_ALARM);
 			flag_alarm = 1;
-			flag_delay6s = 1;
+			flag_delay8s = 1;
         	}
         }
+}
+void key_check_process(void)
+{
+	uint8_t value = read_key_det;
+	uint8_t value2 = read_acc_det;
+	static uint16_t key_detect_num = 0;
+
+	if(!value &&(!(g_flash.acc&BT_OPEN) && !(g_flash.acc&KEY_OPEN) && !(g_flash.acc&GPRS_OPEN)))
+	{
+		printf("\r\nkey_detect_num=%d\r\n",key_detect_num);
+		key_detect_num++;
+		if(key_detect_num>10)
+		{
+			key_detect_num = 0;
+			g_flash.acc |= KEY_OPEN;
+			voice_play(VOICE_UNLOCK);
+		}
+	}
+	else if(value && g_flash.acc && value2)
+	{
+		key_detect_num++;
+		if(key_detect_num>10)
+		{
+			key_detect_num = 0;
+			g_flash.acc = 0;
+			voice_play(VOICE_LOCK);
+		}
+	}
+	else
+	{
+		key_detect_num = 0;
+	}
 }
 void test1()
 {
@@ -470,7 +502,7 @@ void init_flash(void)
 		g_flash.motor = 0;
 		g_flash.ld_alarm = 0;
 		g_flash.zd_alarm = 0;
-		g_flash.zd_sen = 50;
+		g_flash.zd_sen = 80;
 		memset(g_flash.imei,0,sizeof(g_flash.imei));
 		strcpy(g_flash.net.domain, DOMAIN);
 		g_flash.net.port = PORT;

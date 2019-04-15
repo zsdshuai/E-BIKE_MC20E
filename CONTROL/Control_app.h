@@ -142,6 +142,7 @@ bool lock_bike(void);
 void motorlock_process(void);
 void dianchi_refresh_process(void);
 void shake_process(void);
+void key_check_process(void);
 void init_flash(void);
 void open_dianchi_lock(void);
 

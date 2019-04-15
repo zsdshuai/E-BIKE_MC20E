@@ -19,11 +19,12 @@
 #define 	battery_B_on 				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET)
 #define 	gsm_led_off 				HAL_GPIO_WritePin(GPIOA,GPIO_PIN_12,GPIO_PIN_RESET)
 #define 	gsm_led_on 				HAL_GPIO_WritePin(GPIOA,GPIO_PIN_12,GPIO_PIN_SET)
-#define 	read_gsm_led 			HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12)
+#define 	read_key_det 			HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4)
+#define 	read_acc_det 				HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_3)
 
 extern uint8_t flag_lock, f_motorlock,gsm_led_flag;
 extern uint8_t flag_delay_lock, flag_delay_unlock, flag_batlock, flag_motorlock, flag_motorlock2;
-extern uint8_t flag_delay500ms, flag_delay900ms, flag_delay10ms, flag_delay4s,flag_delay6s; 
+extern uint8_t flag_delay500ms, flag_delay900ms, flag_delay10ms, flag_delay4s,flag_delay8s; 
 extern uint8_t flag_tangze_unlock,flag_tangze_lock, flag_battery_lock;
 
 void tangze_lock_bike(void);

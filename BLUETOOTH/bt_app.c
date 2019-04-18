@@ -59,9 +59,14 @@ void bt_send_data(uint8_t* data,uint16_t len)
 
 void bt_prepare_send_data(uint8_t operate, uint8_t param_len, uint8_t* param)
 {
-	uint8_t buffer[32]={0};
+	uint8_t *buffer=(uint8_t*)malloc(32);
 	uint32_t ts = GetTimeStamp();
 	uint16_t crc;
+
+	if(!buffer)
+		return;
+	else
+		memset(buffer,0,32);
 	
 	buffer[0] = 0x3a;
 	buffer[1] = 0x02;
@@ -82,13 +87,20 @@ void bt_prepare_send_data(uint8_t operate, uint8_t param_len, uint8_t* param)
 	buffer[4+param_len+7]=0x0a;	
 
 	bt_send_data(buffer,12+param_len);
+
+	free(buffer);
 }
 
 void bt_prepare_send_data_ext(uint8_t operate, uint8_t param_len, uint8_t* param)
 {
-	uint8_t buffer[32]={0};
+	uint8_t *buffer=(uint8_t*)malloc(32);
 	uint32_t ts = GetTimeStamp();
 	uint16_t crc;
+
+	if(!buffer)
+		return;
+	else
+		memset(buffer,0,32);
 	
 	buffer[0] = 0x3a;
 	buffer[1] = 0x02;
@@ -108,6 +120,8 @@ void bt_prepare_send_data_ext(uint8_t operate, uint8_t param_len, uint8_t* param
 	buffer[3+param_len+7]=0x0a;	
 	
 	bt_send_data(buffer,11+param_len);
+
+	free(buffer);
 }
 
 void read_data(uint8_t operate)

@@ -224,7 +224,7 @@ uint16_t kfd_get_sn(void)
  *****************************************************************************/
 uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context_len)
 {
-	char buf[128]={0};
+	char* buf;
 //	char outbuf2[128]={0};
 	uint16_t* crc = NULL;
 	uint8_t crc_len,sum_len = 0;
@@ -233,6 +233,12 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 	RTC_DateTypeDef sdatestructure;
 	RTC_TimeTypeDef stimestructure;
 
+	buf = (char*)malloc(256);
+	if(!buf)
+		return 0;
+	else
+		memset(buf,0,256);
+	
 	head.start = 0xffff;
 	head.pack_len = context_len;
 	head.prot_type = prot_type;
@@ -269,6 +275,8 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 //	printf("send=%d,%s\r\n",sum_len,outbuf2);
 	
 	send_data(buf,sum_len);
+
+	free(buf);
 	return sum_len;
 }
 

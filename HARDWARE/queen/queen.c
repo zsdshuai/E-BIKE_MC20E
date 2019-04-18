@@ -10,8 +10,8 @@
 #include <stdlib.h>
 
 // CircleQueue		 TxCAN_Queue;	/* CAN 发送缓冲区*/
-CircleQueue		 RxUart1_Queue;		/* 串口1接收缓冲区*/
 CircleQueue		 RxUart2_Queue;		/* 串口2接收缓冲区*/
+CircleQueue at_send_Queue;
 Circle_buffer    buffer;
 RxMsgTypeDef   Uart1_buf, Uart2_buf;
 /*********************************************************************************************************

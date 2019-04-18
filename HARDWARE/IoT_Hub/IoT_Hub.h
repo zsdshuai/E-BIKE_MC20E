@@ -14,6 +14,8 @@ typedef struct
 {
 	char imsi[16];
 	char imei[16];
+	char addr[13];
+	char name[11];
 }dev_struct;
 
 typedef enum
@@ -181,4 +183,5 @@ char* get_imei(void);
 char* get_imsi(void);
 void send_data(char* buf, int len);
 void at_process(void);
+extern dev_struct dev_info;
 #endif

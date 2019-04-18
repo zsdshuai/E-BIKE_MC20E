@@ -13,6 +13,8 @@ extern UART_HandleTypeDef huart1;
 char module_recv_buffer[MODULE_BUFFER_SIZE] = {0};
 short module_recv_buffer_index = 0;
 
+char recv_buf[BUFLEN];
+
 gps_info_struct gps_info;
 dev_struct dev_info;
 uint8_t login_protect_timeout=0;
@@ -31,6 +33,8 @@ cell_location_struct cell_loc;
 RxMsgTypeDefExt at_curr_node={0};
 
 extern bool parse_bt_cmd(int8_t* buf, uint16_t len);
+void parse_bt_addr_cmd(char* buf, int len);
+void parse_bt_name_cmd(char* buf, int len);
 void parse_imei_cmd(char* buf, int len);
 void parse_imsi_cmd(char* buf, int len);
 bool parse_gnss_cmd(char* buf, int len);
@@ -76,9 +80,9 @@ AT_STRUCT at_pack[]={
 	
 	{AT_BT_ON,"AT+QBTPWR=1","OK",3000,NULL},
 	{AT_BT_OFF,"AT+QBTPWR=0","OK",300,NULL},
-	{AT_BT_ADDR,"AT+QBTLEADDR?","OK",300,NULL},
+	{AT_BT_ADDR,"AT+QBTLEADDR?","OK",300,parse_bt_addr_cmd},
 	{AT_BT_NAME,"","OK",300,NULL},
-	{AT_BT_Q_NAME,"AT+QBTNAME?","OK",300,NULL},
+	{AT_BT_Q_NAME,"AT+QBTNAME?","OK",300,parse_bt_name_cmd},
 	{AT_BT_VISB,"AT+QBTVISB=0","OK",300,NULL},
 
 	{AT_QBTGATSREG,"AT+QBTGATSREG=1,\"A001\"","OK",300,NULL},
@@ -133,22 +137,7 @@ void pure_uart1_buf(void)
 	memset(module_recv_buffer, 0, MODULE_BUFFER_SIZE);
 	module_recv_buffer_index = 0;
 }
-void wait_module_ready(void)
-{ 
-	char buf[128]={0};
-   	while (true) 
-	{
-		HAL_Delay(1000);
-		if(get_uart_data(buf, sizeof(buf)))
-		{
-			if (strstr(buf, "RDY") != NULL)
-			{
-				Logln(D_INFO, "Rcv RDY");
-				break;
-			}
-		}
-	} 
-}
+
 int GetComma(int num,char *str)
 {
 	int i,j=0;
@@ -403,7 +392,6 @@ int8_t GetATIndex(AT_CMD cmd)
 
 uint8_t Send_AT_Command(AT_CMD cmd)
 {
-	char buf[256]={0};
 	int len;
 	uint8_t end = 0x1a;	
 	int8_t i=GetATIndex(cmd), ret=0;
@@ -418,17 +406,17 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	UART_SendString("\r\n");
 	HAL_UART_Transmit(&huart1, &end, 1,0xffff); 
 	
-	
 	HAL_Delay(at_pack[i].timeout);
+	
+	memset(recv_buf, 0, BUFLEN);
+	len = get_uart_data(recv_buf, BUFLEN);
+	Logln(D_INFO, "rcv %d,%s", len,recv_buf);
 
-	len = get_uart_data(buf, sizeof(buf));
-	Logln(D_INFO, "rcv %d,%s", len,buf);
-
-	if(strstr(buf,at_pack[i].cmd_ret))
+	if(strstr(recv_buf,at_pack[i].cmd_ret))
 	{
 		if(at_pack[i].fun)
 		{
-			at_pack[i].fun(buf,len);
+			at_pack[i].fun(recv_buf,len);
 		}
 		ret = 1;
 	}
@@ -442,7 +430,10 @@ void Send_AT_Command_ext(AT_CMD cmd)
 	int8_t i=GetATIndex(cmd);
 
 	if(i==-1)
+	{
 		Logln(D_INFO, "error cmd");
+		return;
+	}
 	else
 		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
 
@@ -576,7 +567,32 @@ int get_uart_data(char*buf, int count)
 		return 0;
 	}	
 }
+void parse_bt_addr_cmd(char* buf, int len)
+{
+	char* tmp1 = NULL,*tmp2= NULL;
+	
+	memset(dev_info.addr,0,sizeof(dev_info.addr));
+	tmp1 = strstr(buf,"+QBTLEADDR: ");	
+	tmp2 = strstr(tmp1,"\r\n");
+	if(tmp1&&tmp2)
+	{
+		memcpy(dev_info.addr,tmp1+strlen("+QBTLEADDR: "),tmp2-(tmp1+strlen("+QBTLEADDR: ")));
+	}
+	printf("addr=%s\n",dev_info.addr);
+}
+void parse_bt_name_cmd(char* buf, int len)
+{
+	char* tmp1 = NULL,*tmp2= NULL;
 
+	memset(dev_info.name, 0, sizeof(dev_info.name));
+	tmp1 = strstr(buf,"+QBTNAME: ");	
+	tmp2 = strstr(tmp1,"\r\n");
+	if(tmp1&&tmp2)
+	{
+		memcpy(dev_info.name,tmp1+strlen("+QBTNAME: "),tmp2-(tmp1+strlen("+QBTNAME: ")));
+	}
+	printf("name=%s\n",dev_info.name);
+}
 void parse_imei_cmd(char* buf, int len)
 {
 	char* tmp1 = NULL,*tmp2= NULL;
@@ -617,7 +633,6 @@ char* get_imsi(void)
 }
 void send_data(char* buf, int len)
 {    	
-	char buffer[BUFLEN]={0};
 	uint8_t esc_val = 0;	
 	int i,lenth;	
 	
@@ -630,8 +645,9 @@ void send_data(char* buf, int len)
 	UART_SendString("\r\n");
 	HAL_Delay(at_pack[i].timeout);
 
-	lenth = get_uart_data_ext(buffer, BUFLEN);
-	if(datafind(buffer, lenth, at_pack[i].cmd_ret))
+	memset(recv_buf, 0, BUFLEN);
+	lenth = get_uart_data_ext(recv_buf, BUFLEN);
+	if(datafind(recv_buf, lenth, at_pack[i].cmd_ret))
 	{		
 		uart1_send(buf, len);
 		Logln(D_INFO, "send data1");
@@ -664,8 +680,19 @@ void bt_name_modify(char* name)
 	int8_t i;
 	
 	i = GetATIndex(AT_BT_NAME);
-	sprintf(at_pack[i].cmd_txt,"AT+QBTNAME=\"%s\"",name);
-	Send_AT_Command_ext(AT_BT_NAME);
+	sprintf(at_pack[i].cmd_txt,"AT+QBTNAME=%s",name);
+	Send_AT_Command(AT_BT_NAME);
+}
+void judge_change_bt_name(void)
+{
+	char name[11]={0},imei6[7]={0};
+
+	strncpy(imei6, g_flash.imei+9,6);
+	sprintf(name,"\"CC00%s\"",imei6);
+	if(strcmp(dev_info.name,name))
+	{
+		bt_name_modify(name);
+	}
 }
 RET_TYPE parse_bt_at_cmd(char* buf, int len)
 {
@@ -826,33 +853,33 @@ bool parse_another_cmd(char* buf, int len)
 
 bool at_parse_recv(void)
 {
-	char pbuf[BUFLEN]={0};
 	uint8_t rec_len;
 	uint32_t ret=0;
 	bool result = true;
 
-  	rec_len = get_uart_data_ext(pbuf, BUFLEN);
+	memset(recv_buf, 0, BUFLEN);
+	rec_len = get_uart_data_ext(recv_buf, BUFLEN);
 
 	if(rec_len > 0)
 	{
 	//连接之后网络业务协议
-		if(protocol_parse(pbuf, rec_len))
+		if(protocol_parse(recv_buf, rec_len))
 		{
 			ret |=RET_P;
 		}
 
 	//只收到应答，要清空数据
-		if(datafind(pbuf, rec_len,"OK") || datafind(pbuf, rec_len,"SEND OK") || datafind(pbuf, rec_len,"SEND FAIL")|| datafind(pbuf,rec_len, "ERROR"))
+		if(datafind(recv_buf, rec_len,"OK") || datafind(recv_buf, rec_len,"SEND OK") || datafind(recv_buf, rec_len,"SEND FAIL")|| datafind(recv_buf,rec_len, "ERROR"))
 			ret |=RET_A;
 
 	//蓝牙连接，接收数据	
-		ret |= parse_bt_at_cmd(pbuf, rec_len);
+		ret |= parse_bt_at_cmd(recv_buf, rec_len);
 	
 	//模块自主通知的事件	
-		if(parse_another_cmd(pbuf, rec_len))
+		if(parse_another_cmd(recv_buf, rec_len))
 			ret |=RET_AN;
 
-		if(parse_gnss_cmd(pbuf,rec_len))
+		if(parse_gnss_cmd(recv_buf,rec_len))
 			ret |= RET_G;
 
 		Logln(D_INFO,"rcv ret=%x",ret);
@@ -888,6 +915,7 @@ void bt_init(void)
 	while(Send_AT_Command(AT_BT_ADDR)==0);
 //	while(Send_AT_Command(AT_BT_NAME)==0);
 	while(Send_AT_Command(AT_BT_Q_NAME)==0);
+	judge_change_bt_name();
 	while(Send_AT_Command(AT_QBTGATSREG)==0);
 	while(Send_AT_Command(AT_QBTGATSL)==0);
 	
@@ -1014,31 +1042,6 @@ void bt_cmd_process(void)
 	}
 }
 
-void at_connected_process(void)
-{
-	static uint8_t flag_rmc=0;
-  	if (flag_delay1s == 1) 
-	{
-              	flag_delay1s = 0;
-		upload_all_data_package();
-	}
-	else if(flag_delay5s==1)
-	{
-		//send_gps_QGNSSRD_cmd();
-		if(flag_rmc==0)
-		{
-			send_gps_rmc_cmd();
-			flag_rmc = 1;
-		}
-		else if(flag_rmc==1)
-		{
-			send_gps_gga_cmd();
-			flag_delay5s = 0;
-			flag_rmc = 0;
-		}
-	}
-}
-
 void at_process(void)
 {	
 	uint8_t i=0;
@@ -1071,7 +1074,7 @@ void at_process(void)
 	{
 		gsm_led_flag = 2;
 		connect_times = 0;
-		at_connected_process();
+		upload_all_data_package();
 	}
 
 	while(!at_parse_recv())	//数据没接收完全，等待100ms再接收

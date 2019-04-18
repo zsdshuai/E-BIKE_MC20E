@@ -104,6 +104,7 @@ typedef enum
 	EN_GT_DT_PWR_OIL_SWITCH = 0x20,
 	EN_GT_DT_IO = 0x21,
 	EN_GT_DT_IMSI = 0x22,
+	EN_GT_DT_BT_ADDR = 0x23,
 	
 	EN_GT_CT_END
 } GT_DATA_TYPE_EN;

@@ -672,6 +672,8 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
 	HAL_TIM_Base_Start_IT(&htim3);
+  	InitCircleQueue(&at_send_Queue);	                           //初始化队列
+
 //	module_init();
 	/* Infinite loop */
 	for(;;)

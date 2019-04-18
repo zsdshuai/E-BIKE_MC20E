@@ -6,6 +6,7 @@
 #include "usart.h"
 #include "IoT_Hub.h"
 #include "control_app.h"
+#include "queen.h"
 
 extern RTC_HandleTypeDef hrtc;
 extern gps_info_struct gps_info;
@@ -13,6 +14,7 @@ uint16_t kfd_sn;
 config_struct g_config;
 uint8_t g_hb_send_times = 0;
 work_state net_work_state = EN_INIT_STATE;
+extern uint8_t flag_delay1s;
 
 #define DEV_VER "SW3.0.00_HW3.0.0"
 
@@ -583,7 +585,18 @@ void upload_imsi_package(void)
 
 	send_package(EN_GT_PT_DEV_DATA, (char*)&data_pkg, data_pkg.value_len+2);
 }
+void upload_bt_addr_package(void)
+{
+	data_pkg_struct data_pkg;
 
+	data_pkg.type = EN_GT_DT_BT_ADDR;
+	data_pkg.value_len = strlen(dev_info.addr); 
+	strcpy(data_pkg.value,dev_info.addr);
+
+	printf("upload_bt_addr_package\r\n");
+
+	send_package(EN_GT_PT_DEV_DATA, (char*)&data_pkg, data_pkg.value_len+2);
+}
 void upload_ebike_data_package(void)
 {
   	printf("upload_ebike_data_package\r\n");
@@ -682,51 +695,111 @@ void upload_give_back_package(uint8_t gate)
 	send_package(EN_GT_PT_GIVE_BACK,(uint8_t*)&give_back_pkg, len);
 }
 
-void upload_all_data_package(void)
+void push_interval_package_process(void)
 {
 	static uint8_t delay_index=0;
     
 	if(!get_work_state())
 		return;
 
-//	Logln(D_INFO,"upload_all_data_package");
-
-	if ((delay_index)%15 == 0)	//15Ãë
+	if(flag_delay1s)
 	{
-		upload_gps_package();
-	}
-	else 	if((delay_index+1)%30==0)
-	{
-	    	upload_alarm_package();
-	} 
-	else if((delay_index+2)%30==0)
-	{
-		upload_ebike_data_package();
-	}
-	else if((delay_index+3)%60==0)
-	{
-		upload_hb_package();
-	}
-	else
-	{
-		static uint8_t last_acc=0;
-
-		if(last_acc != get_electric_gate_status())
+		RxMsgTypeDef msgType;
+		
+		flag_delay1s = 0;
+		if ((delay_index)%15 == 0)	//15Ãë
 		{
-			last_acc = get_electric_gate_status();
-			upload_ebike_data_package();
+			msgType.Data[0] = 6;
+			PushElement(&at_send_Queue, msgType, 1);
+		}
+		else 	if((delay_index+1)%30==0)
+		{
+			msgType.Data[0] = 7;
+			PushElement(&at_send_Queue, msgType, 1);
+		} 
+		else if((delay_index+2)%30==0)
+		{
+			msgType.Data[0] = 8;
+			PushElement(&at_send_Queue, msgType, 1);
+		}
+		else if((delay_index+3)%60==0)
+		{
+			msgType.Data[0] = 9;
+			PushElement(&at_send_Queue, msgType, 1);
+		}
+		else if((delay_index+4)%5==0)
+		{
+			msgType.Data[0] = 1;
+			PushElement(&at_send_Queue, msgType, 1);
+			msgType.Data[0] = 2;
+			PushElement(&at_send_Queue, msgType, 1);
 		}
 		else
 		{
-			dianchi_refresh_process();
+			static uint8_t last_acc=0;
+
+			if(last_acc != get_electric_gate_status())
+			{
+				last_acc = get_electric_gate_status();
+				upload_ebike_data_package();
+			}
+			else
+			{
+				dianchi_refresh_process();
+			}
+		}
+		
+		delay_index++;
+
+		if(delay_index>59)
+			delay_index = 0;
+	}
+}
+
+void upload_all_data_package(void)
+{
+	RxMsgTypeDef at_send_type;
+
+	push_interval_package_process();
+	
+	if(PopElement(&at_send_Queue,&at_send_type))
+	{
+		switch(at_send_type.Data[0])
+		{
+			case 1:
+				send_gps_rmc_cmd();
+				break;
+			case 2:
+				send_gps_gga_cmd();
+				break;
+			case 3:
+				upload_version_package();
+				break;
+			case 4:
+				upload_imsi_package();
+				break;
+			case 5:
+				upload_bt_addr_package();
+				break;
+			case 6:
+				upload_gps_package();
+				break;
+			case 7:
+				upload_alarm_package();
+				break;
+			case 8:
+				upload_ebike_data_package();
+				break;
+			case 9:
+				upload_hb_package();
+				break;
+			default:
+				break;
 		}
 	}
-	
-	delay_index++;
 
-	if(delay_index>63)
-		delay_index = 0;
 }
+
 
 void calibration_time(uint8_t* buf)
 {
@@ -799,10 +872,14 @@ bool protocol_proc(char* buf ,int len)
 	{
 		case EN_GT_PT_LOGIN:						
 		{	
+			RxMsgTypeDef msgType;
+			
 			printf("login rsp sn ok\r\n");
 			calibration_time(buf);
-	//		upload_version_package();
-	//		upload_imsi_package();
+			msgType.Data[0] = 3;
+			PushElement(&at_send_Queue, msgType, 1);
+			msgType.Data[0] = 4;
+			PushElement(&at_send_Queue, msgType, 1);
 			net_work_state = EN_CONNECTED_STATE;
 			break;																	
 		}		

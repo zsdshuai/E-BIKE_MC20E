@@ -8,7 +8,6 @@
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart1;
 
-void UART_SendString(uint8_t* s);     //·¢ËÍµ±Ç°×Ö·û
 //void trace(char* buf, int len);
 void uart2_send(uint8_t * pData,uint16_t Size);
 void uart1_send(uint8_t * pData,uint16_t Size);

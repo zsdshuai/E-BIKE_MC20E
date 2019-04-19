@@ -401,10 +401,9 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	else
 		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
 	
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
-	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),0xffff);  
-	UART_SendString("\r\n");
-	HAL_UART_Transmit(&huart1, &end, 1,0xffff); 
+	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000);  
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET); 
+	uart1_send("\r\n",strlen("\r\n"));
 	
 	HAL_Delay(at_pack[i].timeout);
 	
@@ -435,9 +434,9 @@ void Send_AT_Command_ext(AT_CMD cmd)
 	else
 		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
 
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
-	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),0xffff); 
-	UART_SendString("\r\n");
+	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000); 
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET); 	
+	uart1_send("\r\n",strlen("\r\n"));
 
 	HAL_Delay(at_pack[i].timeout);
 }
@@ -638,9 +637,10 @@ void send_data(char* buf, int len)
 	memset(at_pack[i].cmd_txt, 0, sizeof(at_pack[i].cmd_txt));
 	sprintf(at_pack[i].cmd_txt,"AT+QISEND=%d",len);
 	Logln(D_INFO, "send data %d byte", len);
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
-	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),0xffff); 
-	UART_SendString("\r\n");
+	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000); 
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET); 
+	uart1_send("\r\n",strlen("\r\n"));
+	
 	HAL_Delay(at_pack[i].timeout);
 
 	memset(recv_buf, 0, BUFLEN);

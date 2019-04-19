@@ -33,22 +33,7 @@ PUTCHAR_PROTOTYPE
 
 char usart2_recv_buffer[USART2_BUFFER_SIZE] = {0};
 short usart2_recv_buffer_index = 0;
-/*******************************************************************************
-* 函数名  : UART_SendString
-* 描述    : USART发送字符串
-* 输入    : *s字符串指针
-* 输出    : 无
-* 返回    : 无 
-* 说明    : 无
-*******************************************************************************/
-void UART_SendString(uint8_t* s)
-{
-	while(*s)//检测字符串结束符
-	{
-		while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
-		huart1.Instance->TDR = (uint8_t) *s++;                    //发送当前字符
-	}
-}
+
 /*******************************************************************************
 * 函数名  : UART2_Data
 * 描述    : USART2发送一个字节
@@ -60,14 +45,14 @@ void UART_SendString(uint8_t* s)
 
 void uart1_send(uint8_t* pData, uint16_t Size)
 {
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)==RESET); 
-	HAL_UART_Transmit(&huart1, pData, Size, 0xffff);
+	HAL_UART_Transmit(&huart1, pData, Size, 1000);
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET); 
 }
 
 void uart2_send(uint8_t* pData, uint16_t Size)
 {
-	while(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_TC)==RESET); 
-	HAL_UART_Transmit(&huart2, pData, Size, 0xffff);
+	HAL_UART_Transmit(&huart2, pData, Size, 1000);
+	while(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_TC)!=SET); 	
 }
 
 void uart2_process(void)

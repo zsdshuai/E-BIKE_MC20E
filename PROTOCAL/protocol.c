@@ -888,6 +888,8 @@ bool protocol_proc(char* buf ,int len)
 			PushElement(&at_send_Queue, msgType, 1);
 			msgType.Data[0] = 4;
 			PushElement(&at_send_Queue, msgType, 1);
+			msgType.Data[0] = 5;
+			PushElement(&at_send_Queue, msgType, 1);
 			net_work_state = EN_CONNECTED_STATE;
 			break;																	
 		}		

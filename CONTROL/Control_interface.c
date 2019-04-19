@@ -299,7 +299,7 @@ bool parse_control_cmd(uint8_t* buf, uint16_t len)
 				reset_system();
 			}
 		}
-		else if(head = (char*)strstr(buf,"name:"))
+	/*	else if(head = (char*)strstr(buf,"name:"))
 		{
 		
 			head += strlen("name:");
@@ -313,7 +313,7 @@ bool parse_control_cmd(uint8_t* buf, uint16_t len)
 				flag = true;
 			//	reset_system();
 			}
-		}
+		}*/
 	}
 
 	if(!flag)

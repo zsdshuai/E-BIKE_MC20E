@@ -425,8 +425,6 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 
 void Send_AT_Command_ext(AT_CMD cmd)
 {
-	int len;
-	uint8_t end;	
 	int8_t i=GetATIndex(cmd);
 
 	if(i==-1)
@@ -841,7 +839,7 @@ bool parse_another_cmd(char* buf, int len)
 	{
 		ret = true;
 	}
-	else if(datafind(buf,len,"+PDP DEACT") /*|| datafind(buf,len,"CONNECT FAIL")*/)
+	else if(datafind(buf,len,"+PDP DEACT") || datafind(buf,len,"CLOSED"))
 	{//NETWORD disconnect
 		Logln(D_INFO,"CLOSED ---%s",buf);
 		net_work_state=EN_CONNECT_STATE;

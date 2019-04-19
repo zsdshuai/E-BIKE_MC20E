@@ -706,7 +706,7 @@ void StartTask02(void const * argument)
         uart2_process();
         motorlock_process();
         shake_process();
-	key_check_process();
+//	key_check_process();
 	voice_process();
         osDelay(1);
   }

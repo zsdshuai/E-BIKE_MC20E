@@ -12,7 +12,7 @@
 #include "adc.h"
 //#include "flash.h"
 
-#define DOMAIN "zcwebx.liabar.cn"
+#define DOMAIN "devzuche.liabar.com"	//"zcwebx.liabar.cn"
 #define PORT 9000
 
 flash_struct g_flash;

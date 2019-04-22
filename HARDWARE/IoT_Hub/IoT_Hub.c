@@ -422,6 +422,24 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	return ret;
 }
 
+void Send_AT_Command_Timeout(AT_CMD cmd, uint8_t timeout)
+{
+	while(1)
+	{
+		if(Send_AT_Command(cmd))
+		{
+			break;
+		}
+		else
+		{
+			timeout--;
+			
+			if(timeout==0)
+				break;
+		}
+	}
+}
+
 void Send_AT_Command_ext(AT_CMD cmd)
 {
 	int8_t i=GetATIndex(cmd);
@@ -575,7 +593,8 @@ void parse_bt_addr_cmd(char* buf, int len)
 	{
 		memcpy(dev_info.addr,tmp1+strlen("+QBTLEADDR: "),tmp2-(tmp1+strlen("+QBTLEADDR: ")));
 	}
-	printf("addr=%s\n",dev_info.addr);
+	printf("addr=%c%c:%c%c:%c%c:%c%c:%c%c:%c%c\r\n",dev_info.addr[0],dev_info.addr[1],dev_info.addr[2],dev_info.addr[3],dev_info.addr[4],dev_info.addr[5],
+		dev_info.addr[6],dev_info.addr[7],dev_info.addr[8],dev_info.addr[9],dev_info.addr[10],dev_info.addr[11]);
 }
 void parse_bt_name_cmd(char* buf, int len)
 {
@@ -663,14 +682,14 @@ void QGEPOF1(void)
 	int8_t i = GetATIndex(AT_QGEPOF);
 
 	strcpy(at_pack[i].cmd_txt, "AT+QGEPOF=0,255");
-	Send_AT_Command(AT_QGEPOF);
+	Send_AT_Command_Timeout(AT_QGEPOF,1);
 }
 void QGEPOF2(void)
 {
 	int8_t i = GetATIndex(AT_QGEPOF);
 	
 	strcpy(at_pack[i].cmd_txt, "AT+QGEPOF=2");
-	Send_AT_Command(AT_QGEPOF);
+	Send_AT_Command_Timeout(AT_QGEPOF,1);
 }
 
 void bt_name_modify(char* name)
@@ -679,14 +698,14 @@ void bt_name_modify(char* name)
 	
 	i = GetATIndex(AT_BT_NAME);
 	sprintf(at_pack[i].cmd_txt,"AT+QBTNAME=%s",name);
-	Send_AT_Command(AT_BT_NAME);
+	Send_AT_Command_Timeout(AT_BT_NAME,1);
 }
 void judge_change_bt_name(void)
 {
 	char name[11]={0},imei6[7]={0};
 
 	strncpy(imei6, g_flash.imei+9,6);
-	sprintf(name,"\"CC00%s\"",imei6);
+	sprintf(name,"\"LB00%s\"",imei6);
 	if(strcmp(dev_info.name,name))
 	{
 		bt_name_modify(name);
@@ -909,25 +928,22 @@ bool at_parse_recv(void)
 
 void bt_init(void)
 {
-	while(Send_AT_Command(AT_BT_ON)==0);
-	while(Send_AT_Command(AT_BT_ADDR)==0);
-//	while(Send_AT_Command(AT_BT_NAME)==0);
-	while(Send_AT_Command(AT_BT_Q_NAME)==0);
+	Send_AT_Command_Timeout(AT_BT_ON, 1);
+	Send_AT_Command_Timeout(AT_BT_ADDR, 1);
+	Send_AT_Command_Timeout(AT_BT_Q_NAME, 1);
 	judge_change_bt_name();
-	while(Send_AT_Command(AT_QBTGATSREG)==0);
-	while(Send_AT_Command(AT_QBTGATSL)==0);
+	Send_AT_Command_Timeout(AT_QBTGATSREG, 1);
+	Send_AT_Command_Timeout(AT_QBTGATSL, 1);
 	
-	while(Send_AT_Command(AT_QBTGATSS)==0);
-	while(Send_AT_Command(AT_QBTGATSC)==0);
-	while(Send_AT_Command(AT_QBTGATSD)==0);
-	while(Send_AT_Command(AT_QBTGATSST)==0);
-	while(Send_AT_Command(AT_BT_VISB)==0);
+	Send_AT_Command_Timeout(AT_QBTGATSS, 1);
+	Send_AT_Command_Timeout(AT_QBTGATSC, 1);
+	Send_AT_Command_Timeout(AT_QBTGATSD, 1);
+	Send_AT_Command_Timeout(AT_QBTGATSST, 1);
+	Send_AT_Command_Timeout(AT_BT_VISB, 1);
 	
-	while(Send_AT_Command(AT_QBTLETXPWR)==0);
-	while(Send_AT_Command(AT_QBTLETXPWR_Q)==0);
-	while(Send_AT_Command(AT_QBTGATADV)==0);
-
-//	while(Send_AT_Command(AT_QBTGATSDISC)==0);
+	Send_AT_Command_Timeout(AT_QBTLETXPWR, 1);
+	Send_AT_Command_Timeout(AT_QBTLETXPWR_Q, 1);
+	Send_AT_Command_Timeout(AT_QBTGATADV, 1);
 
 }
 
@@ -936,16 +952,16 @@ void AT_QGREFLOC_FUN(void)
 	int8_t i = GetATIndex(AT_QGREFLOC);
 	
 	sprintf(at_pack[i].cmd_txt,"AT+QGREFLOC=%s,%s",cell_loc.lat,cell_loc.lon);
-	while(Send_AT_Command(AT_QGREFLOC)==0);
+	Send_AT_Command_Timeout(AT_QGREFLOC, 10);
 }
 void gnss_init(void)
 {
-	while(Send_AT_Command(AT_QIFGCNT2)==0);  
-	while(Send_AT_Command(AT_QGPS_ON)==0);   	
-	while(Send_AT_Command(AT_QGNSSTS)==0); 
+	Send_AT_Command_Timeout(AT_QIFGCNT2, 1);  
+	Send_AT_Command_Timeout(AT_QGPS_ON, 1);   	
+	Send_AT_Command_Timeout(AT_QGNSSTS, 1); 
 	AT_QGREFLOC_FUN();
-	while(Send_AT_Command(AT_QGNSSEPO)==0);     
-//	while(Send_AT_Command(AT_QGEPOAID)==0); 
+	Send_AT_Command_Timeout(AT_QGNSSEPO, 1);     
+//	Send_AT_Command_Timeout(AT_QGEPOAID, 1); 
 	QGEPOF1();
 	QGEPOF2();
 }
@@ -956,30 +972,30 @@ void module_init(void)
 	pure_uart1_buf();
 	connect_times = 0;
 	
-	while(Send_AT_Command(AT_ATE0)==0); 
+	Send_AT_Command_Timeout(AT_ATE0, 1); 
 	if(g_flash.flag!= 1)
 	{
-		while(Send_AT_Command(AT_IPR)==0);
-		while(Send_AT_Command(AT_W)==0);
+		Send_AT_Command_Timeout(AT_IPR, 1);
+		Send_AT_Command_Timeout(AT_W, 1);
 	}
-	while(Send_AT_Command(AT_ATI)==0);	
-	while(Send_AT_Command(AT_CPIN)==0);
-	while(Send_AT_Command(AT_GSN)==0);
-	while(Send_AT_Command(AT_CIMI)==0);
-	while(Send_AT_Command(AT_CREG)==0);
+	Send_AT_Command_Timeout(AT_ATI, 1);	
+	Send_AT_Command_Timeout(AT_CPIN, 5);
+	Send_AT_Command_Timeout(AT_GSN, 1);
+	Send_AT_Command_Timeout(AT_CIMI, 1);
+	Send_AT_Command_Timeout(AT_CREG, 20);
 	bt_init();
-	while(Send_AT_Command(AT_CSQ)==0);
-	while(Send_AT_Command(AT_QIMODE)==0);
-	while(Send_AT_Command(AT_QICSGP)==0);     
-	while(Send_AT_Command(AT_QIREGAPP)==0);	
-	while(Send_AT_Command(AT_QIACT)==0);		
-	while(Send_AT_Command(AT_COPS)==0);
-	while(Send_AT_Command(AT_QIFGCNT1)==0);     	
-	while(Send_AT_Command(AT_QCELLLOC)==0);
+	Send_AT_Command_Timeout(AT_CSQ, 1);
+	Send_AT_Command_Timeout(AT_QIMODE, 1);
+	Send_AT_Command_Timeout(AT_QICSGP, 1);     
+	Send_AT_Command_Timeout(AT_QIREGAPP, 1);	
+	Send_AT_Command_Timeout(AT_QIACT, 1);		
+	Send_AT_Command_Timeout(AT_COPS, 1);
+	Send_AT_Command_Timeout(AT_QIFGCNT1, 1);     	
+	Send_AT_Command_Timeout(AT_QCELLLOC, 10);
 	gnss_init();
 	
-	while(Send_AT_Command(AT_QIFGCNT1)==0);     
-	while(Send_AT_Command(AT_QIDNSIP)==0);
+	Send_AT_Command_Timeout(AT_QIFGCNT1, 1);     
+	Send_AT_Command_Timeout(AT_QIDNSIP, 1);
 
 	Logln(D_INFO,"Init Complete");
 
@@ -1058,9 +1074,9 @@ void at_process(void)
 		gsm_led_flag = 1;
 		at_close_service();
 		at_connect_service();
-		if(connect_times > 5)
+		if(connect_times > 100)
 		{
-			Logln(D_INFO, "reconnect 5 times, restart ME");
+			Logln(D_INFO, "reconnect 60 times, restart ME");
 			net_work_state=EN_INIT_STATE;
 		}
 	}

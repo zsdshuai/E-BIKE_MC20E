@@ -349,7 +349,6 @@ void parse_gps_data(char* buf)
 	
 //	strcpy(pnmea,"QGPSLOC: 102551.0,2237.315292,N,11402.528687,E,1.2,113.0,2,0.00,0.0,0.0,300318,09\r\n");
 	strcpy(pnmea,buf);
-	//printf("%s\n",pnmea);
 	tmp = (uint32_t)get_double_number(&pnmea[Get_Char_Pos(pnmea,':',1)]);
 	gps_info.dt.nHour = tmp/10000;
 	gps_info.dt.nMin = (tmp%10000)/100;
@@ -371,8 +370,7 @@ void parse_gps_data(char* buf)
 	gps_info.state = 'A';
 	gps_info.sat_uesd = (uint8_t)get_used_sat(&pnmea[GetComma(12,pnmea)]);
 
-	printf("lat:%f,unsigned long:%f,used:%d\n",gps_info.latitude,gps_info.longitude,gps_info.sat_uesd);
-    //printf("nYear:%d,nMonth:%d,nDay:%d\n",gps_info.dt.nYear,gps_info.dt.nMonth,gps_info.dt.nDay);
+	Logln(D_INFO,"lat:%f,unsigned long:%f,used:%d",gps_info.latitude,gps_info.longitude,gps_info.sat_uesd);
 }
 
 int8_t GetATIndex(AT_CMD cmd)
@@ -574,7 +572,6 @@ int get_uart_data(char*buf, int count)
 			}
 			
 			module_recv_buffer_index = ulen - count;
-			printf ("2: %d \r\n",module_recv_buffer_index);
 			return count;
 		}
 	}
@@ -594,7 +591,7 @@ void parse_bt_addr_cmd(char* buf, int len)
 	{
 		memcpy(dev_info.addr,tmp1+strlen("+QBTLEADDR: "),tmp2-(tmp1+strlen("+QBTLEADDR: ")));
 	}
-	printf("addr=%c%c:%c%c:%c%c:%c%c:%c%c:%c%c\r\n",dev_info.addr[0],dev_info.addr[1],dev_info.addr[2],dev_info.addr[3],dev_info.addr[4],dev_info.addr[5],
+	Logln(D_INFO,"addr=%c%c:%c%c:%c%c:%c%c:%c%c:%c%c",dev_info.addr[0],dev_info.addr[1],dev_info.addr[2],dev_info.addr[3],dev_info.addr[4],dev_info.addr[5],
 		dev_info.addr[6],dev_info.addr[7],dev_info.addr[8],dev_info.addr[9],dev_info.addr[10],dev_info.addr[11]);
 }
 void parse_bt_name_cmd(char* buf, int len)
@@ -608,7 +605,7 @@ void parse_bt_name_cmd(char* buf, int len)
 	{
 		memcpy(dev_info.name,tmp1+strlen("+QBTNAME: "),tmp2-(tmp1+strlen("+QBTNAME: ")));
 	}
-	printf("name=%s\n",dev_info.name);
+	Logln(D_INFO,"name=%s",dev_info.name);
 }
 void parse_imei_cmd(char* buf, int len)
 {
@@ -618,7 +615,7 @@ void parse_imei_cmd(char* buf, int len)
 	tmp1 = strstr(buf,"\r\n");	
 	tmp2 = strstr(tmp1+2,"\r\n");
 	memcpy(dev_info.imei,tmp1+strlen("\r\n"),tmp2-(tmp1+strlen("\r\n")));
-	printf("imei=%s\n",dev_info.imei);
+	Logln(D_INFO,"imei=%s",dev_info.imei);
 }
 
 void parse_csq_cmd(char* buf, int len)
@@ -631,7 +628,7 @@ void parse_csq_cmd(char* buf, int len)
 	tmp2 = strstr(tmp1+2,",");
 	memcpy(tmp,tmp1+strlen("+CSQ: "),tmp2-(tmp1+strlen("+CSQ: ")));
 	dev_info.csq = atoi(tmp);
-	printf("csq=%d\r\n",dev_info.csq);
+	Logln(D_INFO,"csq=%d",dev_info.csq);
 }
 
 char* get_imei(void)
@@ -654,7 +651,7 @@ void parse_imsi_cmd(char* buf, int len)
 	tmp1 = strstr(buf,"\r\n");	
 	tmp2 = strstr(tmp1+2,"\r\n");
 	memcpy(dev_info.imsi,tmp1+strlen("\r\n"),tmp2-(tmp1+strlen("\r\n")));
-	printf("imsi=%s\n",dev_info.imsi);
+	Logln(D_INFO,"imsi=%s",dev_info.imsi);
 }
 char* get_imsi(void)
 {

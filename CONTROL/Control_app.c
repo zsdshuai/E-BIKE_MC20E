@@ -116,14 +116,14 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 {
 	if(cmd->addr == 0x1C)
 	{
-        printf ("NETWORK cmd->type = %d \r\n",cmd->type);
+        	Logln(D_INFO, "NETWORK cmd->type = %d",cmd->type);
 		switch(cmd->type)
 		{
 			case SEARCH_CMD:
 				voice_play(VOICE_SEARCH);
 				break;
 			case LOCK_CMD:
-                		printf ("cmd->para[0] = %d,g_flash.acc=%d\r\n",cmd->para[0],g_flash.acc);
+                		Logln(D_INFO, "cmd->para[0] = %d,g_flash.acc=%d",cmd->para[0],g_flash.acc);
 				if(cmd->para[0]==1)	//锁车
 				{
 					if(lock_bike())
@@ -195,13 +195,11 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					zt_controller_send(ADDR_CONTROL, CMD_CONTROL,1,HIGH_SPEED);
 					controller.require.tiaosu = HIGH_SPEED;
-					printf("HIGH Speed\n");
 				}
 				else
 				{
 					zt_controller_send(ADDR_CONTROL, CMD_CONTROL,1,LOW_SPEED);
 					controller.require.tiaosu = LOW_SPEED;
-					printf("LOW Speed\n");
 				}
 				break;
 			case QIANYA_CMD:
@@ -209,13 +207,11 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,2,HIGH);
 					controller.require.qianya = HIGH;
-					printf("HIGH voltage\n");
 				}
 				else
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,2,LOW);
 					controller.require.qianya = LOW;
-					printf("LOW voltage\n");
 				}
 				break;
 			case ZHULI_CMD:
@@ -223,31 +219,26 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,3,DIANDONG);
 					controller.require.zhuli = DIANDONG;
-					printf("CHUN diandong\n");
 				}
 				else if(cmd->para[0]==1)
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,3,ZHULI);
 					controller.require.zhuli = ZHULI;
-					printf("ZHULI 1:1\n");
 				}
 				else if(cmd->para[0]==2)
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,3,ZHULI2);
 					controller.require.zhuli = ZHULI2;
-					printf("ZHULI 1:2\n");
 				}
 				else if(cmd->para[0]==3)
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,3,RENLI); 
 					controller.require.zhuli = RENLI;
-					printf("CHUN RENLI\n");
 				}
 				else
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,3,HUNHE); 
 					controller.require.zhuli = HUNHE;
-					printf("DIANDONG+1:2 ZHULI\n");
 				}
 				break;
 			case XIUFU_CMD:
@@ -255,13 +246,11 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,4,XF_OK);
 					controller.require.xf = XF_OK;
-					printf("GUZHANG XIUFU\n");
 				}
 				else if(cmd->para[0]==0)
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,4,XF_INVALID);
 					controller.require.xf = XF_INVALID;
-					printf("GUZHANG QINGCHU\n");
 				}
 				break;
 			case DIANYUAN_CMD:
@@ -269,13 +258,11 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,5,VOT36V);
 					controller.require.dy = VOT36V;
-					printf("QIEHUAN 36V\n");
 				}
 				else if(cmd->para[0]==1)//48V
 				{
 					zt_controller_send(ADDR_CONTROL,CMD_CONTROL,5, VOT48V);
 					controller.require.dy = VOT48V;
-					printf("QIEHUAN 48V\n");
 				}
 				break;
 			case DIANJI_CMD:
@@ -283,13 +270,13 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					g_flash.motor = 0;
 					write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
-					printf("General Motor\n");
+					Logln(D_INFO, "General Motor");
 				}
 				else if(cmd->para[0]==1)//高速电机
 				{
 					g_flash.motor = 1;
 					write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
-					printf("High Speed Motor\n");
+					Logln(D_INFO, "High Speed Motor");
 				}
 				break;
 			default:
@@ -384,7 +371,7 @@ void get_ebike_data(ebike_pkg_struct* ebike_pkg)
 	g_flash.hall = mileage_count;
 	g_flash.lundong = rotate_count;
 
-	printf("ebike.bat.voltage=%d,mile=%d,last mile=%d,ACC=%d,lock=%d\r\n",ebike.bat.voltage,mileage_count,last_mileage,g_flash.acc,ebike.status.lock);
+	Logln(D_INFO, "ebike.bat.voltage=%d,mile=%d,last mile=%d,ACC=%d,lock=%d",ebike.bat.voltage,mileage_count,last_mileage,g_flash.acc,ebike.status.lock);
 
 	if(mileage_count-last_mileage>100)
 	{
@@ -401,13 +388,13 @@ void dianchi_refresh_process(void)
 	{
 		if(get_bat_connect_status() && flag)
 		{
-			printf("\r\nBAT CONNECT\r\n");
+			Logln(D_INFO, "BAT CONNECT");
 			upload_ebike_data_package_network();
 			flag = false;
 		}
 		else if(!get_bat_connect_status() && !flag)
 		{
-			printf("\r\nBAT DISCONNECT\r\n");
+			Logln(D_INFO,"BAT DISCONNECT");
 			upload_ebike_data_package_network();
 			flag = true;
 		}
@@ -435,7 +422,7 @@ void shake_process(void)
         {
         	if(g_flash.zd_alarm)
         	{
-        		printf("shake--%d\r\n",diff_shake);
+        		Logln(D_INFO,"shake--%d",diff_shake);
               		voice_play(VOICE_ALARM);
 			flag_alarm = 1;
 			flag_delay8s = 1;
@@ -450,7 +437,7 @@ void key_check_process(void)
 
 	if(!value &&(!(g_flash.acc&BT_OPEN) && !(g_flash.acc&KEY_OPEN) && !(g_flash.acc&GPRS_OPEN)))
 	{
-		printf("\r\nkey_detect_num=%d\r\n",key_detect_num);
+		Logln(D_INFO,"key_detect_num=%d",key_detect_num);
 		key_detect_num++;
 		if(key_detect_num>10)
 		{
@@ -474,30 +461,12 @@ void key_check_process(void)
 		key_detect_num = 0;
 	}
 }
-void test1()
-{
-	uint8_t i;
-	uint8_t a[]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,
-		35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52},b[52];
-	
-	write_flash(CONFIG_ADDR, a, 52);
-	HAL_Delay(5);
 
-	read_flash(CONFIG_ADDR, b, 52);
-	HAL_Delay(5);
-
-
-	
-	for(i=0;i<sizeof(b);i++)
-	printf("\r\nb[%d]=%d\r\n",i,b[i]);
-
-}
 void init_flash(void)
 {
-//	test1(); return;
 	read_flash(CONFIG_ADDR,(uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 	HAL_Delay(1);
-	printf("flag=%d,imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,%s:%d,size=%d\r\n",g_flash.flag,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
+	Logln(D_INFO,"flag=%d,imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,%s:%d,size=%d",g_flash.flag,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
 		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen, g_flash.net.domain, g_flash.net.port, sizeof(flash_struct));
 		
 	if(g_flash.flag !=1)

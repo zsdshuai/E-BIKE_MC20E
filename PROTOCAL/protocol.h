@@ -170,6 +170,20 @@ typedef struct
 	double lon;
 }lat_lon_struct;
 
+typedef enum
+{
+	AT_UP_RMC=0x01,
+	AT_UP_GGA,
+	AT_UP_VER,
+	AT_UP_IMSI,
+	AT_UP_BT_ADDR,
+	AT_UP_GPS,
+	AT_UP_ALARM,
+	AT_UP_EBIKE,
+	AT_UP_HB,
+	AT_UP_CSQ,
+}AT_UPLOAD_TYPE;
+
 #pragma pack (1)	//强制字节对齐
 typedef struct 
 {

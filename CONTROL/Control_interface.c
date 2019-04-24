@@ -53,7 +53,7 @@ void zt_controller_send(uint8_t addr,cmd_enum cmd, uint8_t data1,uint8_t data2)
 	send_data[6] =check_sum&0xff;
 	send_data[7] =check_sum>>8;
 
-	printf("uart2 send addr=%x,cmd=%x,data1=%x,data2=%x",addr,cmd,data1,data2);
+	Logln(D_INFO,"uart2 send addr=%x,cmd=%x,data1=%x,data2=%x",addr,cmd,data1,data2);
 	control_send_data(send_data, sizeof(send_data));
 }
 
@@ -65,41 +65,40 @@ bool control_proc(uint8_t* buf, uint16_t len)
 	{
 		checksum += buf[i];
 	}
-	printf("checksum=%x\n",checksum);
+	Logln(D_INFO,"checksum=%x",checksum);
 	if(!((checksum&0x00ff)==(uint16_t)buf[len-2] && (checksum&0xff00)>>8 == (uint16_t)buf[len-1]))
 		return false;
-	printf("checksum ok\n");
+	Logln(D_INFO,"checksum ok");
 
 	if(buf[0]==ADDR_CONTROL && get_electric_gate_status())	//控制器地址
 	{
 		if(buf[1]==0x01)	//控制命令的响应
 		{
-			printf("Recv Control RSP len = %d\n",len);
 			switch(buf[3])
 			{
 				case 0x01:	//调速
 					if(buf[4])
-						printf("Speed change Success\n");
+						Logln(D_INFO,"Speed change Success");
 					else
-						printf("Speed change Fail\n");
+						Logln(D_INFO,"Speed change Fail");
 					break;
 				case 0x02:	//调欠压值
 					if(buf[4])
-						printf("Qianya Success\n");
+						Logln(D_INFO,"Qianya Success");
 					else
-						printf("Qianya Fail\n");
+						Logln(D_INFO,"Qianya Fail");
 					break;
 				case 0x03:	//助力切换
 					if(buf[4])
-						printf("Zhuli Success\n");
+						Logln(D_INFO,"Zhuli Success");
 					else
-						printf("Zhuli Fail\n");
+						Logln(D_INFO,"Zhuli Fail");
 					break;
 				case 0x04:	//故障修复
 					if(buf[4])
-						printf("Guzhang xiufu Success\n");
+						Logln(D_INFO,"Guzhang xiufu Success");
 					else
-						printf("Guzhang xiufu Fail\n");
+						Logln(D_INFO,"Guzhang xiufu Fail");
 					break;
 				default:
 					break;
@@ -114,7 +113,7 @@ bool control_proc(uint8_t* buf, uint16_t len)
 			controller.actual.zhuli = buf[10];
 			controller.actual.dy = buf[11];
 			controller.actual.xf = buf[12];
-			printf("Recv Upload tiaosu=%d,qy=%d,zhuli=%d,dianyuan=%d,xiufu=%d",controller.actual.tiaosu,controller.actual.qianya,
+			Logln(D_INFO,"Recv Upload tiaosu=%d,qy=%d,zhuli=%d,dianyuan=%d,xiufu=%d",controller.actual.tiaosu,controller.actual.qianya,
 				controller.actual.zhuli,controller.actual.dy,controller.actual.xf);
 		}
 	}
@@ -128,7 +127,7 @@ bool control_proc(uint8_t* buf, uint16_t len)
 				break;
 			case bat_vol:
 				curr_bat.voltage = data;
-				printf("voltage=%d",data);
+				Logln(D_INFO,"voltage=%d",data);
 				break;
 			case bat_curr:
 				curr_bat.current = data;
@@ -217,8 +216,7 @@ bool modify_service_address(uint8_t* buf)
 				memcpy(tmp,head,tail-head);
 				g_flash.net.port = atoi(tmp);
 
-				sprintf(tmp,"\r\nWrite OK %s,%d\r\n",g_flash.net.domain,g_flash.net.port);
-				printf("%s",tmp);
+				Logln(D_INFO,"\r\nWrite OK %s,%d",g_flash.net.domain,g_flash.net.port);
 
 				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 				flag = true;
@@ -243,8 +241,7 @@ bool modify_service_address(uint8_t* buf)
 				memcpy(tmp,head,tail-head);
 				g_flash.net.port = atoi(tmp);
 
-				sprintf(tmp,"\r\nWrite OK %s:%d\r\n",g_flash.net.domain,g_flash.net.port);
-				printf("%s",tmp);
+				Logln(D_INFO,"\r\nWrite OK %s:%d",g_flash.net.domain,g_flash.net.port);
 				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 				flag = true;
 				HAL_Delay(1000);
@@ -293,7 +290,7 @@ bool parse_control_cmd(uint8_t* buf, uint16_t len)
 				memset(g_flash.imei,0,sizeof(g_flash.imei));
 				memcpy(g_flash.imei,head,tail-head);
 				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
-				printf("write imei=%s----OK\r\n",g_flash.imei);
+				Logln(D_INFO,"write imei=%s----OK",g_flash.imei);
 				flag = true;
 				HAL_Delay(1000);
 				reset_system();

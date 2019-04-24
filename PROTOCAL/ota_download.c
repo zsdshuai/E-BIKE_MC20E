@@ -61,8 +61,8 @@ void parse_ver_package(uint8_t* buf,uint8_t len)
 	strncpy(tmp,pos1,pos2-pos1);
 	g_ver.timestamp = atoi(tmp);
 
-	printf("flag=%d,size=%d,timestamp=%d",g_ver.flag,g_ver.size,g_ver.timestamp);
-	printf("url=%s",g_ver.url);
+	Logln(D_INFO,"flag=%d,size=%d,timestamp=%d",g_ver.flag,g_ver.size,g_ver.timestamp);
+	Logln(D_INFO,"url=%s",g_ver.url);
 
 	if(g_ver.flag==1)
 	{
@@ -95,7 +95,7 @@ void parse_ver_package(uint8_t* buf,uint8_t len)
 		memset(g_download.path,0,sizeof(g_download.path));
 		strcpy(g_download.path,pos2);
 
-		printf("ip=%d.%d.%d.%d:%d,path=%s",g_download.ip[0],g_download.ip[1],g_download.ip[2],g_download.ip[3],g_download.port,g_download.path);
+		Logln(D_INFO,"ip=%d.%d.%d.%d:%d,path=%s",g_download.ip[0],g_download.ip[1],g_download.ip[2],g_download.ip[3],g_download.port,g_download.path);
 		
 		g_download.total_size = g_ver.size;
 		g_download.complete = 0;

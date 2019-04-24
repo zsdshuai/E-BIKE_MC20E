@@ -145,7 +145,7 @@ void read_data(uint8_t operate)
 	else
 		data.lock = 1;
 
-	printf("vol=%d,hall=%d,lock=%d\r\n",data.volt,data.hall,data.lock);
+	Logln(D_INFO, "vol=%d,hall=%d,lock=%d\r\n",data.volt,data.hall,data.lock);
 
 	bt_prepare_send_data(operate, 0x07, (uint8_t*)&data);
 }
@@ -203,7 +203,6 @@ void bt_giveback_package(uint8_t operate)
 		
 	len = sizeof(bt_giveback_struct);
 
-	printf("BT giveback,len=%d\r\n",len);
 	bt_prepare_send_data_ext(operate, len, (uint8_t*)&bt_giveback_data);
 }
 
@@ -222,16 +221,16 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 	if(crc1 != crc2)
 	{
 		send_error_cmd(cmd,2);
-		printf("bt checksum error,crc1=%x,crc2=%x\r\n",crc1,crc2);
+		Logln(D_INFO, "bt checksum error,crc1=%x,crc2=%x",crc1,crc2);
 		return;
 	}
 	if(0)//abs(timestamp1-timestamp2)>300)
 	{
 		send_error_cmd(cmd,3);
-		printf("bt timestamp error\r\n");
+		Logln(D_INFO, "bt timestamp error");
 		return;
 	}
-	printf("BT cmd=%d\r\n",cmd);
+	Logln(D_INFO, "BT cmd=%d",cmd);
 	switch(cmd)
 	{
 		case BT_LOCK:
@@ -318,7 +317,7 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 			param[1] = gps_info.sat_view;
 			param[2] = gps_info.sat_uesd;
 
-			printf("sig=%d,view=%d,used=%d\r\n",param[0],param[1],param[2]);
+			Logln(D_INFO, "sig=%d,view=%d,used=%d",param[0],param[1],param[2]);
 			bt_prepare_send_data(cmd, 8, param);
 			break;
 		}

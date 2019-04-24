@@ -254,8 +254,7 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 	head.datetime[5] = stimestructure.Seconds;//3
 
 
-	printf ("year=%d,mon=%d,day=%d \r\n", sdatestructure.Year, sdatestructure.Month, sdatestructure.Date);
-	printf ("hours=%d,min=%d,sec=%d \r\n", stimestructure.Hours,stimestructure.Minutes,stimestructure.Seconds);
+	Logln(D_INFO,"%d_%d_%d %d:%d:%d", sdatestructure.Year, sdatestructure.Month, sdatestructure.Date,stimestructure.Hours,stimestructure.Minutes,stimestructure.Seconds);
 	tail.stop = 0x0a0d;
 	//包头
 	memcpy(buf,&head,sizeof(pkg_head_struct));
@@ -272,7 +271,7 @@ uint8_t send_package(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context
 	sum_len = sizeof(pkg_head_struct)+context_len+sizeof(pkg_tail_struct);		
 
 //        hex_convert_str(buf,sum_len,outbuf2);
-//	printf("send=%d,%s\r\n",sum_len,outbuf2);
+//	Logln(D_INFO,"send=%d,%s\r\n",sum_len,outbuf2);
 	
 	send_data(buf,sum_len);
 
@@ -306,7 +305,7 @@ void upload_login_package(void)
 
 void upload_hb_package(void)
 {
-	printf("upload_hb_package,times=%d\r\n",g_hb_send_times);
+	Logln(D_INFO,"upload_hb_package,times=%d",g_hb_send_times);
 	if(g_hb_send_times >= 2)
 	{//reconnect
 		g_hb_send_times = 0;
@@ -322,7 +321,7 @@ void upload_hb_package(void)
 
 void upload_alarm_package(void)
 {
-  	printf("upload_alarm_package\r\n");
+  	Logln(D_INFO,"upload_alarm_package");
 	alarm_pkg_struct alarm_pkg;
 	uint16_t curr_speed = (uint16_t)(gps_info.speed*1.852);
 	uint8_t ind;
@@ -502,7 +501,7 @@ void upload_gps_package(void)
 	gps_info_struct* p_gps = &gps_info;
 	gps_data_struct gps_pkg_gps = {0};
 
-	printf("upload_gps_package,lat=%f,lon=%f \r\n",p_gps->latitude,p_gps->longitude);
+	Logln(D_INFO,"upload_gps_package,lat=%f,lon=%f",p_gps->latitude,p_gps->longitude);
 	if(p_gps->latitude!=lat_lon.lat && p_gps->longitude!=lat_lon.lon)
 	{
 		lat_lon.lat = p_gps->latitude;
@@ -576,7 +575,7 @@ void upload_version_package(void)
 	data_pkg.value_len = strlen(DEV_VER); 
 	strcpy(data_pkg.value,DEV_VER);
 
-	printf("upload_version_package\r\n");
+	Logln(D_INFO,"upload_version_package");
 	send_package(EN_GT_PT_DEV_DATA, (char*)&data_pkg, data_pkg.value_len+2);
 
 }
@@ -589,7 +588,7 @@ void upload_imsi_package(void)
 	data_pkg.value_len = strlen(get_imsi()); 
 	strcpy(data_pkg.value,get_imsi());
 
-	printf("upload_imsi_package\r\n");
+	Logln(D_INFO,"upload_imsi_package");
 
 	send_package(EN_GT_PT_DEV_DATA, (char*)&data_pkg, data_pkg.value_len+2);
 }
@@ -601,13 +600,13 @@ void upload_bt_addr_package(void)
 	data_pkg.value_len = strlen(dev_info.addr); 
 	strcpy(data_pkg.value,dev_info.addr);
 
-	printf("upload_bt_addr_package\r\n");
+	Logln(D_INFO,"upload_bt_addr_package");
 
 	send_package(EN_GT_PT_DEV_DATA, (char*)&data_pkg, data_pkg.value_len+2);
 }
 void upload_ebike_data_package(void)
 {
-  	printf("upload_ebike_data_package\r\n");
+  	Logln(D_INFO,"upload_ebike_data_package");
 	ebike_pkg_struct ebike_pkg;
 	uint8_t package_len;
 
@@ -648,7 +647,7 @@ void upload_give_back_package(uint8_t gate)
 		give_back_pkg.lock_state = 0;
 	}
 	
-	printf("lock_state=%d,gate=%d,gps=%c\r\n",give_back_pkg.lock_state,gate,gps_info.state);
+	Logln(D_INFO,"lock_state=%d,gate=%d,gps=%c",give_back_pkg.lock_state,gate,gps_info.state);
 
 	if(gps_info.state=='A')
 	{
@@ -717,31 +716,31 @@ void push_interval_package_process(void)
 		flag_delay1s = 0;
 		if ((delay_index)%15 == 0)	//15秒
 		{
-			msgType.Data[0] = 6;
+			msgType.Data[0] = AT_UP_GPS;
 			PushElement(&at_send_Queue, msgType, 1);
 		}
 		else 	if((delay_index+1)%30==0)
 		{
-			msgType.Data[0] = 7;
+			msgType.Data[0] = AT_UP_ALARM;
 			PushElement(&at_send_Queue, msgType, 1);
 		} 
 		else if((delay_index+2)%30==0)
 		{
-			msgType.Data[0] = 10;
+			msgType.Data[0] = AT_UP_CSQ;
 			PushElement(&at_send_Queue, msgType, 1);
-			msgType.Data[0] = 8;
+			msgType.Data[0] = AT_UP_EBIKE;
 			PushElement(&at_send_Queue, msgType, 1);
 		}
 		else if((delay_index+3)%60==0)
 		{
-			msgType.Data[0] = 9;
+			msgType.Data[0] = AT_UP_HB;
 			PushElement(&at_send_Queue, msgType, 1);
 		}
 		else if((delay_index+4)%5==0)
 		{
-			msgType.Data[0] = 1;
+			msgType.Data[0] = AT_UP_RMC;
 			PushElement(&at_send_Queue, msgType, 1);
-			msgType.Data[0] = 2;
+			msgType.Data[0] = AT_UP_GGA;
 			PushElement(&at_send_Queue, msgType, 1);
 		}
 		else
@@ -776,34 +775,34 @@ void upload_all_data_package(void)
 	{
 		switch(at_send_type.Data[0])
 		{
-			case 1:
+			case AT_UP_RMC:
 				send_gps_rmc_cmd();
 				break;
-			case 2:
+			case AT_UP_GGA:
 				send_gps_gga_cmd();
 				break;
-			case 3:
+			case AT_UP_VER:
 				upload_version_package();
 				break;
-			case 4:
+			case AT_UP_IMSI:
 				upload_imsi_package();
 				break;
-			case 5:
+			case AT_UP_BT_ADDR:
 				upload_bt_addr_package();
 				break;
-			case 6:
+			case AT_UP_GPS:
 				upload_gps_package();
 				break;
-			case 7:
+			case AT_UP_ALARM:
 				upload_alarm_package();
 				break;
-			case 8:
+			case AT_UP_EBIKE:
 				upload_ebike_data_package();
 				break;
-			case 9:
+			case AT_UP_HB:
 				upload_hb_package();
 				break;
-			case 10:
+			case AT_UP_CSQ:
 				Send_AT_Command_Timeout(AT_CSQ, 1);
 				break;
 			default:
@@ -836,7 +835,7 @@ Logln(D_INFO, "cali %d-%d-%d %d:%d:%d",sdatestructure.Year,sdatestructure.Month,
   	HAL_RTC_SetTime(&hrtc, &stimestructure, RTC_FORMAT_BIN);//设置时分秒
 	HAL_RTC_SetDate(&hrtc, &sdatestructure, RTC_FORMAT_BIN);//设置年月日
 
-		HAL_RTC_GetTime(&hrtc, &stimestructure, RTC_FORMAT_BIN);
+	HAL_RTC_GetTime(&hrtc, &stimestructure, RTC_FORMAT_BIN);
 	HAL_RTC_GetDate(&hrtc, &sdatestructure, RTC_FORMAT_BIN);
 Logln(D_INFO, " %d-%d-%d %d:%d:%d",sdatestructure.Year,sdatestructure.Month,sdatestructure.Date,stimestructure.Hours,stimestructure.Minutes,stimestructure.Seconds);
 
@@ -866,18 +865,15 @@ bool protocol_proc(char* buf ,int len)
 	if (buf == NULL)
 		return true;
 
-	//printf("rcv=%s\n",buf);
 	head = (pkg_head_struct*)buf;
 
 	crc2 = buf[2]*0x100+buf[3];
 	crc1 = get_crc16(buf+4, len-6);
 //	hex_convert_str(buf,len, out);
-//	trace(out,strlen(out));
-    //printf("rcv=%s\n",out);
 
 	if(crc1 != crc2)
 	{
-		printf("check sum error\n");
+		Logln(D_INFO,"check sum error");
 		return false;
 	}
 
@@ -887,13 +883,13 @@ bool protocol_proc(char* buf ,int len)
 		{	
 			RxMsgTypeDef msgType;
 			
-			printf("login rsp sn ok\r\n");
+			Logln(D_INFO,"login rsp sn ok");
 			calibration_time(buf);
-			msgType.Data[0] = 3;
+			msgType.Data[0] = AT_UP_VER;
 			PushElement(&at_send_Queue, msgType, 1);
-			msgType.Data[0] = 4;
+			msgType.Data[0] = AT_UP_IMSI;
 			PushElement(&at_send_Queue, msgType, 1);
-			msgType.Data[0] = 5;
+			msgType.Data[0] = AT_UP_BT_ADDR;
 			PushElement(&at_send_Queue, msgType, 1);
 			net_work_state = EN_CONNECTED_STATE;
 			break;																	
@@ -909,7 +905,7 @@ bool protocol_proc(char* buf ,int len)
 		case EN_GT_PT_HB: 
 		{	
 			g_hb_send_times = 0;
-			printf ("HB rsp sn ok################ \r\n");
+			Logln(D_INFO,"HB rsp sn ok################");
 			break; 
 		}
 		case EN_GT_PT_ALARM: 					
@@ -955,7 +951,7 @@ uint8_t protocol_parse(char *pBuf, int len)
 
 //	hex_convert_str(pBuf,len, req);
     
-//	printf("len = %d,rec=%s\r\n",len,req);
+//	Logln(D_INFO,"len = %d,rec=%s",len,req);
 	
 	for(i = 0; i<len-1; i++)
 	{

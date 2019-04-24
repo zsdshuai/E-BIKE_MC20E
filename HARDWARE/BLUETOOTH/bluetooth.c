@@ -19,7 +19,7 @@ void bt_send(uint8_t*data, uint16_t len)
 		
 	sprintf(at_pack[i].cmd_txt,"AT+QBTGATSIND=\"A001\",%d,%d,1,\"%s\"",bt_conn.conn_id,bt_conn.attr_handle,buf1);
 
-	printf("BT SEND=%s\r\n",buf1);
+	Logln(D_INFO, "BT SEND=%s",buf1);
 	
 	Send_AT_Command_ext(AT_QBTGATSIND);
 }

@@ -36,6 +36,7 @@ extern bool parse_bt_cmd(int8_t* buf, uint16_t len);
 void parse_bt_addr_cmd(char* buf, int len);
 void parse_bt_name_cmd(char* buf, int len);
 void parse_imei_cmd(char* buf, int len);
+void parse_csq_cmd(char* buf, int len);
 void parse_imsi_cmd(char* buf, int len);
 bool parse_gnss_cmd(char* buf, int len);
 void parse_location_cmd(char* buf, int len);
@@ -48,7 +49,7 @@ AT_STRUCT at_pack[]={
 	{AT_W,"AT&W","OK",300,NULL},
 	{AT_CPIN,"AT+CPIN?","OK",300,NULL},
 	{AT_CREG,"AT+CREG?","0,1",500,NULL},
-	{AT_CSQ,"AT+CSQ","OK",300,NULL},
+	{AT_CSQ,"AT+CSQ","OK",300,parse_csq_cmd},
 	{AT_GSN,"AT+GSN","OK",300,parse_imei_cmd},
 	{AT_CIMI,"AT+CIMI","OK",300,parse_imsi_cmd},
 	{AT_QIMODE,"AT+QIMODE=0","OK",300,NULL},
@@ -620,6 +621,19 @@ void parse_imei_cmd(char* buf, int len)
 	printf("imei=%s\n",dev_info.imei);
 }
 
+void parse_csq_cmd(char* buf, int len)
+{
+	char* tmp1 = NULL,*tmp2= NULL;
+	char tmp[3]={0};
+	
+	memset(dev_info.imei,0,sizeof(dev_info.imei));
+	tmp1 = strstr(buf,"+CSQ: ");	
+	tmp2 = strstr(tmp1+2,",");
+	memcpy(tmp,tmp1+strlen("+CSQ: "),tmp2-(tmp1+strlen("+CSQ: ")));
+	dev_info.csq = atoi(tmp);
+	printf("csq=%d\r\n",dev_info.csq);
+}
+
 char* get_imei(void)
 {
 	if(strlen(g_flash.imei)>0)
@@ -682,14 +696,14 @@ void QGEPOF1(void)
 	int8_t i = GetATIndex(AT_QGEPOF);
 
 	strcpy(at_pack[i].cmd_txt, "AT+QGEPOF=0,255");
-	Send_AT_Command_Timeout(AT_QGEPOF,1);
+	Send_AT_Command_Timeout(AT_QGEPOF,2);
 }
 void QGEPOF2(void)
 {
 	int8_t i = GetATIndex(AT_QGEPOF);
 	
 	strcpy(at_pack[i].cmd_txt, "AT+QGEPOF=2");
-	Send_AT_Command_Timeout(AT_QGEPOF,1);
+	Send_AT_Command_Timeout(AT_QGEPOF,2);
 }
 
 void bt_name_modify(char* name)
@@ -928,22 +942,22 @@ bool at_parse_recv(void)
 
 void bt_init(void)
 {
-	Send_AT_Command_Timeout(AT_BT_ON, 1);
+	Send_AT_Command_Timeout(AT_BT_ON, 3);
 	Send_AT_Command_Timeout(AT_BT_ADDR, 1);
 	Send_AT_Command_Timeout(AT_BT_Q_NAME, 1);
 	judge_change_bt_name();
-	Send_AT_Command_Timeout(AT_QBTGATSREG, 1);
-	Send_AT_Command_Timeout(AT_QBTGATSL, 1);
+	Send_AT_Command_Timeout(AT_QBTGATSREG, 2);
+	Send_AT_Command_Timeout(AT_QBTGATSL, 2);
 	
-	Send_AT_Command_Timeout(AT_QBTGATSS, 1);
-	Send_AT_Command_Timeout(AT_QBTGATSC, 1);
-	Send_AT_Command_Timeout(AT_QBTGATSD, 1);
-	Send_AT_Command_Timeout(AT_QBTGATSST, 1);
-	Send_AT_Command_Timeout(AT_BT_VISB, 1);
+	Send_AT_Command_Timeout(AT_QBTGATSS, 2);
+	Send_AT_Command_Timeout(AT_QBTGATSC, 2);
+	Send_AT_Command_Timeout(AT_QBTGATSD, 2);
+	Send_AT_Command_Timeout(AT_QBTGATSST, 2);
+	Send_AT_Command_Timeout(AT_BT_VISB, 2);
 	
 	Send_AT_Command_Timeout(AT_QBTLETXPWR, 1);
 	Send_AT_Command_Timeout(AT_QBTLETXPWR_Q, 1);
-	Send_AT_Command_Timeout(AT_QBTGATADV, 1);
+	Send_AT_Command_Timeout(AT_QBTGATADV, 2);
 
 }
 
@@ -956,12 +970,12 @@ void AT_QGREFLOC_FUN(void)
 }
 void gnss_init(void)
 {
-	Send_AT_Command_Timeout(AT_QIFGCNT2, 1);  
-	Send_AT_Command_Timeout(AT_QGPS_ON, 1);   	
-	Send_AT_Command_Timeout(AT_QGNSSTS, 1); 
+	Send_AT_Command_Timeout(AT_QIFGCNT2, 2);  
+	Send_AT_Command_Timeout(AT_QGPS_ON, 2);   	
+	Send_AT_Command_Timeout(AT_QGNSSTS, 2); 
 	AT_QGREFLOC_FUN();
-	Send_AT_Command_Timeout(AT_QGNSSEPO, 1);     
-//	Send_AT_Command_Timeout(AT_QGEPOAID, 1); 
+	Send_AT_Command_Timeout(AT_QGNSSEPO, 2);     
+//	Send_AT_Command_Timeout(AT_QGEPOAID, 2); 
 	QGEPOF1();
 	QGEPOF2();
 }
@@ -980,22 +994,22 @@ void module_init(void)
 	}
 	Send_AT_Command_Timeout(AT_ATI, 1);	
 	Send_AT_Command_Timeout(AT_CPIN, 5);
-	Send_AT_Command_Timeout(AT_GSN, 1);
-	Send_AT_Command_Timeout(AT_CIMI, 1);
+	Send_AT_Command_Timeout(AT_GSN, 2);
+	Send_AT_Command_Timeout(AT_CIMI, 2);
 	Send_AT_Command_Timeout(AT_CREG, 20);
 	bt_init();
-	Send_AT_Command_Timeout(AT_CSQ, 1);
+//	Send_AT_Command_Timeout(AT_CSQ, 1);
 	Send_AT_Command_Timeout(AT_QIMODE, 1);
-	Send_AT_Command_Timeout(AT_QICSGP, 1);     
-	Send_AT_Command_Timeout(AT_QIREGAPP, 1);	
-	Send_AT_Command_Timeout(AT_QIACT, 1);		
-	Send_AT_Command_Timeout(AT_COPS, 1);
-	Send_AT_Command_Timeout(AT_QIFGCNT1, 1);     	
+	Send_AT_Command_Timeout(AT_QICSGP, 2);     
+	Send_AT_Command_Timeout(AT_QIREGAPP, 2);	
+	Send_AT_Command_Timeout(AT_QIACT, 2);		
+	Send_AT_Command_Timeout(AT_COPS, 2);
+	Send_AT_Command_Timeout(AT_QIFGCNT1, 2);     	
 	Send_AT_Command_Timeout(AT_QCELLLOC, 10);
 	gnss_init();
 	
-	Send_AT_Command_Timeout(AT_QIFGCNT1, 1);     
-	Send_AT_Command_Timeout(AT_QIDNSIP, 1);
+	Send_AT_Command_Timeout(AT_QIFGCNT1, 2);     
+	Send_AT_Command_Timeout(AT_QIDNSIP, 2);
 
 	Logln(D_INFO,"Init Complete");
 

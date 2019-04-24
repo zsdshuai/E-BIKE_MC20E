@@ -11,6 +11,8 @@
 #include "gpio.h"
 #include "voice.h"
 #include "usart.h"
+#include "IoT_Hub.h"
+#include "Control_app.h"
 //#include "flash.h"
 
 extern uint32_t diff_rotate,diff_mileage,diff_shake;
@@ -142,6 +144,8 @@ void read_data(uint8_t operate)
 		data.lock = 0;
 	else
 		data.lock = 1;
+
+	printf("vol=%d,hall=%d,lock=%d\r\n",data.volt,data.hall,data.lock);
 
 	bt_prepare_send_data(operate, 0x07, (uint8_t*)&data);
 }
@@ -304,6 +308,18 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 		{
 			//reset system
 			send_ok_cmd(cmd);
+			reset_system();
+			break;
+		}
+		case BT_SIGNAL:
+		{
+			char param[8]={0}; 
+			param[0] = convert_csq(dev_info.csq);
+			param[1] = gps_info.sat_view;
+			param[2] = gps_info.sat_uesd;
+
+			printf("sig=%d,view=%d,used=%d\r\n",param[0],param[1],param[2]);
+			bt_prepare_send_data(cmd, 8, param);
 			break;
 		}
 		default:

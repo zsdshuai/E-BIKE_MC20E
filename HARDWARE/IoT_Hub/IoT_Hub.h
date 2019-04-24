@@ -16,6 +16,7 @@ typedef struct
 	char imei[16];
 	char addr[13];
 	char name[11];
+	char csq;
 }dev_struct;
 
 typedef enum

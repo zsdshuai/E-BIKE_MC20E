@@ -19,6 +19,7 @@ typedef enum
 	BT_GIVEBACK,
 	BT_GIVEBACK_SUCCESS,
 	BT_RESET=0x0C,
+	BT_SIGNAL,
 }BT_CMD;
 
 typedef enum
@@ -145,6 +146,7 @@ void shake_process(void);
 void key_check_process(void);
 void init_flash(void);
 void open_dianchi_lock(void);
+uint8_t convert_csq(uint8_t csq);
 
 #define CONFIG_ADDR 0x03	//0x0800D000
 extern flash_struct g_flash;

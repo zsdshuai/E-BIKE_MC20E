@@ -10,6 +10,7 @@
 #include "exti.h"
 #include "voice.h"
 #include "adc.h"
+#include "IoT_Hub.h"
 //#include "flash.h"
 
 #define DOMAIN "devzuche.liabar.com"	//"zcwebx.liabar.cn"
@@ -27,6 +28,16 @@ extern uint8_t flag_alarm;
 void open_dianchi_lock(void)
 {
 	flag_battery_lock = 1;
+}
+
+uint8_t convert_csq(uint8_t csq)
+{
+	if(csq==99)
+		return 0;
+	else if(csq>=0 && csq<=30)
+		return csq*100/30;
+	else 
+		return 100;
 }
 
 bool get_bat_connect_status(void)
@@ -362,7 +373,7 @@ void get_ebike_data(ebike_pkg_struct* ebike_pkg)
 	ebike.bat.interval= curr_bat.interval;
 	ebike.bat.max_interval= curr_bat.max_interval;
 
-	ebike.sig.gsm_signal = 100;
+	ebike.sig.gsm_signal = convert_csq(dev_info.csq);
 	ebike.sig.gps_viewd = gps_info.sat_view;
 	ebike.sig.gps_used = gps_info.sat_uesd;
     

@@ -727,6 +727,8 @@ void push_interval_package_process(void)
 		} 
 		else if((delay_index+2)%30==0)
 		{
+			msgType.Data[0] = 10;
+			PushElement(&at_send_Queue, msgType, 1);
 			msgType.Data[0] = 8;
 			PushElement(&at_send_Queue, msgType, 1);
 		}
@@ -800,6 +802,9 @@ void upload_all_data_package(void)
 				break;
 			case 9:
 				upload_hb_package();
+				break;
+			case 10:
+				Send_AT_Command_Timeout(AT_CSQ, 1);
 				break;
 			default:
 				break;

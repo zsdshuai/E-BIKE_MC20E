@@ -147,6 +147,7 @@ void key_check_process(void);
 void init_flash(void);
 void open_dianchi_lock(void);
 uint8_t convert_csq(uint8_t csq);
+bool check_zhendong(void);
 
 #define CONFIG_ADDR 0x03	//0x0800D000
 extern flash_struct g_flash;

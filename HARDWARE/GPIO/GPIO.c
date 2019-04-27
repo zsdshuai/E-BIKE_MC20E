@@ -26,7 +26,6 @@ void tangze_lock_bike(void)
                   tim14_delay900ms = 0;
                   flag_delay900ms = 1;
                   flag_lock = 1;
-                  //printf ("on \r\n");
              }
              if (flag_delay_lock) {
                     flag_delay_lock = 0;
@@ -36,7 +35,6 @@ void tangze_lock_bike(void)
                   tangze_B_off;
                  flag_startlock = 0;
                  flag_tangze_lock = 0;
-                 //printf("off \r\n");
             }
     }
       
@@ -52,7 +50,6 @@ void tangze_unlock_bike(void)
               tim14_delay900ms = 0;
               flag_delay900ms = 1;
               flag_lock = 2;
-              //printf ("on unlock \r\n");
          }
          if (flag_delay_unlock) {
               flag_lock = 0;
@@ -62,7 +59,6 @@ void tangze_unlock_bike(void)
               tangze_B_off;
               flag_startunlock = 0;
               flag_tangze_unlock = 0;
-              //printf ("off unlock \r\n");
          }
      }
 }
@@ -85,14 +81,12 @@ void battery_lock(void)
             battery_B_on;
             tim14_delay500ms = 0;
             flag_delay500ms = 1;
-            //printf ("battery off \r\n");
         }
         if (flag_batlock) {
             flag_batlock = 0;
             battery_B_off;
             flag_delay500ms = 0;
             flag_battery_lock = 0;
-            //printf ("battery on \r\n");
             f_start_batlock = 0;
         }
    }
@@ -156,14 +150,12 @@ void gsm_led_process(void)
 			gsm_led_off;
 			gsm_led_on_off = 0;
 			gsm_led_count = 0;
-//			printf("\r\nLED_OFF\r\n");
 		}
 		else if(!gsm_led_on_off && gsm_led_count >=90)	//Ãð900ms
 		{
 			gsm_led_on;
 			gsm_led_on_off = 1;
 			gsm_led_count = 0;
-//			printf("\r\nLED_ON\r\n");
 
 		}
 	}

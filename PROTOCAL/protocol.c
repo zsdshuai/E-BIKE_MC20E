@@ -502,61 +502,65 @@ void upload_gps_package(void)
 	gps_data_struct gps_pkg_gps = {0};
 
 	Logln(D_INFO,"upload_gps_package,lat=%f,lon=%f",p_gps->latitude,p_gps->longitude);
-	if(p_gps->latitude!=lat_lon.lat && p_gps->longitude!=lat_lon.lon)
+	
+	if(check_zhendong() || get_electric_gate_status())
 	{
-		lat_lon.lat = p_gps->latitude;
-		lat_lon.lon = p_gps->longitude;
-		convert_gps_data_for_protocol(p_gps,&gps_pkg_gps);
-				
-		//定位类型GPS
-		gps_pkg.loc_type = EN_GT_LT_GPS;
-		gps_pkg.latitude = gps_pkg_gps.latitude;
-		gps_pkg.longitude = gps_pkg_gps.longitude;
-		gps_pkg.speed = gps_pkg_gps.speed;					
-		
-		//航向
-		gps_pkg.course= gps_pkg_gps.course;
-		//可用卫星
-		gps_pkg.reserv_satnum = gps_pkg_gps.sat_uesed;
+		if(p_gps->latitude!=lat_lon.lat && p_gps->longitude!=lat_lon.lon)
+		{
+			lat_lon.lat = p_gps->latitude;
+			lat_lon.lon = p_gps->longitude;
+			convert_gps_data_for_protocol(p_gps,&gps_pkg_gps);
+					
+			//定位类型GPS
+			gps_pkg.loc_type = EN_GT_LT_GPS;
+			gps_pkg.latitude = gps_pkg_gps.latitude;
+			gps_pkg.longitude = gps_pkg_gps.longitude;
+			gps_pkg.speed = gps_pkg_gps.speed;					
+			
+			//航向
+			gps_pkg.course= gps_pkg_gps.course;
+			//可用卫星
+			gps_pkg.reserv_satnum = gps_pkg_gps.sat_uesed;
 
-		if(gps_pkg_gps.lat_ind == EN_GT_SOUTH)
-		{
-			gps_pkg.property.lat_ind = 0;	
-		}
-		else if(gps_pkg_gps.lat_ind == EN_GT_NORTH)
-		{
-			gps_pkg.property.lat_ind = 1;
-		}
+			if(gps_pkg_gps.lat_ind == EN_GT_SOUTH)
+			{
+				gps_pkg.property.lat_ind = 0;	
+			}
+			else if(gps_pkg_gps.lat_ind == EN_GT_NORTH)
+			{
+				gps_pkg.property.lat_ind = 1;
+			}
 
-		if(gps_pkg_gps.long_ind == EN_GT_WEST)
-		{
-			gps_pkg.property.long_ind = 0;	
-		}
-		else if(gps_pkg_gps.long_ind == EN_GT_EAST)
-		{
-			gps_pkg.property.long_ind = 1;
-		}
+			if(gps_pkg_gps.long_ind == EN_GT_WEST)
+			{
+				gps_pkg.property.long_ind = 0;	
+			}
+			else if(gps_pkg_gps.long_ind == EN_GT_EAST)
+			{
+				gps_pkg.property.long_ind = 1;
+			}
 
-		if(gps_pkg_gps.mode == EN_GT_GM_A)
-		{
-			gps_pkg.property.mode = 0;	
-		}
-		else if(gps_pkg_gps.mode == EN_GT_GM_D)
-		{
-			gps_pkg.property.mode = 1;
-		}
-		else if(gps_pkg_gps.mode == EN_GT_GM_E)
-		{
-			gps_pkg.property.mode = 2;
-		}
-		else if(gps_pkg_gps.mode == EN_GT_GM_N)
-		{
-			gps_pkg.property.mode = 3;
-		}
+			if(gps_pkg_gps.mode == EN_GT_GM_A)
+			{
+				gps_pkg.property.mode = 0;	
+			}
+			else if(gps_pkg_gps.mode == EN_GT_GM_D)
+			{
+				gps_pkg.property.mode = 1;
+			}
+			else if(gps_pkg_gps.mode == EN_GT_GM_E)
+			{
+				gps_pkg.property.mode = 2;
+			}
+			else if(gps_pkg_gps.mode == EN_GT_GM_N)
+			{
+				gps_pkg.property.mode = 3;
+			}
 
-		gps_pkg.bid = 0;
-		
-		send_package(EN_GT_PT_GPS,(char*)&gps_pkg,sizeof(gps_pkg_struct));
+			gps_pkg.bid = 0;
+			
+			send_package(EN_GT_PT_GPS,(char*)&gps_pkg,sizeof(gps_pkg_struct));
+		}
 	}
 }
 
@@ -588,7 +592,7 @@ void upload_imsi_package(void)
 	data_pkg.value_len = strlen(get_imsi()); 
 	strcpy(data_pkg.value,get_imsi());
 
-	Logln(D_INFO,"upload_imsi_package");
+	Logln(D_INFO,"upload_imsi_package,imsi=%s",get_imsi());
 
 	send_package(EN_GT_PT_DEV_DATA, (char*)&data_pkg, data_pkg.value_len+2);
 }

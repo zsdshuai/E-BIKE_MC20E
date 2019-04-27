@@ -174,7 +174,6 @@ int main(void)
   init_flash();
 
   /* USER CODE BEGIN 2 */
-	printf("test start!! \r\n");	
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */

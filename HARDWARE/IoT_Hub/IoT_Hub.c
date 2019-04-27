@@ -655,7 +655,7 @@ void parse_imsi_cmd(char* buf, int len)
 }
 char* get_imsi(void)
 {
-	strcpy(dev_info.imsi,"515092400103763");
+//	strcpy(dev_info.imsi,"515092400103763");
 	return dev_info.imsi;
 }
 void send_data(char* buf, int len)

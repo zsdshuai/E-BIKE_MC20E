@@ -18,7 +18,7 @@
 extern uint32_t diff_rotate,diff_mileage,diff_shake;
 extern battery_info_struct curr_bat;
 extern gps_info_struct gps_info;
-
+extern uint8_t connect_times;
 
 extern RTC_HandleTypeDef hrtc;
 
@@ -312,13 +312,14 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 		}
 		case BT_SIGNAL:
 		{
-			char param[8]={0}; 
+			char param[4]={0}; 
 			param[0] = convert_csq(dev_info.csq);
 			param[1] = gps_info.sat_view;
 			param[2] = gps_info.sat_uesd;
+			param[3] = connect_times;
 
-			Logln(D_INFO, "sig=%d,view=%d,used=%d",param[0],param[1],param[2]);
-			bt_prepare_send_data(cmd, 8, param);
+			Logln(D_INFO, "sig=%d,view=%d,used=%d,connect_times=%d",param[0],param[1],param[2],connect_times);
+			bt_prepare_send_data(cmd, 4, param);
 			break;
 		}
 		default:

@@ -123,11 +123,6 @@ void StartTask02(void const * argument);
 extern void MODULE_RST(void);
 extern void module_init(void);
 
-/* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
-
-/* USER CODE END PFP */
-
 /* USER CODE BEGIN 0 */
 void delay_us(uint32_t n_10us);
 /* USER CODE END 0 */
@@ -139,29 +134,11 @@ void delay_us(uint32_t n_10us);
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
-  /* USER CODE END 1 */
-
-  /* MCU Configuration----------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-//  MODULE_RST();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init(); 
@@ -172,55 +149,18 @@ int main(void)
   MX_IWDG_Init();
   MX_RTC_Init();
   init_flash();
-
-  /* USER CODE BEGIN 2 */
-  /* USER CODE END 2 */
-
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
-
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
-
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
-
-  /* Create the thread(s) */
-  /* definition and creation of defaultTask */
+  
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 512);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-  /* definition and creation of myTask02 */
   osThreadDef(myTask02, StartTask02, osPriorityNormal, 0, 256);
   myTask02Handle = osThreadCreate(osThread(myTask02), NULL);
 
-  /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
- 
-
-  /* Start scheduler */
   osKernelStart();
   
-  /* We should never get here as control is now taken by the scheduler */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   while (1)
   {
-  /* USER CODE END WHILE */
-
-  /* USER CODE BEGIN 3 */
-
   }
-  /* USER CODE END 3 */
 
 }
 
@@ -673,12 +613,10 @@ void StartDefaultTask(void const * argument)
 	HAL_TIM_Base_Start_IT(&htim3);
   	InitCircleQueue(&at_send_Queue);	                           //初始化队列
 
-//	module_init();
 	/* Infinite loop */
 	for(;;)
 	{
 		at_process();
-	    //HAL_IWDG_Refresh(&hiwdg);      				//喂看门狗   Tout=((4*2^prer)*rlr)/40  rlr = 3124 prer = 4 Tout = 5000ms内必须喂狗不然系统会复位
 	    	osDelay(1);
 	}
   /* USER CODE END 5 */ 
@@ -798,6 +736,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		mileage_bak = mileage_count;
 		shake_bak = shake_count;
 
+		Logln(D_INFO,"Feed WatchDog");
 		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
 
 	}

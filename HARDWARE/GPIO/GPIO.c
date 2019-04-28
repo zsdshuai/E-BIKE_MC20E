@@ -144,19 +144,17 @@ void gsm_led_process(void)
 	if(gsm_led_flag ==2)	//½»ÌæÉÁË¸
 	{
 		gsm_led_count++;
-		
-		if(gsm_led_on_off && gsm_led_count>=10)	//ÁÁ100ms
+		if(gsm_led_on_off && gsm_led_count>=3)	//ÁÁ100ms
 		{
 			gsm_led_off;
 			gsm_led_on_off = 0;
 			gsm_led_count = 0;
 		}
-		else if(!gsm_led_on_off && gsm_led_count >=90)	//Ãð900ms
+		else if(!gsm_led_on_off && gsm_led_count >=27)	//Ãð900ms
 		{
 			gsm_led_on;
 			gsm_led_on_off = 1;
 			gsm_led_count = 0;
-
 		}
 	}
 	else if(gsm_led_flag ==1)

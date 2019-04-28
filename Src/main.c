@@ -610,9 +610,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
-	HAL_TIM_Base_Start_IT(&htim3);
   	InitCircleQueue(&at_send_Queue);	                           //初始化队列
-
+	
 	/* Infinite loop */
 	for(;;)
 	{
@@ -627,6 +626,7 @@ void StartTask02(void const * argument)
 {
   /* USER CODE BEGIN StartTask02 */
 	HAL_TIM_Base_Start_IT(&htim14);
+  	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_ADCEx_Calibration_Start(&hadc);
 	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&adc_val, 64);
 	InitCircleQueue(&RxUart2_Queue);	                           //初始化队列
@@ -645,6 +645,7 @@ void StartTask02(void const * argument)
         shake_process();
 //	key_check_process();
 	voice_process();
+	gsm_led_process();
         osDelay(1);
   }
   /* USER CODE END StartTask02 */
@@ -708,7 +709,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			flag_alarm = 0;
 			flag_delay8s = 0;
 		}
-		gsm_led_process();
 	}
 	
 	/* USER CODE END Callback 0 */

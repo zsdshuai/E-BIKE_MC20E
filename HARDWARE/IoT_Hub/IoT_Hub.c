@@ -1087,7 +1087,7 @@ void at_process(void)
 		at_connect_service();
 		if(connect_times > 100)
 		{
-			Logln(D_INFO, "reconnect 60 times, restart ME");
+			Logln(D_INFO, "reconnect %d times, restart ME",connect_times);
 			net_work_state=EN_INIT_STATE;
 		}
 	}

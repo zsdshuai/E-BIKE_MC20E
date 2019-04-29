@@ -120,7 +120,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 		switch(cmd->type)
 		{
 			case SEARCH_CMD:
-				voice_play(VOICE_SEARCH);
+				voice_play(VOICE_SEARCH,g_flash.search_times);
 				break;
 			case LOCK_CMD:
                 		Logln(D_INFO, "cmd->para[0] = %d,g_flash.acc=%d",cmd->para[0],g_flash.acc);
@@ -128,7 +128,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					if(lock_bike())
 					{
-						voice_play(VOICE_LOCK);
+						voice_play(VOICE_LOCK,1);
 					}
 				}
 				else if(cmd->para[0]==0)	//解锁
@@ -136,7 +136,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 					if(!g_flash.acc)
 					{
 						gprs_unlock();
-						voice_play(VOICE_UNLOCK);
+						voice_play(VOICE_UNLOCK,1);
 					}
 				}
 				break;
@@ -171,7 +171,7 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 				{
 					if(lock_bike())
 					{
-						voice_play(VOICE_LOCK);
+						voice_play(VOICE_LOCK,1);
 					}
 					upload_give_back_package(g_flash.acc);
 				}
@@ -279,6 +279,23 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 					Logln(D_INFO, "High Speed Motor");
 				}
 				break;
+			case SEARCH_TIMES_CMD:
+				{
+					if(cmd->para[0]>0)
+					{
+						g_flash.search_times = cmd->para[0];
+						write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+					}
+					break;
+				}
+			case GB_CMD:
+				{
+					g_flash.gb_alarm = cmd->para[0];
+					g_flash.gb_speed = cmd->para[1];
+					write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+					Logln(D_INFO,"gb_alarm=%d,gb_speed=%d",g_flash.gb_alarm,g_flash.gb_speed);
+					break;
+				}
 			default:
 				break;
 		}
@@ -380,6 +397,60 @@ void get_ebike_data(ebike_pkg_struct* ebike_pkg)
 	}
 	
 }
+
+double getPerimeter(int n)
+{
+	switch(n){
+		   case 14:
+			   return 1.12;
+		   case 10:
+			   return 1.27;
+		   case 12:
+			   return 1.44;
+		   case 16:
+			   return 1.27;
+		   case 18:
+			   return 1.43;
+		   case 20:
+			   return 1.59;
+		   case 22:
+			   return 1.75;
+		  default:
+			   return 1.91;
+		}
+}
+/*算出时速在1秒的霍尔数量*/
+uint32_t get_hall_for_speed(uint32_t speed)
+{
+	return  (uint32_t)(speed*g_flash.cigang)/(getPerimeter(g_flash.lunjing)*2*3600);
+}
+bool zt_smart_check_gb_speed(uint32_t hall_1sec)
+{
+	if(hall_1sec > get_hall_for_speed(g_flash.gb_speed*1000))
+		return true;
+	else
+		return false;
+}
+
+void gb_speed_process(void)
+{
+	if(zt_smart_check_gb_speed(diff_mileage) && g_flash.gb_alarm)
+	{
+		voice_play(VOICE_SEARCH,1);
+	}
+}
+
+void parse_imsi_package(uint8_t* data, uint8_t len)
+{
+	if(g_flash.lunjing != data[0] ||g_flash.cigang != data[1])
+	{
+		g_flash.lunjing = data[0];
+		g_flash.cigang = data[1];
+		write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+	}
+	Logln(D_INFO,"lunjin=%d,cigang=%d",g_flash.lunjing,g_flash.cigang);
+}
+
 void dianchi_refresh_process(void)
 {
 	static bool flag=false;
@@ -407,7 +478,7 @@ void motorlock_process(void)
 		f_motorlock = 1;
 		if(g_flash.zd_alarm)
 		{
-			voice_play(VOICE_ALARM);
+			voice_play(VOICE_ALARM,1);
 		}
 	}
 
@@ -423,7 +494,7 @@ void shake_process(void)
         	if(g_flash.zd_alarm)
         	{
         		Logln(D_INFO,"shake--%d",diff_shake);
-              		voice_play(VOICE_ALARM);
+              		voice_play(VOICE_ALARM,1);
 			flag_alarm = 1;
 			flag_delay8s = 1;
         	}
@@ -443,7 +514,7 @@ void key_check_process(void)
 		{
 			key_detect_num = 0;
 			g_flash.acc |= KEY_OPEN;
-			voice_play(VOICE_UNLOCK);
+			voice_play(VOICE_UNLOCK,1);
 		}
 	}
 	else if(value && g_flash.acc && value2)
@@ -453,7 +524,7 @@ void key_check_process(void)
 		{
 			key_detect_num = 0;
 			g_flash.acc = 0;
-			voice_play(VOICE_LOCK);
+			voice_play(VOICE_LOCK,1);
 		}
 	}
 	else
@@ -466,8 +537,8 @@ void init_flash(void)
 {
 	read_flash(CONFIG_ADDR,(uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 	HAL_Delay(1);
-	Logln(D_INFO,"flag=%d,imei=%s,acc=%d,hall=%d,lundong=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,%s:%d,size=%d",g_flash.flag,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
-		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen, g_flash.net.domain, g_flash.net.port, sizeof(flash_struct));
+	Logln(D_INFO,"flag=%d,imei=%s,acc=%d,hall=%d,ld=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,times=%d,gb_a=%d,gb_s=%d,lj=%d,cg=%d,%s:%d,size=%d",g_flash.flag,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
+		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen,g_flash.search_times,g_flash.gb_alarm,g_flash.gb_speed,g_flash.lunjing,g_flash.cigang,g_flash.net.domain, g_flash.net.port, sizeof(flash_struct));
 		
 	if(g_flash.flag !=1)
 	{
@@ -483,6 +554,11 @@ void init_flash(void)
 		g_flash.ld_alarm = 0;
 		g_flash.zd_alarm = 0;
 		g_flash.zd_sen = 80;
+		g_flash.search_times = 3;
+		g_flash.gb_alarm = 0;
+		g_flash.gb_speed = 15;
+		g_flash.cigang = 46;
+		g_flash.lunjing = 14;
 		memset(g_flash.imei,0,sizeof(g_flash.imei));
 		strcpy(g_flash.net.domain, DOMAIN);
 		g_flash.net.port = PORT;

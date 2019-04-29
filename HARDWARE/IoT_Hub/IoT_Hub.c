@@ -978,7 +978,7 @@ void gnss_init(void)
 }
 void module_init(void)
 {
-	Logln(D_INFO, "IOT_module Start Init \r\n");
+	Logln(D_INFO, "IOT_module Start Init");
 
 	pure_uart1_buf();
 	connect_times = 0;

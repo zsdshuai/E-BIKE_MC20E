@@ -855,6 +855,9 @@ void parse_dev_data(data_pkg_struct* data)
 		case EN_GT_DT_VER:
 //			parse_ver_package(data->value,data->value_len);
 			break;
+		case EN_GT_DT_IMSI:
+			parse_imsi_package(data->value,data->value_len);
+			break;
 		default:
 			break;
 	}

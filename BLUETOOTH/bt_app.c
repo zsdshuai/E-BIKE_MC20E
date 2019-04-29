@@ -243,7 +243,7 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 			{
 				if(lock_bike())
 				{
-					voice_play(VOICE_LOCK);
+					voice_play(VOICE_LOCK,1);
 					send_ok_cmd(cmd);	
 		  		}
 		  		else
@@ -262,7 +262,7 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 			if(!g_flash.acc)
 			{
 				bt_unlock();
-				voice_play(VOICE_UNLOCK);
+				voice_play(VOICE_UNLOCK,1);
 				send_ok_cmd(cmd);
 			}
 			else
@@ -273,7 +273,7 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 		}
 		case BT_SEARCH:
 		{
-			voice_play(VOICE_SEARCH);
+			voice_play(VOICE_SEARCH,g_flash.search_times);
 			send_ok_cmd(cmd);
 			break;
 		}
@@ -292,7 +292,7 @@ void bt_parse_proc(uint8_t* buf, uint16_t len)
 		{
 			if(lock_bike())
 			{
-				voice_play(VOICE_LOCK);
+				voice_play(VOICE_LOCK,1);
 			}
 			bt_giveback_package(cmd);
 			break;

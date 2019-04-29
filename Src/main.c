@@ -646,6 +646,7 @@ void StartTask02(void const * argument)
 //	key_check_process();
 	voice_process();
 	gsm_led_process();
+	gb_speed_process();
         osDelay(1);
   }
   /* USER CODE END StartTask02 */

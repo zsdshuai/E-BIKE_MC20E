@@ -68,7 +68,9 @@ typedef enum
 	ZHULI_CMD,
 	XIUFU_CMD,
 	DIANYUAN_CMD,
-	DIANJI_CMD
+	DIANJI_CMD,
+	SEARCH_TIMES_CMD=0x24,
+	GB_CMD
 }ebike_cmd_enum;
 
 typedef struct
@@ -97,6 +99,11 @@ typedef struct
 	uint8_t ld_alarm;
 	uint8_t imei[16];
 	network_struct net;
+	int8_t search_times;
+	uint8_t gb_alarm;	//国标达速报音
+	uint8_t gb_speed;
+	uint8_t lunjing;	//轮径
+	uint8_t cigang;	//磁钢片
 }flash_struct;
 	
 #pragma pack (1)
@@ -148,6 +155,7 @@ void init_flash(void);
 void open_dianchi_lock(void);
 uint8_t convert_csq(uint8_t csq);
 bool check_zhendong(void);
+void gb_speed_process(void);
 
 #define CONFIG_ADDR 0x03	//0x0800D000
 extern flash_struct g_flash;

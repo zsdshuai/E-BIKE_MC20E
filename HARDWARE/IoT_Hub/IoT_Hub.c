@@ -387,7 +387,16 @@ int8_t GetATIndex(AT_CMD cmd)
 	}
 	return i;
 }
-
+void __HAL_UART_GET_FLAG_TIMEOUT(void)
+{
+	uint16_t timeout=0;
+	
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET)
+	{
+		timeout++;
+		if(timeout>1000)break;
+	}
+}
 uint8_t Send_AT_Command(AT_CMD cmd)
 {
 	int len;
@@ -398,10 +407,10 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 		Logln(D_INFO, "error cmd");
 	else
 		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
-	
+
+	strcat(at_pack[i].cmd_txt,"\r\n");	
 	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000);  
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET); 
-	uart1_send("\r\n",strlen("\r\n"));
+	__HAL_UART_GET_FLAG_TIMEOUT();
 	
 	HAL_Delay(at_pack[i].timeout);
 	
@@ -440,6 +449,7 @@ void Send_AT_Command_Timeout(AT_CMD cmd, uint8_t timeout)
 
 void Send_AT_Command_ext(AT_CMD cmd)
 {
+	uint16_t ret,timeout=0;
 	int8_t i=GetATIndex(cmd);
 
 	if(i==-1)
@@ -449,10 +459,11 @@ void Send_AT_Command_ext(AT_CMD cmd)
 	}
 	else
 		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
-
-	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000); 
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET); 	
-	uart1_send("\r\n",strlen("\r\n"));
+	
+	strcat(at_pack[i].cmd_txt,"\r\n");
+	ret = HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),100); 
+	Logln(D_INFO, "Send ret =%d",ret);
+	__HAL_UART_GET_FLAG_TIMEOUT();
 
 	HAL_Delay(at_pack[i].timeout);
 }
@@ -666,9 +677,10 @@ void send_data(char* buf, int len)
 	memset(at_pack[i].cmd_txt, 0, sizeof(at_pack[i].cmd_txt));
 	sprintf(at_pack[i].cmd_txt,"AT+QISEND=%d",len);
 	Logln(D_INFO, "send data %d byte", len);
+
+	strcat(at_pack[i].cmd_txt,"\r\n");
 	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000); 
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET); 
-	uart1_send("\r\n",strlen("\r\n"));
+	__HAL_UART_GET_FLAG_TIMEOUT();
 	
 	HAL_Delay(at_pack[i].timeout);
 
@@ -998,7 +1010,7 @@ void module_init(void)
 	Send_AT_Command_Timeout(AT_QIMODE, 1);
 	Send_AT_Command_Timeout(AT_QICSGP, 2);     
 	Send_AT_Command_Timeout(AT_QIREGAPP, 2);	
-	Send_AT_Command_Timeout(AT_QIACT, 2);		
+	Send_AT_Command_Timeout(AT_QIACT, 5);		
 	Send_AT_Command_Timeout(AT_COPS, 2);
 	Send_AT_Command_Timeout(AT_QIFGCNT1, 2);     	
 	Send_AT_Command_Timeout(AT_QCELLLOC, 10);

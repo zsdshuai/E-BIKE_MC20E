@@ -1,4 +1,5 @@
 #include "voice.h"
+#include "IoT_Hub.h"
 
 #define VOICE_DATA_H HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET)
 #define VOICE_DATA_L HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET)
@@ -16,6 +17,7 @@ void delay_us(uint32_t n_us);
 //ÓïÒô²¥·Å
 void voice_play(uint8_t plusenum, int8_t times)
 {
+	Logln(D_INFO,"pluse=%d,times=%d",plusenum,times);
 	voice_pluse = plusenum;
 	voice_times = times;
 }
@@ -25,9 +27,10 @@ void voice_process(void)
 	if(voice_times>0)
 	{
 		uint8_t i;
+		Logln(D_INFO, "A7=%d",HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7));
 		if (!HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7))
 			return;
-		printf("voice RST %d\r\n",voice_times);
+		Logln(D_INFO,"voice RST %d",voice_times);
 		VOICE_RST_H;
 		delay_us(660);
 		VOICE_RST_L;

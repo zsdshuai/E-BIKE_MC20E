@@ -14,7 +14,7 @@
 #else  
   #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)  
 #endif /* __GNUC__ */  
-  
+extern void __HAL_UART_GET_FLAG_TIMEOUT(void);  
 /** 
   * @brief  Retargets the C library printf function to the USART. 
   * @param  None 
@@ -45,14 +45,14 @@ short usart2_recv_buffer_index = 0;
 
 void uart1_send(uint8_t* pData, uint16_t Size)
 {
-	HAL_UART_Transmit(&huart1, pData, Size, 1000);
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET); 
+	HAL_UART_Transmit(&huart1, pData, Size, 100);
+	__HAL_UART_GET_FLAG_TIMEOUT();
 }
 
 void uart2_send(uint8_t* pData, uint16_t Size)
 {
 	HAL_UART_Transmit(&huart2, pData, Size, 1000);
-	while(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_TC)!=SET); 	
+	__HAL_UART_GET_FLAG_TIMEOUT();
 }
 
 void uart2_process(void)

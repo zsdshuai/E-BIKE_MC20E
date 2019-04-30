@@ -620,13 +620,6 @@ void upload_ebike_data_package(void)
 	send_package(EN_GT_PT_CONTROL, (char*)&ebike_pkg, package_len);
 }
 
-void upload_ebike_data_package_network(void)
-{
-	if(get_work_state())
-	{
-		upload_ebike_data_package();
-	}
-}
 void upload_give_back_package(uint8_t gate)
 {
 	uint8_t num=0;
@@ -747,18 +740,33 @@ void push_interval_package_process(void)
 			msgType.Data[0] = AT_UP_GGA;
 			PushElement(&at_send_Queue, msgType, 1);
 		}
-		else
-		{
-			static uint8_t last_acc=0;
 
-			if(last_acc != get_electric_gate_status())
+		
+		{//电门开关上报状态
+			static uint8_t last_acc=0;
+			if(last_acc != get_electric_gate_status())	
 			{
 				last_acc = get_electric_gate_status();
-				upload_ebike_data_package();
+				msgType.Data[0] = AT_UP_EBIKE;
+				PushElement(&at_send_Queue, msgType, 1);
 			}
-			else
+		}
+		
+		{//电池插拔上报状态
+			static bool flag=false;
+			if(get_bat_connect_status() && flag)
 			{
-				dianchi_refresh_process();
+				Logln(D_INFO, "BAT CONNECT");
+				msgType.Data[0] = AT_UP_EBIKE;
+				PushElement(&at_send_Queue, msgType, 1);
+				flag = false;
+			}
+			else if(!get_bat_connect_status() && !flag)
+			{
+				Logln(D_INFO,"BAT DISCONNECT");
+				msgType.Data[0] = AT_UP_EBIKE;
+				PushElement(&at_send_Queue, msgType, 1);
+				flag = true;
 			}
 		}
 		

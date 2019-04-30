@@ -19,7 +19,6 @@ gps_info_struct gps_info;
 dev_struct dev_info;
 uint8_t login_protect_timeout=0;
 extern uint8_t flag_delay1s;
-extern uint8_t flag_delay5s;
 BT_CONN_STRUCT bt_conn;
 extern work_state net_work_state;
 uint8_t bt_rsp_flag=0;

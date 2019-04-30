@@ -91,9 +91,9 @@ osThreadId myTask02Handle;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 uint8_t usart1_recbuf, usart2_recbuf;
-uint8_t tim3_delay5s;
+uint8_t tim3_delay3s;
 uint16_t tim14_delay900ms,tim14_delay500ms,tim14_delay10ms, tim14_delay4s,tim14_delay8s;
-uint8_t flag_delay5s, flag_delay1s, flag_sendlock,flag_delay5s_2;
+uint8_t flag_delay3s, flag_delay1s, flag_sendlock;
 uint32_t adc_val[64];
 uint16_t batvol;
 uint64_t rotate_bak, mileage_bak, shake_bak;
@@ -146,7 +146,7 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM1_Init();
   MX_TIM14_Init();
-  MX_IWDG_Init();
+//  MX_IWDG_Init();
   MX_RTC_Init();
   init_flash();
   
@@ -720,12 +720,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   	/* USER CODE BEGIN Callback 1 */
 	if (htim->Instance == htim3.Instance)
 	{
-		tim3_delay5s++;
+		tim3_delay3s++;
 
-		if (tim3_delay5s >= 5) 
+		if (tim3_delay3s >= 3) 
 		{
-			tim3_delay5s = 0;
-			flag_delay5s = 1;
+			tim3_delay3s = 0;
+			flag_delay3s = 1;
 		}
 		flag_delay1s = 1;
 		
@@ -737,8 +737,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		mileage_bak = mileage_count;
 		shake_bak = shake_count;
 
-		Logln(D_INFO,"Feed WatchDog");
-		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
+//		Logln(D_INFO,"Feed WatchDog");
+//		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
 
 	}
   /* USER CODE END Callback 1 */

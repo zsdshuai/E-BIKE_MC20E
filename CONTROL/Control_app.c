@@ -23,6 +23,7 @@ extern uint32_t diff_rotate,diff_mileage,diff_shake;
 extern battery_info_struct curr_bat;
 extern gps_info_struct gps_info;
 extern uint8_t flag_alarm;
+extern uint8_t flag_delay3s;
 
 /*PB9拉高，500ms之后拉低*/
 void open_dianchi_lock(void)
@@ -42,7 +43,7 @@ uint8_t convert_csq(uint8_t csq)
 
 bool get_bat_connect_status(void)
 {
-	if(get_bat_vol()>600)	//大于6V
+	if(get_bat_vol()>1200)	//大于12V
 		return true;
 	else
 		return false;
@@ -434,8 +435,9 @@ bool zt_smart_check_gb_speed(uint32_t hall_1sec)
 
 void gb_speed_process(void)
 {
-	if(zt_smart_check_gb_speed(diff_mileage) && g_flash.gb_alarm)
+	if(zt_smart_check_gb_speed(diff_mileage) && g_flash.gb_alarm && flag_delay3s)
 	{
+		flag_delay3s = 0;
 		voice_play(VOICE_SEARCH,1);
 	}
 }
@@ -451,26 +453,6 @@ void parse_imsi_package(uint8_t* data, uint8_t len)
 	Logln(D_INFO,"lunjin=%d,cigang=%d",g_flash.lunjing,g_flash.cigang);
 }
 
-void dianchi_refresh_process(void)
-{
-	static bool flag=false;
-
-	if(get_work_state())
-	{
-		if(get_bat_connect_status() && flag)
-		{
-			Logln(D_INFO, "BAT CONNECT");
-			upload_ebike_data_package_network();
-			flag = false;
-		}
-		else if(!get_bat_connect_status() && !flag)
-		{
-			Logln(D_INFO,"BAT DISCONNECT");
-			upload_ebike_data_package_network();
-			flag = true;
-		}
-	}	
-}
 void motorlock_process(void)
 {
 	if (diff_rotate > 4 && f_motorlock == 0 && g_flash.acc == 0) 

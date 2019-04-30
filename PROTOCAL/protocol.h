@@ -385,7 +385,6 @@ void hex_convert_str(uint8_t *in,uint8_t len, uint8_t *out);
 void str_convert_hex(char* in, int len, unsigned char* out);
 uint16_t get_crc16(uint8_t* bytes, uint16_t len);
 void upload_give_back_package(uint8_t gate);
-void upload_ebike_data_package_network(void);
 
 
 //void convert_gps_data_for_protocol(gps_info_struct* gps_data, gps_data_struct* kfd_gps_data);

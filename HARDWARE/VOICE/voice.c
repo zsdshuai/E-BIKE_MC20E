@@ -9,12 +9,12 @@
 extern TIM_HandleTypeDef htim1;
 uint16_t delay_nus;
 uint8_t voice_pluse;
-uint8_t voice_times;
+int8_t voice_times;
 
 void delay_us(uint32_t n_us);
 
 //ÓïÒô²¥·Å
-void voice_play(uint8_t plusenum, uint8_t times)
+void voice_play(uint8_t plusenum, int8_t times)
 {
 	voice_pluse = plusenum;
 	voice_times = times;
@@ -27,6 +27,7 @@ void voice_process(void)
 		uint8_t i;
 		if (!HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7))
 			return;
+		printf("voice RST %d\r\n",voice_times);
 		VOICE_RST_H;
 		delay_us(660);
 		VOICE_RST_L;
@@ -40,8 +41,8 @@ void voice_process(void)
 			delay_us(330);
 		}
 
-		voice_times--;
-		HAL_Delay(100);
+		if(--voice_times > 0)
+			HAL_Delay(300);
 	}
 }
 

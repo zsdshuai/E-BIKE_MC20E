@@ -737,7 +737,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		mileage_bak = mileage_count;
 		shake_bak = shake_count;
 
-//		Logln(D_INFO,"Feed WatchDog");
+		Logln(D_INFO,"Feed WatchDog");
 //		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
 
 	}

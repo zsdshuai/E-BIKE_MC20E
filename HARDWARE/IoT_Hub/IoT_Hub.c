@@ -117,19 +117,17 @@ void MODULE_PWRON(void)
 	HAL_Delay(100);
 }
 
-char* datafind(char* data, int len, char* find)
+void conventdata(char* data, int len)
 {
 	int i;
 
 	for(i=0; i<len; i++)
 	{
-		if(*(data+i)==*find)
+		if(*(data+i)==0)
 		{
-			return strstr(data+i,find);
+			*(data+i)='*';
 		}
 	}
-
-	return NULL;
 }
 void pure_uart1_buf(void)
 {
@@ -245,7 +243,7 @@ bool parse_gnss_cmd(char* buf, int len)
 	bool ret = false;
 
 //	Logln(D_INFO, "parse_gnss_cmd");
-	if((tmp1=datafind(pnmea+1,len,"GPRMC"))||(tmp2=datafind(pnmea+1,len,"GNRMC")))
+	if((tmp1=strstr(pnmea+1,"GPRMC"))||(tmp2=strstr(pnmea+1,"GNRMC")))
 	{
 		if(tmp1)
 			pnmea = tmp1;
@@ -275,7 +273,7 @@ bool parse_gnss_cmd(char* buf, int len)
 		Logln(D_INFO,"lat=%f,lon=%f",gps_info.latitude,gps_info.longitude);
 		ret = true;
 	}
-	if((tmp1=datafind(pnmea+1,len,"GPGGA"))||(tmp2=datafind(pnmea+1,len,"GNGGA")))
+	if((tmp1=strstr(pnmea+1,"GPGGA"))||(tmp2=strstr(pnmea+1,"GNGGA")))
 	{
 		//$GPGGA,085118.00,2235.87223,N,11359.99731,E,1,03,4.72,138.3,M,-2.6,M,,*4B
 		if(tmp1)
@@ -287,7 +285,7 @@ bool parse_gnss_cmd(char* buf, int len)
 		gps_info.altitude = get_double_number(&pnmea[GetComma(9,pnmea)]);
 		ret = true;
 	}
-	if(tmp1 = datafind(pnmea+1,len,"GPGSV"))
+	if(tmp1 = strstr(pnmea+1,"GPGSV"))
 	{
 		char n,isat, isi, nsat;
 		//$GPGSV,5,1,17,01,45,168,19,03,00,177,,07,53,321,08,08,53,014,*7C
@@ -313,12 +311,12 @@ bool parse_gnss_cmd(char* buf, int len)
 
 		ret = true;
 	}
-	if(datafind(pnmea+1,len,"GPGLL"))
+	if(strstr(pnmea+1,"GPGLL"))
 	{
 		//$GPGLL,4250.5589,S,14718.5084,E,092204.999,A*2D
 		ret = true;
 	}
-	if((tmp1=datafind(pnmea+1,len,"GPGSA"))||(tmp2=datafind(pnmea+1,len,"GNGSA")))
+	if((tmp1=strstr(pnmea+1,"GPGSA"))||(tmp2=strstr(pnmea+1,"GNGSA")))
 	{
 		//$GPGSA,A,3,01,20,19,13,,,,,,,,,40.4,24.4,32.2*0A
 		if(tmp1)
@@ -333,7 +331,7 @@ bool parse_gnss_cmd(char* buf, int len)
 		}
 		ret = true;
 	}
-	if(datafind(pnmea+1,len,"GPVTG"))
+	if(strstr(pnmea+1,"GPVTG"))
 	{
 		//$GPVTG,89.68,T,,M,0.00,N,0.0,K*5F
 		ret = true;
@@ -394,7 +392,7 @@ void __HAL_UART_GET_FLAG_TIMEOUT(void)
 	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET)
 	{
 		timeout++;
-		if(timeout>1000)break;
+		if(timeout>100)break;
 	}
 }
 uint8_t Send_AT_Command(AT_CMD cmd)
@@ -408,9 +406,9 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	else
 		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
 
-	strcat(at_pack[i].cmd_txt,"\r\n");	
 	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000);  
-	__HAL_UART_GET_FLAG_TIMEOUT();
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);
+	uart1_send("\r\n", strlen("\r\n"));
 	
 	HAL_Delay(at_pack[i].timeout);
 	
@@ -460,10 +458,9 @@ void Send_AT_Command_ext(AT_CMD cmd)
 	else
 		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
 	
-	strcat(at_pack[i].cmd_txt,"\r\n");
-	ret = HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),100); 
-	Logln(D_INFO, "Send ret =%d",ret);
-	__HAL_UART_GET_FLAG_TIMEOUT();
+	ret = HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000); 
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);
+	uart1_send("\r\n", strlen("\r\n"));
 
 	HAL_Delay(at_pack[i].timeout);
 }
@@ -678,15 +675,15 @@ void send_data(char* buf, int len)
 	sprintf(at_pack[i].cmd_txt,"AT+QISEND=%d",len);
 	Logln(D_INFO, "send data %d byte", len);
 
-	strcat(at_pack[i].cmd_txt,"\r\n");
 	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000); 
-	__HAL_UART_GET_FLAG_TIMEOUT();
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);
+	uart1_send("\r\n", strlen("\r\n"));
 	
 	HAL_Delay(at_pack[i].timeout);
 
 	memset(recv_buf, 0, BUFLEN);
 	lenth = get_uart_data_ext(recv_buf, BUFLEN);
-	if(datafind(recv_buf, lenth, at_pack[i].cmd_ret))
+	if(strstr(recv_buf, at_pack[i].cmd_ret))
 	{		
 		uart1_send(buf, len);
 		Logln(D_INFO, "send data1");
@@ -739,7 +736,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 	RET_TYPE ret = 0;
 
 //	Logln(D_INFO,"parse_bt_at_cmd");	
-	if(tmp=datafind(buf,len,"+QBTGATSCON:"))
+	if(tmp=strstr(buf,"+QBTGATSCON:"))
 	{/*+QBTGATSCON: 1,"A001",0,3DD098833C4B,1*/
 		char state;
 
@@ -774,7 +771,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 		}
 	}
 	
-	if(tmp=datafind(buf,len,"+QBTGATWREQ:"))
+	if(tmp=strstr(buf,"+QBTGATWREQ:"))
 	{/*+QBTGATWREQ: "A001",1,16,4746D5A60659,258,56,1,0,0*/
 
 		if(strstr(tmp,"\r\n"))
@@ -804,7 +801,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 		}
 		
 	}
-	if(tmp=datafind(buf,len,"+QBTGATRREQ:"))
+	if(tmp=strstr(buf,"+QBTGATRREQ:"))
 	{
 		if(strstr(tmp,"\r\n"))
 		{
@@ -818,7 +815,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 			ret |= RET_B0;
 		}
 	}
-	if(tmp=datafind(buf,len,"+QBTGATSRSP:"))
+	if(tmp=strstr(buf,"+QBTGATSRSP:"))
 	{/*+QBTGATSRSP: 0,"A001",1,258*/
 		if(strstr(tmp,"\r\n"))
 		{
@@ -842,7 +839,7 @@ bool parse_another_cmd(char* buf, int len)
 
 //	Logln(D_INFO,"parse_another_cmd");	
 
-	if(tmp1 = datafind(buf,len,"+CMS ERROR:"))
+	if(tmp1 = strstr(buf,"+CMS ERROR:"))
 	{
 		char data[6]={0};
 		int err;
@@ -852,7 +849,7 @@ bool parse_another_cmd(char* buf, int len)
 		Logln(D_INFO,"ERROR code = %d",err);
 		ret = true;
 	}
-	else if(tmp1 = datafind(buf,len,"+CME ERROR:"))
+	else if(tmp1 = strstr(buf,"+CME ERROR:"))
 	{
 		char data[6]={0};
 		int err;
@@ -864,23 +861,23 @@ bool parse_another_cmd(char* buf, int len)
 		if(err == 7103)
 			net_work_state=EN_INIT_STATE;
 	}
-	else if(datafind(buf, len,"CONNECT OK"))
+	else if(strstr(buf,"CONNECT OK"))
 	{
 		upload_login_package();
 	}
-	else if(datafind(buf, len,"ALREADY CONNECT"))
+	else if(strstr(buf,"ALREADY CONNECT"))
 	{
 		net_work_state=EN_CONNECTED_STATE;
 	}
-	else if(datafind(buf,len,"RDY"))
+	else if(strstr(buf,"RDY"))
 	{
 		module_init();	
 	}
-	else if(datafind(buf,len,"RING"))
+	else if(strstr(buf,"RING"))
 	{
 		ret = true;
 	}
-	else if(datafind(buf,len,"+PDP DEACT") || datafind(buf,len,"CLOSED"))
+	else if(strstr(buf,"+PDP DEACT") || strstr(buf,"CLOSED"))
 	{//NETWORD disconnect
 		Logln(D_INFO,"CLOSED ---%s",buf);
 		net_work_state=EN_CONNECT_STATE;
@@ -907,8 +904,10 @@ bool at_parse_recv(void)
 			ret |=RET_P;
 		}
 
+		conventdata(recv_buf, rec_len);
+		
 	//只收到应答，要清空数据
-		if(datafind(recv_buf, rec_len,"OK") || datafind(recv_buf, rec_len,"SEND OK") || datafind(recv_buf, rec_len,"SEND FAIL")|| datafind(recv_buf,rec_len, "ERROR"))
+		if(strstr(recv_buf,"OK") || strstr(recv_buf,"SEND OK") || strstr(recv_buf,"SEND FAIL")|| strstr(recv_buf, "ERROR"))
 			ret |=RET_A;
 
 	//蓝牙连接，接收数据	

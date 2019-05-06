@@ -691,7 +691,7 @@ void send_data(char* buf, int len)
 	else 
 	{
 		esc_val = 0x1B;		
-		uart1_send(&esc_val, 1);		
+		uart1_send(&esc_val, 1);
 		Logln(D_INFO, "send data2");	
 	}
 }
@@ -742,7 +742,7 @@ RET_TYPE parse_bt_at_cmd(char* buf, int len)
 
 		if(strstr(tmp,"\r\n"))
 		{
-			Logln(D_INFO,"RCV +QBTGATSCON:----------0",);
+			Logln(D_INFO,"RCV +QBTGATSCON:----------0");
 			state = tmp[GetComma(1,tmp)-2];
 			if(state=='1')
 			{
@@ -877,7 +877,7 @@ bool parse_another_cmd(char* buf, int len)
 	{
 		ret = true;
 	}
-	else if(strstr(buf,"+PDP DEACT") || strstr(buf,"CLOSED"))
+	else if(strstr(buf,"+PDP DEACT") /*|| strstr(buf,"CLOSED")*/)
 	{//NETWORD disconnect
 		Logln(D_INFO,"CLOSED ---%s",buf);
 		net_work_state=EN_CONNECT_STATE;
@@ -1066,7 +1066,7 @@ void bt_cmd_process(void)
 		send_bt_rsp_cmd();
 	}
 
-	if(bt_cmd_flag)
+	if(bt_cmd_flag && bt_cmd_len>0)
 	{
 		bt_cmd_flag = 0;
 

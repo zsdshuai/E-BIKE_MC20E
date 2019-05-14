@@ -50,7 +50,7 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
 extern TIM_HandleTypeDef htim6;
-extern uint8_t usart1_recbuf;
+extern uint8_t usart1_recbuf,usart2_recbuf;
 /******************************************************************************/
 /*            Cortex-M0 Processor Interruption and Exception Handlers         */ 
 /******************************************************************************/
@@ -184,11 +184,9 @@ void TIM14_IRQHandler(void)
 */
 void USART1_IRQHandler(void)
 {
-  /* USER CODE BEGIN USART1_IRQn 0 */
   	uint32_t timeout;
-  /* USER CODE END USART1_IRQn 0 */
-  HAL_UART_IRQHandler(&huart1);
-  /* USER CODE BEGIN USART1_IRQn 1 */
+	
+        HAL_UART_IRQHandler(&huart1);
   	timeout=0;
 	while (HAL_UART_GetState(&huart1) != HAL_UART_STATE_READY)//等待就绪
 	{
@@ -199,10 +197,9 @@ void USART1_IRQHandler(void)
 	timeout=0;
 	while(HAL_UART_Receive_IT(&huart1, &usart1_recbuf, 1) != HAL_OK)//一次处理完成之后，重新开启中断并设置RxXferCount为1
 	{
-	 timeout++; //超时处理
-	 if(timeout>HAL_MAX_DELAY) break;	
+		 timeout++; //超时处理
+		 if(timeout>HAL_MAX_DELAY) break;	
 	}
-  /* USER CODE END USART1_IRQn 1 */
 }
 
 /**
@@ -210,13 +207,22 @@ void USART1_IRQHandler(void)
 */
 void USART2_IRQHandler(void)
 {
-  /* USER CODE BEGIN USART2_IRQn 0 */
-
-  /* USER CODE END USART2_IRQn 0 */
-  HAL_UART_IRQHandler(&huart2);
-  /* USER CODE BEGIN USART2_IRQn 1 */
-
-  /* USER CODE END USART2_IRQn 1 */
+	uint32_t timeout;
+	
+        HAL_UART_IRQHandler(&huart2);
+  	timeout=0;
+	while (HAL_UART_GetState(&huart2) != HAL_UART_STATE_READY)//等待就绪
+	{
+	 	timeout++;////超时处理
+	 	if(timeout>HAL_MAX_DELAY) break;		
+	}
+     
+	timeout=0;
+	while(HAL_UART_Receive_IT(&huart2, &usart2_recbuf, 1) != HAL_OK)//一次处理完成之后，重新开启中断并设置RxXferCount为1
+	{
+		 timeout++; //超时处理
+		 if(timeout>HAL_MAX_DELAY) break;	
+	}
 }
 
 /**

@@ -64,9 +64,10 @@ typedef enum
 #endif
 
 #define MODULE_BUFFER_SIZE  512	//1024
+#define SEND_BUF_SIZE 256
 
 extern char module_recv_buffer[MODULE_BUFFER_SIZE];
-extern short module_recv_buffer_index;
+extern unsigned short module_recv_write_index;
 
 typedef void (*parseFun)(void*,int);
 

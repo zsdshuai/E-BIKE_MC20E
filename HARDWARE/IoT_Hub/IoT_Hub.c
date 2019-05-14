@@ -11,9 +11,17 @@
 extern UART_HandleTypeDef huart1;
 
 char module_recv_buffer[MODULE_BUFFER_SIZE] = {0};
-short module_recv_buffer_index = 0;
+unsigned short module_recv_write_index = 0;
+unsigned short recv_read_start_index = 0;
+unsigned short recv_read_end_index = 0;
 
-char recv_buf[BUFLEN];
+char send_buffer[SEND_BUF_SIZE];
+unsigned short send_len;
+
+char gnss_buf[512];
+char bt_buf[512];
+char gprs_buf[512];
+char another_buf[512];
 
 gps_info_struct gps_info;
 dev_struct dev_info;
@@ -37,7 +45,7 @@ void parse_bt_name_cmd(char* buf, int len);
 void parse_imei_cmd(char* buf, int len);
 void parse_csq_cmd(char* buf, int len);
 void parse_imsi_cmd(char* buf, int len);
-bool parse_gnss_cmd(char* buf, int len);
+void parse_gnss_cmd(char* buf, int len);
 void parse_location_cmd(char* buf, int len);
 void parse_cell_location_cmd(char* buf, int len);
 
@@ -59,13 +67,13 @@ AT_STRUCT at_pack[]={
 	{AT_QCELLLOC,"AT+QCELLLOC=1","OK",1000,parse_cell_location_cmd},
 	{AT_QIMUX,"AT+QIMUX=0","OK",300,NULL},
 	{AT_QIDNSIP,"AT+QIDNSIP=1","OK",300,NULL},
-	{AT_QIOPEN,"","CONNECT OK",3000,NULL},
+	{AT_QIOPEN,"","CONNECT OK",5000,NULL},
 	{AT_QISEND,"",">",500,NULL},
 	{AT_QRECV,"+QIURC: \"recv\"","OK",300,NULL},
 	{AT_QICLOSE,"AT+QICLOSE","CLOSE OK",300,NULL},
 	{AT_QPING,"AT+QPING=1,\"zcwebx.liabar.cn\",4,1","OK",300,NULL},
 	
-	{AT_QGPS_ON,"AT+QGNSSC=1","OK",300,NULL},
+	{AT_QGPS_ON,"AT+QGNSSC=1","OK",1000,NULL},
 	{AT_QGPS_OFF,"AT+QGNSSC=0","OK",300,NULL},
 	{AT_QGPS_RMC,"AT+QGNSSRD=\"NMEA/RMC\"","OK",500,NULL},
 	{AT_QGPS_GGA,"AT+QGNSSRD=\"NMEA/GGA\"","OK",500,NULL},	
@@ -117,7 +125,7 @@ void MODULE_PWRON(void)
 	HAL_Delay(100);
 }
 
-void conventdata(char* data, int len)
+void conventdata0(char* data, int len)
 {
 	int i;
 
@@ -125,15 +133,29 @@ void conventdata(char* data, int len)
 	{
 		if(*(data+i)==0)
 		{
-			*(data+i)='*';
+			*(data+i)='#';
 		}
 	}
 }
+
+void conventdatahash(char* data, int len)
+{
+	int i;
+
+	for(i=0; i<len; i++)
+	{
+		if(*(data+i)=='#')
+		{
+			*(data+i)=0;
+		}
+	}
+}
+
 void pure_uart1_buf(void)
 {
 	Logln(D_INFO, "pure_uart1_buf");		
 	memset(module_recv_buffer, 0, MODULE_BUFFER_SIZE);
-	module_recv_buffer_index = 0;
+	module_recv_write_index = 0;
 }
 
 int GetComma(int num,char *str)
@@ -235,14 +257,12 @@ void parse_cell_location_cmd(char* buf, int len)
 		strncpy(cell_loc.lat, tmp1+1, tmp2-(tmp1+1));
 	}
 }
-bool parse_gnss_cmd(char* buf, int len)
+void parse_gnss_cmd(char* buf, int len)
 {
 	char* pnmea = buf;
 	unsigned long tmp;
 	char *tmp1,*tmp2;
-	bool ret = false;
 
-//	Logln(D_INFO, "parse_gnss_cmd");
 	if((tmp1=strstr(pnmea+1,"GPRMC"))||(tmp2=strstr(pnmea+1,"GNRMC")))
 	{
 		if(tmp1)
@@ -271,9 +291,8 @@ bool parse_gnss_cmd(char* buf, int len)
 		gps_info.mode = pnmea[GetComma(12,pnmea)];
 
 		Logln(D_INFO,"lat=%f,lon=%f",gps_info.latitude,gps_info.longitude);
-		ret = true;
 	}
-	if((tmp1=strstr(pnmea+1,"GPGGA"))||(tmp2=strstr(pnmea+1,"GNGGA")))
+	else if((tmp1=strstr(pnmea+1,"GPGGA"))||(tmp2=strstr(pnmea+1,"GNGGA")))
 	{
 		//$GPGGA,085118.00,2235.87223,N,11359.99731,E,1,03,4.72,138.3,M,-2.6,M,,*4B
 		if(tmp1)
@@ -283,9 +302,8 @@ bool parse_gnss_cmd(char* buf, int len)
 	    	gps_info.sat_uesd = (char)get_double_number(&pnmea[GetComma(7,pnmea)]);
 		gps_info.hdop = get_double_number(&pnmea[GetComma(8,pnmea)]);;
 		gps_info.altitude = get_double_number(&pnmea[GetComma(9,pnmea)]);
-		ret = true;
 	}
-	if(tmp1 = strstr(pnmea+1,"GPGSV"))
+	else if(tmp1 = strstr(pnmea+1,"GPGSV"))
 	{
 		char n,isat, isi, nsat;
 		//$GPGSV,5,1,17,01,45,168,19,03,00,177,,07,53,321,08,08,53,014,*7C
@@ -309,14 +327,12 @@ bool parse_gnss_cmd(char* buf, int len)
 		}
 		Logln(D_INFO,"gsv=%d",nsat);
 
-		ret = true;
 	}
-	if(strstr(pnmea+1,"GPGLL"))
+	else if(strstr(pnmea+1,"GPGLL"))
 	{
 		//$GPGLL,4250.5589,S,14718.5084,E,092204.999,A*2D
-		ret = true;
 	}
-	if((tmp1=strstr(pnmea+1,"GPGSA"))||(tmp2=strstr(pnmea+1,"GNGSA")))
+	else if((tmp1=strstr(pnmea+1,"GPGSA"))||(tmp2=strstr(pnmea+1,"GNGSA")))
 	{
 		//$GPGSA,A,3,01,20,19,13,,,,,,,,,40.4,24.4,32.2*0A
 		if(tmp1)
@@ -329,15 +345,11 @@ bool parse_gnss_cmd(char* buf, int len)
 		{
 			gps_info.state = 'V';
 		}
-		ret = true;
 	}
-	if(strstr(pnmea+1,"GPVTG"))
+	else if(strstr(pnmea+1,"GPVTG"))
 	{
 		//$GPVTG,89.68,T,,M,0.00,N,0.0,K*5F
-		ret = true;
 	}
-
-	return ret;
 }
 void parse_gps_data(char* buf)
 {
@@ -399,6 +411,8 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 {
 	int len;
 	uint8_t end = 0x1a;	
+	char buf[128]={0};
+	
 	int8_t i=GetATIndex(cmd), ret=0;
 
 	if(i==-1)
@@ -412,15 +426,14 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	
 	HAL_Delay(at_pack[i].timeout);
 	
-	memset(recv_buf, 0, BUFLEN);
-	len = get_uart_data(recv_buf, BUFLEN);
-	Logln(D_INFO, "rcv %d,%s", len,recv_buf);
+	len = get_uart_data(buf, 128);
+	Logln(D_INFO, "rcv %d,%s", len,buf);
 
-	if(strstr(recv_buf,at_pack[i].cmd_ret))
+	if(strstr(buf,at_pack[i].cmd_ret))
 	{
 		if(at_pack[i].fun)
 		{
-			at_pack[i].fun(recv_buf,len);
+			at_pack[i].fun(buf,len);
 		}
 		ret = 1;
 	}
@@ -493,26 +506,10 @@ int get_recv_len(char *s,char find,int num)
 
 	return rev;
 }
-void move_rcv_buf(uint16_t drop, uint16_t sum)
-{
-	if(sum > drop)
-	{
-		char* pDst = module_recv_buffer;
-		char* pSrc = module_recv_buffer + drop;
-		char* pDstEnd = pDst + (sum-drop);
 
-
-		for (; pDst < pDstEnd; ++pDst, ++pSrc)
-		{
-			*pDst = *pSrc;
-		}
-		
-		module_recv_buffer_index = sum-drop;
-	}
-}
 int get_uart_data_ext(char*buf, int count)
 {
-	uint16_t ulen = module_recv_buffer_index;
+	uint16_t ulen = module_recv_write_index;
 
 	if (ulen > 0)
 	{
@@ -521,7 +518,7 @@ int get_uart_data_ext(char*buf, int count)
 		{
 			memcpy(buf, module_recv_buffer, ulen);
 			buf[ulen] = 0;
-			Logln(D_INFO,"rcv=%d,%s",ulen,buf);
+		//	Logln(D_INFO,"rcv=%d,%s",ulen,buf);
 			return ulen;
 		}
 		else
@@ -539,7 +536,7 @@ int get_uart_data_ext(char*buf, int count)
 				*pDst = *pSrc;
 			}
 			
-			module_recv_buffer_index = ulen - count;
+			module_recv_write_index = ulen - count;
 			return count;
 		}
 	}
@@ -551,7 +548,7 @@ int get_uart_data_ext(char*buf, int count)
 
 int get_uart_data(char*buf, int count)
 {
-	uint16_t ulen = module_recv_buffer_index;
+	uint16_t ulen = module_recv_write_index;
 
 	if (ulen > 0)
 	{
@@ -559,7 +556,7 @@ int get_uart_data(char*buf, int count)
 		{
 			memcpy(buf, module_recv_buffer, ulen);
 			buf[ulen] = 0;
-			module_recv_buffer_index = 0;
+			module_recv_write_index = 0;
 			memset(module_recv_buffer, 0, strlen(module_recv_buffer));
 			return ulen;
 		}
@@ -578,7 +575,7 @@ int get_uart_data(char*buf, int count)
 				*pDst = *pSrc;
 			}
 			
-			module_recv_buffer_index = ulen - count;
+			module_recv_write_index = ulen - count;
 			return count;
 		}
 	}
@@ -667,10 +664,8 @@ char* get_imsi(void)
 }
 void send_data(char* buf, int len)
 {    	
-	uint8_t esc_val = 0;	
-	int i,lenth;	
+	int i = GetATIndex(AT_QISEND);	
 	
-	i = GetATIndex(AT_QISEND);	
 	memset(at_pack[i].cmd_txt, 0, sizeof(at_pack[i].cmd_txt));
 	sprintf(at_pack[i].cmd_txt,"AT+QISEND=%d",len);
 	Logln(D_INFO, "send data %d byte", len);
@@ -681,19 +676,9 @@ void send_data(char* buf, int len)
 	
 	HAL_Delay(at_pack[i].timeout);
 
-	memset(recv_buf, 0, BUFLEN);
-	lenth = get_uart_data_ext(recv_buf, BUFLEN);
-	if(strstr(recv_buf, at_pack[i].cmd_ret))
-	{		
-		uart1_send(buf, len);
-		Logln(D_INFO, "send data1");
-	}	
-	else 
-	{
-		esc_val = 0x1B;		
-		uart1_send(&esc_val, 1);
-		Logln(D_INFO, "send data2");	
-	}
+	memset(send_buffer, 0, SEND_BUF_SIZE);
+	memcpy(send_buffer, buf, len);
+	send_len = len;
 }
 
 void QGEPOF1(void)
@@ -730,140 +715,163 @@ void judge_change_bt_name(void)
 		bt_name_modify(name);
 	}
 }
-RET_TYPE parse_bt_at_cmd(char* buf, int len)
+
+void parse_bt_at_cmd(char* buf, int len)
 {
 	char *tmp,*tmp1=NULL,*tmp2=NULL;
-	RET_TYPE ret = 0;
 
-//	Logln(D_INFO,"parse_bt_at_cmd");	
 	if(tmp=strstr(buf,"+QBTGATSCON:"))
 	{/*+QBTGATSCON: 1,"A001",0,3DD098833C4B,1*/
 		char state;
 
-		if(strstr(tmp,"\r\n"))
+		Logln(D_INFO,"RCV +QBTGATSCON:----------0");
+		state = tmp[GetComma(1,tmp)-2];
+		if(state=='1')
 		{
-			Logln(D_INFO,"RCV +QBTGATSCON:----------0");
-			state = tmp[GetComma(1,tmp)-2];
-			if(state=='1')
+			Logln(D_INFO,"BT CONNECT");
+		}
+		else
+		{
+			Logln(D_INFO,"BT DISCONNECT");
+		}
+	}
+	else if(tmp=strstr(buf,"+QBTGATWREQ:"))
+	{/*+QBTGATWREQ: "A001",1,16,4746D5A60659,258,56,1,0,0*/
+		unsigned char data[64]={0};
+		int len;
+		
+		Logln(D_INFO,"RCV +QBTGATWREQ:----------1-T");
+		bt_conn.conn_id = get_double_number(tmp+GetComma(1, tmp));
+		bt_conn.trans_id = get_double_number(tmp+GetComma(2, tmp));
+		bt_conn.attr_handle = get_double_number(tmp+GetComma(4, tmp));
+		tmp1 = tmp+GetComma(5, tmp);
+		tmp2 = tmp+GetComma(6, tmp)-1;
+	
+		len = tmp2-tmp1;
+		str_convert_hex(tmp1,len,data);
+		memset(bt_cmd_data, 0, sizeof(bt_cmd_data));
+		memcpy(bt_cmd_data, data, len/2);
+		bt_cmd_len = len/2;
+		bt_cmd_flag = 1;
+	}
+	else if(tmp=strstr(buf,"+QBTGATRREQ:"))
+	{
+		bt_rsp_flag = 1;
+		Logln(D_INFO,"RCV +QBTGATRREQ:");
+	}
+	else if(tmp=strstr(buf,"+QBTGATSRSP:"))
+	{/*+QBTGATSRSP: 0,"A001",1,258*/
+		Logln(D_INFO,"RCV +QBTGATSRSP:");
+	}
+}
+
+void parse_bt_pkg(char* buf, int len)
+{
+	char* phead;
+	char* ptail=NULL;
+	char* pseek=NULL;
+	char pkg[128]={0};
+
+	Logln(D_INFO,"parse_bt_pkg=%s",buf);
+
+	do{
+		pseek = strstr(phead,"+QBTGAT");
+
+		if(pseek)
+		{
+			ptail = strstr(pseek,"\r\n");
+			if(ptail)
 			{
-				if(1)//strstr(tmp,"+QBTGATWREQ:"))	//连接成功要等待+QBTGATWREQ:接收
-				{
-					Logln(D_INFO,"BT CONNECT");
-					Logln(D_INFO,"RCV +QBTGATSCON:----------0-T");
-					ret |= RET_B1;
-				}
-				else
-				{
-					Logln(D_INFO,"RCV +QBTGATSCON:----------0-F");
-					ret |= RET_B0;
-				}
+				memset(pkg, 0, sizeof(pkg));
+				memcpy(pkg, pseek, ptail-pseek);
+				parse_bt_at_cmd(pkg, ptail-pseek);
+				phead = ptail+2;
 			}
 			else
 			{
-				Logln(D_INFO,"BT DISCONNECT");
-				ret |= RET_B1;
+				break;
 			}
 		}
 		else
 		{
-			Logln(D_INFO,"RCV +QBTGATSCON:----------0-F");
-			ret |= RET_B0;
+			break;
 		}
-	}
+		
+	}while(1);
 	
-	if(tmp=strstr(buf,"+QBTGATWREQ:"))
-	{/*+QBTGATWREQ: "A001",1,16,4746D5A60659,258,56,1,0,0*/
-
-		if(strstr(tmp,"\r\n"))
-		{
-			unsigned char data[64]={0};
-			int len;
-			Logln(D_INFO,"RCV +QBTGATWREQ:----------1-T");
-			bt_conn.conn_id = get_double_number(tmp+GetComma(1, tmp));
-			bt_conn.trans_id = get_double_number(tmp+GetComma(2, tmp));
-			bt_conn.attr_handle = get_double_number(tmp+GetComma(4, tmp));
-			tmp1 = tmp+GetComma(5, tmp);
-			tmp2 = tmp+GetComma(6, tmp)-1;
-		
-			len = tmp2-tmp1;
-			str_convert_hex(tmp1,len,data);
-			memset(bt_cmd_data, 0, sizeof(bt_cmd_data));
-			memcpy(bt_cmd_data, data, len/2);
-			bt_cmd_len = len/2;
-			bt_cmd_flag = 1;
-			
-			ret |= RET_B1;
-		}
-		else
-		{
-			Logln(D_INFO,"RCV +QBTGATWREQ:----------1-F");
-			ret |= RET_B0;
-		}
-		
-	}
-	if(tmp=strstr(buf,"+QBTGATRREQ:"))
-	{
-		if(strstr(tmp,"\r\n"))
-		{
-			bt_rsp_flag = 1;
-			Logln(D_INFO,"RCV +QBTGATRREQ:---------2-T");
-			ret |= RET_B1;
-		}
-		else
-		{
-			Logln(D_INFO,"RCV +QBTGATRREQ:---------2-F");
-			ret |= RET_B0;
-		}
-	}
-	if(tmp=strstr(buf,"+QBTGATSRSP:"))
-	{/*+QBTGATSRSP: 0,"A001",1,258*/
-		if(strstr(tmp,"\r\n"))
-		{
-			Logln(D_INFO,"RCV +QBTGATSRSP:---------3-T");
-			ret |= RET_B1;
-		}
-		else
-		{
-			Logln(D_INFO,"RCV +QBTGATSRSP:---------3-F");
-			ret |= RET_B0;
-		}
-	}
-
-	return ret;
 }
 
-bool parse_another_cmd(char* buf, int len)
+void parse_gnss_pkg(char* buf, int len)
 {
-	bool ret = false;
+	char* phead;
+	char* ptail=NULL;
+	char* pseek=NULL;
+	char pkg[128]={0};
+
+	Logln(D_INFO,"parse_gnss_pkg=%s",buf);
+	do{
+		pseek = strstr(phead,"+QGNSSRD");
+
+		if(pseek)
+		{
+			ptail = strstr(pseek,"\r\n");
+			if(ptail)
+			{
+				memset(pkg, 0, sizeof(pkg));
+				memcpy(pkg, pseek, ptail-pseek);
+				parse_gnss_cmd(pkg, ptail-pseek);
+				phead = ptail+2;
+			}
+			else
+			{
+				break;
+			}
+		}
+		else
+		{
+			break;
+		}
+		
+	}while(1);
+	
+}
+
+void parse_another_cmd(char* buf, int len)
+{
 	char* tmp1=NULL,*tmp2 = NULL;
 
-//	Logln(D_INFO,"parse_another_cmd");	
+	Logln(D_INFO,"parse_another_cmd,%s", buf);	
 
-	if(tmp1 = strstr(buf,"+CMS ERROR:"))
+	if(tmp1 = strstr(buf,"CMS ERROR:"))
 	{
 		char data[6]={0};
 		int err;
 		tmp2 = strstr(tmp1,"\r\n");
-		memcpy(data,tmp1+strlen("+CMS ERROR:"),tmp2-(tmp1+strlen("+CMS ERROR:")));
+		memcpy(data,tmp1+strlen("CMS ERROR:"),tmp2-(tmp1+strlen("CMS ERROR:")));
 		err = atoi(data);
 		Logln(D_INFO,"ERROR code = %d",err);
-		ret = true;
 	}
-	else if(tmp1 = strstr(buf,"+CME ERROR:"))
+	else if(tmp1 = strstr(buf,"CME ERROR:"))
 	{
 		char data[6]={0};
 		int err;
 		tmp2 = strstr(tmp1,"\r\n");
-		memcpy(data,tmp1+strlen("+CME ERROR:"),tmp2-(tmp1+strlen("+CME ERROR:")));
+		memcpy(data,tmp1+strlen("CME ERROR:"),tmp2-(tmp1+strlen("CME ERROR:")));
 		err = atoi(data);
 		Logln(D_INFO,"CME ERROR code = %d",err);
-		ret = true;
 		if(err == 7103)
 			net_work_state=EN_INIT_STATE;
 	}
 	else if(strstr(buf,"CONNECT OK"))
 	{
-		upload_login_package();
+		if(net_work_state!=EN_CONNECTED_STATE)
+		{
+			RxMsgTypeDef msgType;
+
+			net_work_state = EN_LOGING_STATE;
+			msgType.Data[0] = AT_UP_LOGIN;
+			PushElement(&at_send_Queue, msgType, 1);
+		}
 	}
 	else if(strstr(buf,"ALREADY CONNECT"))
 	{
@@ -875,76 +883,197 @@ bool parse_another_cmd(char* buf, int len)
 	}
 	else if(strstr(buf,"RING"))
 	{
-		ret = true;
 	}
-	else if(strstr(buf,"+PDP DEACT") /*|| strstr(buf,"CLOSED")*/)
+	else if(strstr(buf,"PDP DEACT") /*|| strstr(buf,"CLOSED")*/)
 	{//NETWORD disconnect
 		Logln(D_INFO,"CLOSED ---%s",buf);
 		net_work_state=EN_CONNECT_STATE;
-		ret = true;
 	}
-	return ret;
-}
 
-
-bool at_parse_recv(void)
-{
-	uint8_t rec_len;
-	uint32_t ret=0;
-	bool result = true;
-
-	memset(recv_buf, 0, BUFLEN);
-	rec_len = get_uart_data_ext(recv_buf, BUFLEN);
-
-	if(rec_len > 0)
+	if(send_len>0)
 	{
-	//连接之后网络业务协议
-		if(protocol_parse(recv_buf, rec_len))
+		uint8_t esc_val = 0;	
+
+		if(strstr(buf,">"))
 		{
-			ret |=RET_P;
-		}
-
-		conventdata(recv_buf, rec_len);
-		
-	//只收到应答，要清空数据
-		if(strstr(recv_buf,"OK") || strstr(recv_buf,"SEND OK") || strstr(recv_buf,"SEND FAIL")|| strstr(recv_buf, "ERROR"))
-			ret |=RET_A;
-
-	//蓝牙连接，接收数据	
-		ret |= parse_bt_at_cmd(recv_buf, rec_len);
-	
-	//模块自主通知的事件	
-		if(parse_another_cmd(recv_buf, rec_len))
-			ret |=RET_AN;
-
-		if(parse_gnss_cmd(recv_buf,rec_len))
-			ret |= RET_G;
-
-		Logln(D_INFO,"rcv ret=%x",ret);
-		if(ret&RET_B0)	//蓝牙接收数据未完成，不清空数据
-		{
-			result = false;
-		}
-		else if(ret>0)
-		{
-			Logln(D_INFO,"&%d,%d",rec_len,module_recv_buffer_index);
-			if(module_recv_buffer_index > rec_len)
-			{
-				move_rcv_buf(rec_len, module_recv_buffer_index);
-			}
-			else
-			{
-				module_recv_buffer_index = 0;
-			}
-			result =  true;	
+			uart1_send(send_buffer, send_len);
+			esc_val = 0x1a;
+			uart1_send(&esc_val, 1);
+			Logln(D_INFO, "send data1");
 		}
 		else
 		{
-			result =  false;
+			esc_val = 0x1B;		
+			uart1_send(&esc_val, 1);
+			Logln(D_INFO, "send data2");	
+		}
+		send_len = 0;
+	}
+}
+
+bool cmpdata(char* data1, char* data2, unsigned short len)
+{
+	while(len--)
+	{
+		if(*(data1+len) != *(data2+len))
+			return false;
+	}
+
+	return true;
+}
+
+/*返回最后一个包的结尾索引值*/
+unsigned short split_diff_type(char* buf, unsigned short size)
+{
+	char* head,*tail;
+	char gns[]={'+','Q','G','N','S','S','R','D',':'};
+	char bt[]={'+','Q','B','T','G','A','T'};
+	char *find="OK\r\n";
+	unsigned short i,bt_index=0,gnss_index=0,gprs_index=0;
+	unsigned short last_bt=0, last_gns=0, last_gprs=0,last_end=0,ret=0,j=0;
+
+	memset(gnss_buf, 0, sizeof(gnss_buf));
+	memset(bt_buf, 0, sizeof(bt_buf));
+	memset(gprs_buf, 0, sizeof(gprs_buf));
+	memset(another_buf, 0, sizeof(another_buf));
+	
+	for(i=0; i<size; i++)
+	{
+		if(*(buf+i) == '+')
+		{
+			head = buf+i;
+			if(size-i>=sizeof(gns) && cmpdata(head, gns, sizeof(gns)))
+			{
+				tail = strstr(head, find);
+				if(tail)
+				{
+					memcpy(gnss_buf+gnss_index, head, tail+strlen(find)-head);
+					gnss_index += tail+strlen(find)-head;
+					last_gns = tail+strlen(find)-head+i;
+					i = last_gns-1;
+				}
+			}
+
+			if(size-i>=sizeof(bt) && cmpdata(head, bt, sizeof(bt)))
+			{
+				tail = strstr(head, "\r\n");
+				if(tail)
+				{
+					memcpy(bt_buf+bt_index, head, tail+2-head);
+					bt_index += tail+2-head;
+					last_bt = tail+2-head+i;
+					i = last_bt-1;
+				}
+			}
+		}
+		else if(*(unsigned char*)(buf+i) == 0xff)
+		{
+			if(size-i>=1 && *(unsigned char*)(buf+i+1)==0xff)
+			{
+				char len;
+				
+				head = buf+i;
+				tail = head;
+				if(head[4]=='#')
+					len=0;
+				else
+					len=head[4];
+					
+				do
+				{
+					tail = strstr(tail, "\r\n");
+				
+					if(tail && (len+PACKET_FRAME_LEN)==(tail+2-head))
+					{
+						memcpy(gprs_buf+gprs_index, head, tail+2-head);
+						gprs_index += tail+2-head;
+						last_gprs = tail+2-head+i;
+						i = last_gprs-1;
+						break;
+					}
+					else if(tail)
+					{
+						tail += strlen("\r\n");
+					}
+					else
+					{
+						break;
+					}
+				}while(1);
+			}
+		}
+		else
+		{
+			another_buf[j] = *(buf+i);
+			j++;
+			if(size-i>=1 && *(buf+i)=='\r'&& *(buf+i+1)=='\n')
+				last_end = i+2;
 		}
 	}
 
-	return result;
+//取4个数的最大值,最后一个回车的位置
+	ret = last_bt>last_gns?last_bt:last_gns;
+	ret = ret>last_gprs?ret:last_gprs;
+	ret = ret>last_end?ret:last_end;
+
+//	Logln(D_INFO,"size%d,bt%d,gns%d,gps%d",size,last_bt,last_gns,last_gprs);
+
+//	Logln(D_INFO,"return%d,split_diff_type=%s",ret,buf);
+	return size-ret;
+}
+
+void parse_package_type(void)
+{
+	unsigned short i;
+	unsigned short size=0;
+	char tmp[512];
+	char* buf = module_recv_buffer;
+	unsigned short wrtie_index = module_recv_write_index;	//用个局部变量保存，否则中断会改变这个值
+
+	memset(tmp, 0, 512);
+	recv_read_start_index = recv_read_end_index;
+	recv_read_end_index = wrtie_index;
+
+	if(recv_read_end_index > recv_read_start_index)
+	{
+		size = recv_read_end_index-recv_read_start_index;
+		memcpy(tmp, buf+recv_read_start_index, size);
+	}
+	else if(recv_read_end_index < recv_read_start_index)
+	{
+		size = MODULE_BUFFER_SIZE-recv_read_start_index;
+		memcpy(tmp, buf+recv_read_start_index, size);
+		memcpy(tmp+size, buf, recv_read_end_index);
+		size += recv_read_end_index;
+	}
+//	Logln(D_INFO,"start=%d,end=%d\r\n%s",recv_read_start_index,recv_read_end_index,tmp);
+
+	conventdata0(tmp, size);
+	recv_read_end_index = wrtie_index-split_diff_type(tmp, size);
+//	Logln(D_INFO,"write=%d,module_write=%d,end=%d",wrtie_index,module_recv_write_index,recv_read_end_index);
+	
+}
+
+bool at_parse_recv(void)
+{
+	parse_package_type();
+
+	if(strlen(bt_buf)>0)
+		parse_bt_pkg(bt_buf, strlen(bt_buf));
+
+	if(strlen(gnss_buf)>0)
+		parse_gnss_pkg(gnss_buf, strlen(gnss_buf));
+
+	if(strlen(another_buf)>0)
+		parse_another_cmd(another_buf, strlen(another_buf));
+
+	if(strlen(gprs_buf)>0)
+	{
+		int len = strlen(gprs_buf);
+		Logln(D_INFO,"gprs size %d",len);
+		conventdatahash(gprs_buf, len);
+		protocol_parse(gprs_buf, len);
+	}
 }
 
 void bt_init(void)
@@ -977,14 +1106,14 @@ void AT_QGREFLOC_FUN(void)
 }
 void gnss_init(void)
 {
-	Send_AT_Command_Timeout(AT_QIFGCNT2, 2);  
+//	Send_AT_Command_Timeout(AT_QIFGCNT2, 2);  
 	Send_AT_Command_Timeout(AT_QGPS_ON, 2);   	
 	Send_AT_Command_Timeout(AT_QGNSSTS, 2); 
-	AT_QGREFLOC_FUN();
-	Send_AT_Command_Timeout(AT_QGNSSEPO, 2);     
+//	AT_QGREFLOC_FUN();
+//	Send_AT_Command_Timeout(AT_QGNSSEPO, 2);     
 //	Send_AT_Command_Timeout(AT_QGEPOAID, 2); 
-	QGEPOF1();
-	QGEPOF2();
+//	QGEPOF1();
+//	QGEPOF2();
 }
 void module_init(void)
 {
@@ -1009,10 +1138,10 @@ void module_init(void)
 	Send_AT_Command_Timeout(AT_QIMODE, 1);
 	Send_AT_Command_Timeout(AT_QICSGP, 2);     
 	Send_AT_Command_Timeout(AT_QIREGAPP, 2);	
-	Send_AT_Command_Timeout(AT_QIACT, 5);		
+	Send_AT_Command_Timeout(AT_QIACT, 50);		
 	Send_AT_Command_Timeout(AT_COPS, 2);
-	Send_AT_Command_Timeout(AT_QIFGCNT1, 2);     	
-	Send_AT_Command_Timeout(AT_QCELLLOC, 10);
+//	Send_AT_Command_Timeout(AT_QIFGCNT1, 2);     	
+//	Send_AT_Command_Timeout(AT_QCELLLOC, 10);
 	gnss_init();
 	
 	Send_AT_Command_Timeout(AT_QIFGCNT1, 2);     
@@ -1079,7 +1208,7 @@ void bt_cmd_process(void)
 
 void at_process(void)
 {	
-	uint8_t i=0;
+	Logln(D_INFO,"state@=%d",net_work_state);
 
 	if(net_work_state==EN_INIT_STATE)
 	{
@@ -1109,20 +1238,13 @@ void at_process(void)
 	{
 		gsm_led_flag = 2;
 		connect_times = 0;
-		upload_all_data_package();
+		push_interval_package_process();
 	}
 
-	while(!at_parse_recv())	//数据没接收完全，等待100ms再接收
-	{
-		Logln(D_INFO,"i=%d",i);
-		HAL_Delay(100);
-		if(i++>=5)		//500ms还没接收完，清空buf
-		{
-			module_recv_buffer_index = 0;
-			break;
-		}
-	}
+	PopATcmd();
 	
+	at_parse_recv();	//数据没接收完全，等待100ms再接收
+
 	bt_cmd_process();
 	
 	HAL_Delay(50);

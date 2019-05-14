@@ -46,15 +46,13 @@ short usart2_recv_buffer_index = 0;
 void uart1_send(uint8_t* pData, uint16_t Size)
 {
 	HAL_UART_Transmit(&huart1, pData, Size, 1000);
-		while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);
-
-	__HAL_UART_GET_FLAG_TIMEOUT();
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);
 }
 
 void uart2_send(uint8_t* pData, uint16_t Size)
 {
 	HAL_UART_Transmit(&huart2, pData, Size, 1000);
-	__HAL_UART_GET_FLAG_TIMEOUT();
+	while(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_TC)!=SET);
 }
 
 void uart2_process(void)

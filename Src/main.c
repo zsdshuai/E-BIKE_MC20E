@@ -146,7 +146,7 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM1_Init();
   MX_TIM14_Init();
-//  MX_IWDG_Init();
+  MX_IWDG_Init();
   MX_RTC_Init();
   init_flash();
   
@@ -589,11 +589,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
   /* Set transmission flag: transfer complete */
 	if (UartHandle->Instance == USART1) 
 	{
-		module_recv_buffer[module_recv_buffer_index] = usart1_recbuf; //将接收到的字符串存到缓存中
-		module_recv_buffer_index++;
-		if(module_recv_buffer_index >= MODULE_BUFFER_SIZE)       			//如果缓存满,将缓存指针指向缓存的首地址
+		module_recv_buffer[module_recv_write_index] = usart1_recbuf; //将接收到的字符串存到缓存中
+		module_recv_write_index++;
+		if(module_recv_write_index >= MODULE_BUFFER_SIZE)       			//如果缓存满,将缓存指针指向缓存的首地址
 		{
-			module_recv_buffer_index = 0;
+			module_recv_write_index = 0;
 		}
        	}
 	if (UartHandle->Instance == USART2) 
@@ -738,7 +738,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		shake_bak = shake_count;
 
 		Logln(D_INFO,"Feed WatchDog");
-//		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
+		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
 
 	}
   /* USER CODE END Callback 1 */

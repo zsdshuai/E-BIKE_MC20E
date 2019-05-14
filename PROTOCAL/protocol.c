@@ -300,7 +300,6 @@ void upload_login_package(void)
 	hex_str_2_bytes(imei, strlen(imei), login_package.dev_id, 8);
     
 	send_package(EN_GT_PT_LOGIN,(char*)&login_package,sizeof(login_pkg_struct));
-	net_work_state = EN_LOGING_STATE;
 }
 
 void upload_hb_package(void)
@@ -723,8 +722,8 @@ void push_interval_package_process(void)
 		} 
 		else if((delay_index+2)%30==0)
 		{
-			msgType.Data[0] = AT_UP_CSQ;
-			PushElement(&at_send_Queue, msgType, 1);
+		//	msgType.Data[0] = AT_UP_CSQ;
+		//	PushElement(&at_send_Queue, msgType, 1);
 			msgType.Data[0] = AT_UP_EBIKE;
 			PushElement(&at_send_Queue, msgType, 1);
 		}
@@ -777,12 +776,10 @@ void push_interval_package_process(void)
 	}
 }
 
-void upload_all_data_package(void)
+void PopATcmd(void)
 {
 	RxMsgTypeDef at_send_type;
 
-	push_interval_package_process();
-	
 	if(PopElement(&at_send_Queue,&at_send_type))
 	{
 		switch(at_send_type.Data[0])
@@ -792,6 +789,9 @@ void upload_all_data_package(void)
 				break;
 			case AT_UP_GGA:
 				send_gps_gga_cmd();
+				break;
+			case AT_UP_LOGIN:
+				upload_login_package();
 				break;
 			case AT_UP_VER:
 				upload_version_package();
@@ -823,7 +823,6 @@ void upload_all_data_package(void)
 	}
 
 }
-
 
 void calibration_time(uint8_t* buf)
 {
@@ -964,9 +963,9 @@ uint8_t protocol_parse(char *pBuf, int len)
 	char* head,*tail,head_first=1;
 	uint8_t ret=0;
 
-//	hex_convert_str(pBuf,len, req);
+	hex_convert_str(pBuf,len, req);
     
-//	Logln(D_INFO,"len = %d,rec=%s",len,req);
+	Logln(D_INFO,"len = %d,rec=%s",len,req);
 	
 	for(i = 0; i<len-1; i++)
 	{

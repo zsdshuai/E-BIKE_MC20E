@@ -557,26 +557,7 @@ int get_uart_data(char*buf, int count)
 			memcpy(buf, module_recv_buffer, ulen);
 			buf[ulen] = 0;
 			module_recv_write_index = 0;
-			memset(module_recv_buffer, 0, strlen(module_recv_buffer));
 			return ulen;
-		}
-		else
-		{
-			char* pDst = module_recv_buffer;
-			char* pSrc = module_recv_buffer + count;
-			char* pDstEnd = pDst + (ulen - count);
-
-			memcpy(buf, module_recv_buffer, count);
-			buf[count] = 0;
-			Logln(D_INFO,"2--%s",buf);
-
-			for (; pDst < pDstEnd; ++pDst, ++pSrc)
-			{
-				*pDst = *pSrc;
-			}
-			
-			module_recv_write_index = ulen - count;
-			return count;
 		}
 	}
 	else
@@ -1016,7 +997,7 @@ unsigned short split_diff_type(char* buf, unsigned short size)
 	ret = ret>last_gprs?ret:last_gprs;
 	ret = ret>last_end?ret:last_end;
 
-//	Logln(D_INFO,"size%d,bt%d,gns%d,gps%d",size,last_bt,last_gns,last_gprs);
+//	Logln(D_INFO,"size%d,bt%d,gns%d,gps%d,ret%d",size,last_bt,last_gns,last_gprs,ret);
 
 //	Logln(D_INFO,"return%d,split_diff_type=%s",ret,buf);
 	return size-ret;
@@ -1025,14 +1006,15 @@ unsigned short split_diff_type(char* buf, unsigned short size)
 void parse_package_type(void)
 {
 	unsigned short i;
-	unsigned short size=0;
+	unsigned short size=0,offset=0;
 	char tmp[512];
 	char* buf = module_recv_buffer;
-	unsigned short wrtie_index = module_recv_write_index;	//用个局部变量保存，否则中断会改变这个值
+	unsigned short write_index = module_recv_write_index;	//用个局部变量保存，否则中断会改变这个值
 
 	memset(tmp, 0, 512);
 	recv_read_start_index = recv_read_end_index;
-	recv_read_end_index = wrtie_index;
+	recv_read_end_index = write_index;
+//	Logln(D_INFO,"start=%d,end=%d",recv_read_start_index,recv_read_end_index);
 
 	if(recv_read_end_index > recv_read_start_index)
 	{
@@ -1046,11 +1028,15 @@ void parse_package_type(void)
 		memcpy(tmp+size, buf, recv_read_end_index);
 		size += recv_read_end_index;
 	}
-//	Logln(D_INFO,"start=%d,end=%d\r\n%s",recv_read_start_index,recv_read_end_index,tmp);
 
 	conventdata0(tmp, size);
-	recv_read_end_index = wrtie_index-split_diff_type(tmp, size);
-//	Logln(D_INFO,"write=%d,module_write=%d,end=%d",wrtie_index,module_recv_write_index,recv_read_end_index);
+	offset = split_diff_type(tmp, size);
+	if(write_index>=offset)
+		recv_read_end_index = write_index-offset;
+	else
+		recv_read_end_index = MODULE_BUFFER_SIZE+write_index-offset;
+	
+//	Logln(D_INFO,"write=%d,module_write=%d,end=%d",write_index,module_recv_write_index,recv_read_end_index);
 	
 }
 
@@ -1162,7 +1148,7 @@ void at_connect_service(void)
 
 void at_close_service(void)
 {
-	Send_AT_Command(AT_QICLOSE);
+	Send_AT_Command_ext(AT_QICLOSE);
 }
 
 void send_gps_rmc_cmd(void)
@@ -1208,7 +1194,8 @@ void bt_cmd_process(void)
 
 void at_process(void)
 {	
-	Logln(D_INFO,"state@=%d",net_work_state);
+	static uint16_t i=0;
+//	Logln(D_INFO,"state@=%d",net_work_state);
 
 	if(net_work_state==EN_INIT_STATE)
 	{
@@ -1229,10 +1216,17 @@ void at_process(void)
 			Logln(D_INFO, "reconnect %d times, restart ME",connect_times);
 			net_work_state=EN_INIT_STATE;
 		}
+		i=0;
 	}
 	else if(net_work_state==EN_LOGING_STATE)
 	{
-
+		i++;
+		if(i>100)
+		{
+			i=0;
+			net_work_state = EN_CONNECT_STATE;
+			Logln(D_INFO, "Loging Timeout, retry connect");
+		}
 	}
 	else if(net_work_state==EN_CONNECTED_STATE)
 	{
@@ -1242,7 +1236,7 @@ void at_process(void)
 	}
 
 	PopATcmd();
-	
+
 	at_parse_recv();	//数据没接收完全，等待100ms再接收
 
 	bt_cmd_process();

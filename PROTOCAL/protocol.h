@@ -381,7 +381,7 @@ typedef struct
 extern void upload_login_package(void);
 uint8_t kfd_format_cb_to_buffer(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context_len);
 void push_interval_package_process(void);
-uint8_t protocol_parse(char *pBuf, int len);
+uint8_t protocol_parse(unsigned char *pBuf, int len);
 void hex_convert_str(uint8_t *in,uint8_t len, uint8_t *out);
 void str_convert_hex(char* in, int len, unsigned char* out);
 uint16_t get_crc16(uint8_t* bytes, uint16_t len);

@@ -50,7 +50,7 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
 extern TIM_HandleTypeDef htim6;
-extern uint8_t usart1_recbuf,usart2_recbuf;
+extern uint8_t usart1_recbuf;
 /******************************************************************************/
 /*            Cortex-M0 Processor Interruption and Exception Handlers         */ 
 /******************************************************************************/
@@ -206,23 +206,8 @@ void USART1_IRQHandler(void)
 * @brief This function handles USART2 global interrupt.
 */
 void USART2_IRQHandler(void)
-{
-	uint32_t timeout;
-	
+{	
         HAL_UART_IRQHandler(&huart2);
-  	timeout=0;
-	while (HAL_UART_GetState(&huart2) != HAL_UART_STATE_READY)//等待就绪
-	{
-	 	timeout++;////超时处理
-	 	if(timeout>HAL_MAX_DELAY) break;		
-	}
-     
-	timeout=0;
-	while(HAL_UART_Receive_IT(&huart2, &usart2_recbuf, 1) != HAL_OK)//一次处理完成之后，重新开启中断并设置RxXferCount为1
-	{
-		 timeout++; //超时处理
-		 if(timeout>HAL_MAX_DELAY) break;	
-	}
 }
 
 /**

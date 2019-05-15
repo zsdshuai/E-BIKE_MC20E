@@ -710,6 +710,13 @@ void push_interval_package_process(void)
 		RxMsgTypeDef msgType;
 		
 		flag_delay1s = 0;
+	#if 1
+		if((delay_index+3)%60==0)
+		{
+		msgType.Data[0] = AT_UP_HB;
+		PushElement(&at_send_Queue, msgType, 1);
+		}
+	#else
 		if ((delay_index)%15 == 0)	//15Ãë
 		{
 			msgType.Data[0] = AT_UP_GPS;
@@ -768,7 +775,7 @@ void push_interval_package_process(void)
 				flag = true;
 			}
 		}
-		
+		#endif
 		delay_index++;
 
 		if(delay_index>59)
@@ -870,7 +877,7 @@ void parse_dev_data(data_pkg_struct* data)
 	}
 }
 
-bool protocol_proc(char* buf ,int len)
+bool protocol_proc(unsigned char* buf ,int len)
 {	
 	pkg_head_struct* head;
 //	char out[256]={0};
@@ -910,10 +917,12 @@ bool protocol_proc(char* buf ,int len)
 		}		
 		case EN_GT_PT_GPS: 			
 		{	
+			Logln(D_INFO,"EN_GT_PT_GPS");
 			break;
 		}
 		case EN_GT_PT_STATUS: 			
 		{	
+			Logln(D_INFO,"EN_GT_PT_STATUS");
 			break;
 		}
 		case EN_GT_PT_HB: 
@@ -924,12 +933,14 @@ bool protocol_proc(char* buf ,int len)
 		}
 		case EN_GT_PT_ALARM: 					
 		{	
+			Logln(D_INFO,"EN_GT_PT_ALARM");
 			break;
 		}		
 		case EN_GT_PT_DEV_DATA:			
 		{	
 			data_pkg_struct* data;
 
+			Logln(D_INFO,"EN_GT_PT_DEV_DATA");
 			data = (data_pkg_struct*)((uint8_t*)head + sizeof(pkg_head_struct));	
 			parse_dev_data(data);
 			break;						
@@ -937,28 +948,32 @@ bool protocol_proc(char* buf ,int len)
 		case EN_GT_PT_CONTROL: 					
 		{	
 			ebike_cmd_struct* control_data;
+			Logln(D_INFO,"EN_GT_PT_CONTROL");
 			control_data = (ebike_cmd_struct*)((uint8_t*)head + sizeof(pkg_head_struct));
 			parse_network_cmd(control_data);
 			break;
 		}
 		case EN_GT_PT_LBS:
 		{
+			Logln(D_INFO,"EN_GT_PT_LBS");
 			break;
 		}
 		case EN_GT_PT_SRV_DATA:
 		{
+			Logln(D_INFO,"EN_GT_PT_SRV_DATA");
 			break;	
 		}		
 		default:
+			Logln(D_INFO,"EN_GT_PT_DEFAULT");
 			break;			
 	}					
 
 	return true;
 }
 
-uint8_t protocol_parse(char *pBuf, int len)
+uint8_t protocol_parse(unsigned char *pBuf, int len)
 {
-	char req[256]={0};
+	unsigned char req[256]={0};
 	int i;
 	char* head,*tail,head_first=1;
 	uint8_t ret=0;

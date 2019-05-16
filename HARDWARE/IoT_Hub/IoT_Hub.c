@@ -991,7 +991,7 @@ unsigned short split_diff_type(char* buf, unsigned short size)
 	ret = ret>last_gprs?ret:last_gprs;
 	ret = ret>last_end?ret:last_end;
 
-	Logln(D_INFO,"size%d,bt%d,gns%d,gps%d,ret%d",size,last_bt,last_gns,last_gprs,ret);
+//	Logln(D_INFO,"size%d,bt%d,gns%d,gps%d,ret%d",size,last_bt,last_gns,last_gprs,ret);
 
 //	Logln(D_INFO,"return%d,split_diff_type=%s",ret,buf);
 	return size-ret;
@@ -1030,7 +1030,7 @@ void parse_package_type(void)
 	else
 		recv_read_end_index = MODULE_BUFFER_SIZE+write_index-offset;
 	
-	Logln(D_INFO,"write=%d,module_write=%d,end=%d",write_index,module_recv_write_index,recv_read_end_index);
+//	Logln(D_INFO,"write=%d,module_write=%d,end=%d",write_index,module_recv_write_index,recv_read_end_index);
 	
 }
 

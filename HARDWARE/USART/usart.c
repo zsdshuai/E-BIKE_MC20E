@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include "bluetooth.h"
 #include "Control_interface.h"
-#include "IoT_Hub.h"
 
 #ifdef __GNUC__  
   /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf 
@@ -46,10 +45,8 @@ short usart2_recv_buffer_index = 0;
 
 void uart1_send(uint8_t* pData, uint16_t Size)
 {
-	Logln(D_INFO,"UART send %s",pData);
 	HAL_UART_Transmit(&huart1, pData, Size, 1000);
 	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);
-	Logln(D_INFO,"UART send ok");
 }
 
 void uart2_send(uint8_t* pData, uint16_t Size)

@@ -150,10 +150,10 @@ int main(void)
   MX_RTC_Init();
   init_flash();
   
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 512);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 2048);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-  osThreadDef(myTask02, StartTask02, osPriorityNormal, 0, 256);
+  osThreadDef(myTask02, StartTask02, osPriorityNormal, 0, 1024);
   myTask02Handle = osThreadCreate(osThread(myTask02), NULL);
 
   osKernelStart();

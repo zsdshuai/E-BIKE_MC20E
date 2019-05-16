@@ -710,7 +710,7 @@ void push_interval_package_process(void)
 		RxMsgTypeDef msgType;
 		
 		flag_delay1s = 0;
-	#if 1
+	#if 0
 		if((delay_index+3)%60==0)
 		{
 		msgType.Data[0] = AT_UP_HB;

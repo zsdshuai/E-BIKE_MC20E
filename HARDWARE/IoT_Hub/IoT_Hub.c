@@ -416,12 +416,11 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	int8_t i=GetATIndex(cmd), ret=0;
 
 	if(i==-1)
+	{
 		Logln(D_INFO, "error cmd");
-	else
-		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
-
-	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000);  
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);
+		return ret;
+	}
+	uart1_send(at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt));
 	uart1_send("\r\n", strlen("\r\n"));
 	
 	HAL_Delay(at_pack[i].timeout);
@@ -468,11 +467,8 @@ void Send_AT_Command_ext(AT_CMD cmd)
 		Logln(D_INFO, "error cmd");
 		return;
 	}
-	else
-		Logln(D_INFO, "Send %s",at_pack[i].cmd_txt);
-	
-	ret = HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000); 
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);
+
+	uart1_send(at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt));
 	uart1_send("\r\n", strlen("\r\n"));
 
 	HAL_Delay(at_pack[i].timeout);
@@ -648,12 +644,10 @@ void send_data(char* buf, int len)
 	int i = GetATIndex(AT_QISEND);	
 	
 	memset(at_pack[i].cmd_txt, 0, sizeof(at_pack[i].cmd_txt));
-	sprintf(at_pack[i].cmd_txt,"AT+QISEND=%d",len);
+	sprintf(at_pack[i].cmd_txt,"AT+QISEND=%d\r\n",len);
 	Logln(D_INFO, "send data %d byte", len);
-
-	HAL_UART_Transmit(&huart1, at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt),1000); 
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);
-	uart1_send("\r\n", strlen("\r\n"));
+	
+	uart1_send(at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt));
 	
 	HAL_Delay(at_pack[i].timeout);
 
@@ -997,7 +991,7 @@ unsigned short split_diff_type(char* buf, unsigned short size)
 	ret = ret>last_gprs?ret:last_gprs;
 	ret = ret>last_end?ret:last_end;
 
-//	Logln(D_INFO,"size%d,bt%d,gns%d,gps%d,ret%d",size,last_bt,last_gns,last_gprs,ret);
+	Logln(D_INFO,"size%d,bt%d,gns%d,gps%d,ret%d",size,last_bt,last_gns,last_gprs,ret);
 
 //	Logln(D_INFO,"return%d,split_diff_type=%s",ret,buf);
 	return size-ret;
@@ -1036,7 +1030,7 @@ void parse_package_type(void)
 	else
 		recv_read_end_index = MODULE_BUFFER_SIZE+write_index-offset;
 	
-//	Logln(D_INFO,"write=%d,module_write=%d,end=%d",write_index,module_recv_write_index,recv_read_end_index);
+	Logln(D_INFO,"write=%d,module_write=%d,end=%d",write_index,module_recv_write_index,recv_read_end_index);
 	
 }
 
@@ -1221,7 +1215,7 @@ void at_process(void)
 	else if(net_work_state==EN_LOGING_STATE)
 	{
 		i++;
-		if(i>100)
+		if(i>200)
 		{
 			i=0;
 			net_work_state = EN_CONNECT_STATE;

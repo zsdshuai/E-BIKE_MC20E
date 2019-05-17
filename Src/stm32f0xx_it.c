@@ -184,10 +184,10 @@ void TIM14_IRQHandler(void)
 */
 void USART1_IRQHandler(void)
 {
-  	uint32_t timeout;
+//  	uint32_t timeout;
 	
         HAL_UART_IRQHandler(&huart1);
-  	timeout=0;
+ /* 	timeout=0;
 	while (HAL_UART_GetState(&huart1) != HAL_UART_STATE_READY)//等待就绪
 	{
 	 	timeout++;////超时处理
@@ -199,7 +199,7 @@ void USART1_IRQHandler(void)
 	{
 		 timeout++; //超时处理
 		 if(timeout>HAL_MAX_DELAY) break;	
-	}
+	}*/
 }
 
 /**

@@ -397,16 +397,7 @@ int8_t GetATIndex(AT_CMD cmd)
 	}
 	return i;
 }
-void __HAL_UART_GET_FLAG_TIMEOUT(void)
-{
-	uint16_t timeout=0;
-	
-	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET)
-	{
-		timeout++;
-		if(timeout>100)break;
-	}
-}
+
 uint8_t Send_AT_Command(AT_CMD cmd)
 {
 	int len;
@@ -605,9 +596,9 @@ void parse_csq_cmd(char* buf, int len)
 	char tmp[3]={0};
 	
 	memset(dev_info.imei,0,sizeof(dev_info.imei));
-	tmp1 = strstr(buf,"+CSQ: ");	
+	tmp1 = strstr(buf,"CSQ: ");	
 	tmp2 = strstr(tmp1+2,",");
-	memcpy(tmp,tmp1+strlen("+CSQ: "),tmp2-(tmp1+strlen("+CSQ: ")));
+	memcpy(tmp,tmp1+strlen("CSQ: "),tmp2-(tmp1+strlen("CSQ: ")));
 	dev_info.csq = atoi(tmp);
 	Logln(D_INFO,"csq=%d",dev_info.csq);
 }
@@ -864,7 +855,11 @@ void parse_another_cmd(char* buf, int len)
 		Logln(D_INFO,"CLOSED ---%s",buf);
 		net_work_state=EN_CONNECT_STATE;
 	}
-
+	else if(tmp1 = strstr(buf,"CSQ:"))
+	{
+		parse_csq_cmd(tmp1,strlen(tmp1));
+	}
+	
 	if(send_len>0)
 	{
 		uint8_t esc_val = 0;	
@@ -1231,7 +1226,7 @@ void at_process(void)
 
 	PopATcmd();
 
-	at_parse_recv();	//数据没接收完全，等待100ms再接收
+	at_parse_recv();	
 
 	bt_cmd_process();
 	

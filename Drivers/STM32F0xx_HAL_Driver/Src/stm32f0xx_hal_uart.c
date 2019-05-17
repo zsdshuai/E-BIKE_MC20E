@@ -936,7 +936,7 @@ HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData,
     }
 
     /* Process Locked */
-    __HAL_LOCK(huart);
+//    __HAL_LOCK(huart);
 
     huart->pRxBuffPtr = pData;
     huart->RxXferSize = Size;
@@ -949,7 +949,7 @@ HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData,
     huart->RxState = HAL_UART_STATE_BUSY_RX;
 
     /* Process Unlocked */
-    __HAL_UNLOCK(huart);
+//    __HAL_UNLOCK(huart);
 
     /* Enable the UART Error Interrupt: (Frame error, noise error, overrun error) */
     SET_BIT(huart->Instance->CR3, USART_CR3_EIE);

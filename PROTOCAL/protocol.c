@@ -710,13 +710,7 @@ void push_interval_package_process(void)
 		RxMsgTypeDef msgType;
 		
 		flag_delay1s = 0;
-	#if 0
-		if((delay_index+3)%60==0)
-		{
-		msgType.Data[0] = AT_UP_HB;
-		PushElement(&at_send_Queue, msgType, 1);
-		}
-	#else
+
 		if ((delay_index)%15 == 0)	//15Ãë
 		{
 			msgType.Data[0] = AT_UP_GPS;
@@ -729,8 +723,8 @@ void push_interval_package_process(void)
 		} 
 		else if((delay_index+2)%30==0)
 		{
-		//	msgType.Data[0] = AT_UP_CSQ;
-		//	PushElement(&at_send_Queue, msgType, 1);
+			msgType.Data[0] = AT_UP_CSQ;
+			PushElement(&at_send_Queue, msgType, 1);
 			msgType.Data[0] = AT_UP_EBIKE;
 			PushElement(&at_send_Queue, msgType, 1);
 		}
@@ -775,7 +769,7 @@ void push_interval_package_process(void)
 				flag = true;
 			}
 		}
-		#endif
+		
 		delay_index++;
 
 		if(delay_index>59)
@@ -822,7 +816,7 @@ void PopATcmd(void)
 				upload_hb_package();
 				break;
 			case AT_UP_CSQ:
-				Send_AT_Command_Timeout(AT_CSQ, 1);
+				Send_AT_Command_ext(AT_CSQ, 1);
 				break;
 			default:
 				break;
@@ -973,14 +967,16 @@ bool protocol_proc(unsigned char* buf ,int len)
 
 uint8_t protocol_parse(unsigned char *pBuf, int len)
 {
-	unsigned char req[256]={0};
+	unsigned char req[512]={0};
 	int i;
 	char* head,*tail,head_first=1;
 	uint8_t ret=0;
 
-	hex_convert_str(pBuf,len, req);
-    
-	Logln(D_INFO,"len = %d,rec=%s",len,req);
+	if(len<256)
+	{
+		hex_convert_str(pBuf,len, req);
+		Logln(D_INFO,"len = %d,rec=%s",len,req);
+	}
 	
 	for(i = 0; i<len-1; i++)
 	{

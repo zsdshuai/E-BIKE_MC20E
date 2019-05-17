@@ -595,6 +595,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 		{
 			module_recv_write_index = 0;
 		}
+		 HAL_UART_Receive_IT(&huart1, (uint8_t *)&usart1_recbuf, 1);
        	}
 	if (UartHandle->Instance == USART2) 
 	{

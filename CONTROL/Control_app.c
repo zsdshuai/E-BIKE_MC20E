@@ -389,7 +389,7 @@ void get_ebike_data(ebike_pkg_struct* ebike_pkg)
 	g_flash.hall = mileage_count;
 	g_flash.lundong = rotate_count;
 
-	Logln(D_INFO, "ebike.bat.voltage=%d,mile=%d,last mile=%d,ACC=%d,lock=%d",ebike.bat.voltage,mileage_count,last_mileage,g_flash.acc,ebike.status.lock);
+	Logln(D_INFO, "ebike.bat.voltage=%d,mile=%d,last mile=%d,ACC=%d,lock=%d,gsm_signal=%d,gps_used=%d",ebike.bat.voltage,mileage_count,last_mileage,g_flash.acc,ebike.status.lock,ebike.sig.gsm_signal,ebike.sig.gps_used);
 
 	if(mileage_count-last_mileage>100)
 	{

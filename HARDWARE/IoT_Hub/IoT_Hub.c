@@ -55,6 +55,7 @@ AT_STRUCT at_pack[]={
 	{AT_ATE0,"ATE0","OK",300,NULL},
 	{AT_IPR,"AT+IPR=115200","OK",300,NULL},
 	{AT_W,"AT&W","OK",300,NULL},
+	{AT_ATS0,"ATS0=3",300,NULL},
 	{AT_CPIN,"AT+CPIN?","OK",300,NULL},
 	{AT_CREG,"AT+CREG?","0,1",500,NULL},
 	{AT_CSQ,"AT+CSQ","OK",300,parse_csq_cmd},
@@ -648,6 +649,7 @@ void send_data(char* buf, int len)
 	send_len = len;
 }
 
+/*查询文件大小*/
 void QGEPOF1(void)
 {
 	int8_t i = GetATIndex(AT_QGEPOF);
@@ -655,6 +657,8 @@ void QGEPOF1(void)
 	strcpy(at_pack[i].cmd_txt, "AT+QGEPOF=0,255");
 	Send_AT_Command_Timeout(AT_QGEPOF,2);
 }
+
+/*查询有效期*/
 void QGEPOF2(void)
 {
 	int8_t i = GetATIndex(AT_QGEPOF);
@@ -1071,18 +1075,31 @@ void AT_QGREFLOC_FUN(void)
 	int8_t i = GetATIndex(AT_QGREFLOC);
 	
 	sprintf(at_pack[i].cmd_txt,"AT+QGREFLOC=%s,%s",cell_loc.lat,cell_loc.lon);
+	if(strlen(cell_loc.lat)==0 || strlen(cell_loc.lon)==0)
+		return;
 	Send_AT_Command_Timeout(AT_QGREFLOC, 10);
+}
+void miaoding(void)
+{
+	Send_AT_Command_Timeout(AT_QIFGCNT1, 2);     	
+	Send_AT_Command_Timeout(AT_QCELLLOC, 10);	//获取基站经纬度
+
+	Send_AT_Command_Timeout(AT_QIFGCNT2, 2);  
+	AT_QGREFLOC_FUN();		//设置参考位置
+
+	Send_AT_Command_Timeout(AT_QGPS_ON, 2);   //打开GPS	
+	Send_AT_Command_Timeout(AT_QGNSSTS, 2); 	//GPS模块时间同步状态，对于EPO非常有用
+
+	Send_AT_Command_Timeout(AT_QGNSSEPO, 2);   //打开EPO功能
+	Send_AT_Command_Timeout(AT_QGEPOAID, 2);   //触发EPO功能
+
+	QGEPOF1();	//查询文件大小
+	QGEPOF2();	//查询有效期
 }
 void gnss_init(void)
 {
-//	Send_AT_Command_Timeout(AT_QIFGCNT2, 2);  
 	Send_AT_Command_Timeout(AT_QGPS_ON, 2);   	
-	Send_AT_Command_Timeout(AT_QGNSSTS, 2); 
-//	AT_QGREFLOC_FUN();
-//	Send_AT_Command_Timeout(AT_QGNSSEPO, 2);     
-//	Send_AT_Command_Timeout(AT_QGEPOAID, 2); 
-//	QGEPOF1();
-//	QGEPOF2();
+	Send_AT_Command_Timeout(AT_QGNSSTS, 2); 	
 }
 void module_init(void)
 {
@@ -1097,6 +1114,7 @@ void module_init(void)
 		Send_AT_Command_Timeout(AT_IPR, 1);
 		Send_AT_Command_Timeout(AT_W, 1);
 	}
+//	Send_AT_Command_Timeout(AT_ATS0, 1);
 	Send_AT_Command_Timeout(AT_ATI, 1);	
 	Send_AT_Command_Timeout(AT_CPIN, 5);
 	Send_AT_Command_Timeout(AT_GSN, 2);
@@ -1108,9 +1126,8 @@ void module_init(void)
 	Send_AT_Command_Timeout(AT_QIREGAPP, 2);	
 	Send_AT_Command_Timeout(AT_QIACT, 50);		
 	Send_AT_Command_Timeout(AT_COPS, 2);
-//	Send_AT_Command_Timeout(AT_QIFGCNT1, 2);     	
-//	Send_AT_Command_Timeout(AT_QCELLLOC, 10);
-	gnss_init();
+	miaoding();
+//	gnss_init();
 	
 	Send_AT_Command_Timeout(AT_QIFGCNT1, 2);     
 	Send_AT_Command_Timeout(AT_QIDNSIP, 2);

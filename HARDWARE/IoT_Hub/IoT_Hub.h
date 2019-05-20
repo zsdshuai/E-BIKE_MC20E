@@ -76,6 +76,7 @@ typedef enum{
 	AT_ATE0,
 	AT_IPR,
 	AT_W,
+	AT_ATS0,
 	AT_CPIN,
 	AT_CREG,
 	AT_CSQ,

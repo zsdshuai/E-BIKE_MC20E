@@ -21,6 +21,7 @@ unsigned short send_len;
 char gnss_buf[512];
 char bt_buf[512];
 char gprs_buf[512];
+unsigned short gprs_size=0;
 char another_buf[512];
 
 gps_info_struct gps_info;
@@ -940,36 +941,29 @@ unsigned short split_diff_type(char* buf, unsigned short size)
 		{
 			if(size-i>=1 && *(unsigned char*)(buf+i+1)==0xff)
 			{
-				char len;
+				unsigned char len;
+				unsigned short j=0;
 				
 				head = buf+i;
-				tail = head;
-				if(head[4]=='#')
-					len=0;
-				else
-					len=head[4];
-					
+				len=head[4];
+
 				do
 				{
-					tail = strstr(tail, "\r\n");
+					if(size-(i+j)>=1 && *(head+j)==0x0d && *(head+j+1)==0x0a)
+					{
+						if((len+PACKET_FRAME_LEN)==(j+2))
+						{
+							memcpy(gprs_buf+gprs_index, head, j+2);
+							gprs_index += 2+j;
+							last_gprs = 2+j+i;
+							i = last_gprs-1;
+							gprs_size = gprs_index;
+							break;
+						}
+					}
+					j++;
+				}while(i+j<size);
 				
-					if(tail && (len+PACKET_FRAME_LEN)==(tail+2-head))
-					{
-						memcpy(gprs_buf+gprs_index, head, tail+2-head);
-						gprs_index += tail+2-head;
-						last_gprs = tail+2-head+i;
-						i = last_gprs-1;
-						break;
-					}
-					else if(tail)
-					{
-						tail += strlen("\r\n");
-					}
-					else
-					{
-						break;
-					}
-				}while(1);
 			}
 		}
 		else
@@ -1018,7 +1012,7 @@ void parse_package_type(void)
 		size += recv_read_end_index;
 	}
 
-	conventdata0(tmp, size);
+//	conventdata0(tmp, size);
 	offset = split_diff_type(tmp, size);
 	if(write_index>=offset)
 		recv_read_end_index = write_index-offset;
@@ -1042,12 +1036,12 @@ bool at_parse_recv(void)
 	if(strlen(another_buf)>0)
 		parse_another_cmd(another_buf, strlen(another_buf));
 
-	if(strlen(gprs_buf)>0)
+	if(gprs_size>0)
 	{
-		int len = strlen(gprs_buf);
-		Logln(D_INFO,"gprs size %d",len);
-		conventdatahash(gprs_buf, len);
-		protocol_parse(gprs_buf, len);
+		Logln(D_INFO,"gprs size %d",gprs_size);
+	//	conventdatahash(gprs_buf, len);
+		protocol_parse(gprs_buf, gprs_size);
+		gprs_size = 0;
 	}
 }
 
@@ -1109,7 +1103,6 @@ void module_init(void)
 	Send_AT_Command_Timeout(AT_CIMI, 2);
 	Send_AT_Command_Timeout(AT_CREG, 20);
 	bt_init();
-//	Send_AT_Command_Timeout(AT_CSQ, 1);
 	Send_AT_Command_Timeout(AT_QIMODE, 1);
 	Send_AT_Command_Timeout(AT_QICSGP, 2);     
 	Send_AT_Command_Timeout(AT_QIREGAPP, 2);	

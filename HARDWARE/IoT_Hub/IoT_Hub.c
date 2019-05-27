@@ -69,7 +69,7 @@ AT_STRUCT at_pack[]={
 	{AT_QCELLLOC,"AT+QCELLLOC=1","OK",1000,parse_cell_location_cmd},
 	{AT_QIMUX,"AT+QIMUX=0","OK",300,NULL},
 	{AT_QIDNSIP,"AT+QIDNSIP=1","OK",300,NULL},
-	{AT_QIOPEN,"","CONNECT OK",5000,NULL},
+	{AT_QIOPEN,"","CONNECT OK",3000,NULL},
 	{AT_QISEND,"",">",500,NULL},
 	{AT_QRECV,"+QIURC: \"recv\"","OK",300,NULL},
 	{AT_QICLOSE,"AT+QICLOSE","CLOSE OK",300,NULL},
@@ -1210,7 +1210,7 @@ void at_process(void)
 		gsm_led_flag = 1;
 		at_close_service();
 		at_connect_service();
-		if(connect_times > 100)
+		if(connect_times > 10)
 		{
 			Logln(D_INFO, "reconnect %d times, restart ME",connect_times);
 			net_work_state=EN_INIT_STATE;

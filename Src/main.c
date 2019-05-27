@@ -400,7 +400,7 @@ static void MX_TIM14_Init(void)
   htim14.Instance = TIM14;
   htim14.Init.Prescaler = 4800-1;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 100-1;
+  htim14.Init.Period = 10-1;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
@@ -606,7 +606,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 	
 }
 /* USER CODE END 4 */
-
+#include "voice.h"
 /* StartDefaultTask function */
 void StartDefaultTask(void const * argument)
 {
@@ -616,6 +616,7 @@ void StartDefaultTask(void const * argument)
 	/* Infinite loop */
 	for(;;)
 	{
+		voice_process();
 		at_process();
 	    	osDelay(1);
 	}
@@ -645,7 +646,6 @@ void StartTask02(void const * argument)
         motorlock_process();
         shake_process();
 //	key_check_process();
-	voice_process();
 	gsm_led_process();
 	gb_speed_process();
         osDelay(1);
@@ -668,7 +668,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		if (flag_delay900ms)
 			tim14_delay900ms ++;
-		if (tim14_delay900ms >= 80) 
+		if (tim14_delay900ms >= 800) 
 		{
 			tim14_delay900ms = 0;
 			if (flag_lock == 1)
@@ -683,7 +683,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		
 		if (flag_delay500ms)
 			tim14_delay500ms ++;
-		if (tim14_delay500ms >= 50) 
+		if (tim14_delay500ms >= 500) 
 		{
 			tim14_delay500ms = 0;
 			flag_batlock = 1;
@@ -697,7 +697,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 		if (flag_delay4s)
 			tim14_delay4s++;
-		if (tim14_delay4s >= 400) 
+		if (tim14_delay4s >= 4000) 
 		{
 			tim14_delay4s = 0;
 			flag_motorlock2 = 1;
@@ -705,12 +705,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 		if (flag_delay8s)
 			tim14_delay8s++;
-		if (tim14_delay8s >= 800) 
+		if (tim14_delay8s >= 8000) 
 		{
 			tim14_delay8s = 0;
 			flag_alarm = 0;
 			flag_delay8s = 0;
 		}
+		
 	}
 	
 	/* USER CODE END Callback 0 */

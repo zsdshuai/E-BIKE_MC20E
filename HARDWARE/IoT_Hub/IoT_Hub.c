@@ -34,7 +34,7 @@ uint8_t bt_rsp_flag=0;
 uint8_t bt_cmd_flag=0;	//蓝牙业务命令标志
 uint8_t bt_cmd_data[20];
 uint8_t bt_cmd_len;
-uint8_t connect_times;
+uint16_t connect_times;
 cell_location_struct cell_loc;
 
 
@@ -69,7 +69,7 @@ AT_STRUCT at_pack[]={
 	{AT_QCELLLOC,"AT+QCELLLOC=1","OK",1000,parse_cell_location_cmd},
 	{AT_QIMUX,"AT+QIMUX=0","OK",300,NULL},
 	{AT_QIDNSIP,"AT+QIDNSIP=1","OK",300,NULL},
-	{AT_QIOPEN,"","CONNECT OK",3000,NULL},
+	{AT_QIOPEN,"","CONNECT OK",1000,NULL},
 	{AT_QISEND,"",">",500,NULL},
 	{AT_QRECV,"+QIURC: \"recv\"","OK",300,NULL},
 	{AT_QICLOSE,"AT+QICLOSE","CLOSE OK",300,NULL},
@@ -1124,7 +1124,7 @@ void module_init(void)
 	Send_AT_Command_Timeout(AT_QIMODE, 1);
 	Send_AT_Command_Timeout(AT_QICSGP, 2);     
 	Send_AT_Command_Timeout(AT_QIREGAPP, 2);	
-	Send_AT_Command_Timeout(AT_QIACT, 50);		
+	Send_AT_Command_Timeout(AT_QIACT, 5);		
 	Send_AT_Command_Timeout(AT_COPS, 2);
 	miaoding();
 //	gnss_init();
@@ -1142,7 +1142,6 @@ void at_connect_service(void)
 	Logln(D_INFO,"%s,%d",g_flash.net.domain,g_flash.net.port);
 	sprintf(at_pack[i].cmd_txt,"AT+QIOPEN=\"TCP\",\"%s\",%d",g_flash.net.domain,g_flash.net.port);
 	Send_AT_Command_ext(AT_QIOPEN);
-	connect_times++;
 }
 
 void at_close_service(void)
@@ -1174,12 +1173,6 @@ void send_bt_rsp_cmd(void)
 
 void bt_cmd_process(void)
 {
-	if(bt_rsp_flag)
-	{
-		bt_rsp_flag = 0;
-		send_bt_rsp_cmd();
-	}
-
 	if(bt_cmd_flag && bt_cmd_len>0)
 	{
 		bt_cmd_flag = 0;
@@ -1188,6 +1181,11 @@ void bt_cmd_process(void)
 		{
 			send_bt_rsp_cmd();
 		}
+	}
+	else if(bt_rsp_flag)
+	{
+		bt_rsp_flag = 0;
+		send_bt_rsp_cmd();
 	}
 }
 
@@ -1208,11 +1206,15 @@ void at_process(void)
 	else if(net_work_state==EN_CONNECT_STATE)
 	{
 		gsm_led_flag = 1;
-		at_close_service();
-		at_connect_service();
-		if(connect_times > 10)
+		if(connect_times%40==0)
 		{
-			Logln(D_INFO, "reconnect %d times, restart ME",connect_times);
+			at_close_service();
+			at_connect_service();
+		}
+		connect_times++;
+		if(connect_times > 2000)
+		{
+			Logln(D_INFO, "reconnect %d times, restart ME",connect_times/40);
 			net_work_state=EN_INIT_STATE;
 		}
 		i=0;

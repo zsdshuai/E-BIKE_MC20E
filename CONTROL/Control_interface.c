@@ -303,6 +303,13 @@ bool parse_control_cmd(uint8_t* buf, uint16_t len)
 			Logln(D_INFO, "format flash OK........");
 			reset_system();
 		}
+		else if(strstr(buf,"factory test"))
+		{
+			g_flash.mode = 1;
+			write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+			Logln(D_INFO, "factory test START");
+			reset_system();
+		}
 	/*	else if(head = (char*)strstr(buf,"name:"))
 		{
 		

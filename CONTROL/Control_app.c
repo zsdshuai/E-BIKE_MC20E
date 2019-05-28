@@ -11,6 +11,7 @@
 #include "voice.h"
 #include "adc.h"
 #include "IoT_Hub.h"
+#include "queen.h"
 //#include "flash.h"
 
 #define DOMAIN "devzuche.liabar.com"	//"zcwebx.liabar.cn"
@@ -170,11 +171,14 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 			case GIVE_BACK_CMD:
 				if(cmd->para[0]==1)	//还车指令
 				{
+					RxMsgTypeDef msgType;
+					
 					if(lock_bike())
 					{
 						voice_play(VOICE_LOCK,1);
 					}
-					upload_give_back_package(g_flash.acc);
+					msgType.Data[0] = AT_UP_GIVEBACK;
+					PushElement(&at_send_Queue, msgType, 1);
 				}
 				else if(cmd->para[0]==2)	//服务器判断还车成功之后下发指令
 				{
@@ -458,7 +462,7 @@ void motorlock_process(void)
 	if (diff_rotate > 4 && f_motorlock == 0 && g_flash.acc == 0) 
 	{
 		f_motorlock = 1;
-		if(g_flash.zd_alarm)
+		if(g_flash.ld_alarm)
 		{
 			voice_play(VOICE_ALARM,1);
 		}
@@ -544,6 +548,7 @@ void init_flash(void)
 		memset(g_flash.imei,0,sizeof(g_flash.imei));
 		strcpy(g_flash.net.domain, DOMAIN);
 		g_flash.net.port = PORT;
+		g_flash.mode = 0;
 		write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 		HAL_Delay(1);
 	}

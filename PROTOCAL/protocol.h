@@ -183,6 +183,7 @@ typedef enum
 	AT_UP_EBIKE,
 	AT_UP_HB,
 	AT_UP_CSQ,
+	AT_UP_GIVEBACK,
 }AT_UPLOAD_TYPE;
 
 #pragma pack (1)	//强制字节对齐

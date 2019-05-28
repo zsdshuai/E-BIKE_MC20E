@@ -818,6 +818,9 @@ void PopATcmd(void)
 			case AT_UP_CSQ:
 				Send_AT_Command_ext(AT_CSQ, 1);
 				break;
+			case AT_UP_GIVEBACK:
+				upload_give_back_package(g_flash.acc);
+				break;
 			default:
 				break;
 		}

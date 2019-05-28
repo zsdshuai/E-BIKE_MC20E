@@ -65,6 +65,7 @@
 #include "queen.h"
 #include "control_app.h"
 
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -606,7 +607,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 	
 }
 /* USER CODE END 4 */
-#include "voice.h"
+
 /* StartDefaultTask function */
 void StartDefaultTask(void const * argument)
 {
@@ -617,8 +618,15 @@ void StartDefaultTask(void const * argument)
 	for(;;)
 	{
 		voice_process();
-		at_process();
-	    	osDelay(1);
+		if(g_flash.mode==0)	//正常模式
+		{
+			at_process();
+		}
+		else if(g_flash.mode==1)	//测试模式
+		{
+	//		test_process();
+	    	}
+		osDelay(1);
 	}
   /* USER CODE END 5 */ 
 }

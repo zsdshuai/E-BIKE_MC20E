@@ -16,7 +16,6 @@ uint8_t g_hb_send_times = 0;
 work_state net_work_state = EN_INIT_STATE;
 extern uint8_t flag_delay1s;
 
-#define DEV_VER "SW3.0.00_HW3.0.0"
 
 static uint16_t CRC16_TABLE[] = {
 	0x0000, 0x1189, 0x2312, 0x329b, 0x4624, 0x57ad, 0x6536, 0x74bf,

@@ -378,6 +378,7 @@ typedef struct
 }lbs_gps_struct;
 #pragma pack ()//强制字节对齐
 
+#define DEV_VER "SW3.0.00_HW3.0.0"
 
 extern void upload_login_package(void);
 uint8_t kfd_format_cb_to_buffer(GT_PROT_TYPE_EN prot_type, uint8_t *context,uint8_t context_len);

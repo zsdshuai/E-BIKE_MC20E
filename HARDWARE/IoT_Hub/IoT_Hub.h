@@ -99,6 +99,7 @@ typedef enum{
 	AT_QGPS_OFF,
 	AT_QGPS_RMC,
 	AT_QGPS_GGA,
+	AT_QGPS_GSV,
 	AT_QGNSSRD,
 	AT_QIFGCNT1,
 	AT_QIFGCNT2,
@@ -187,4 +188,5 @@ char* get_imsi(void);
 void send_data(char* buf, int len);
 void at_process(void);
 extern dev_struct dev_info;
+
 #endif

@@ -523,7 +523,7 @@ void init_flash(void)
 {
 	read_flash(CONFIG_ADDR,(uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 	HAL_Delay(1);
-	Logln(D_INFO,"flag=%d,imei=%s,acc=%d,hall=%d,ld=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,times=%d,gb_a=%d,gb_s=%d,lj=%d,cg=%d,%s:%d,size=%d",g_flash.flag,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
+	Logln(D_INFO,"flag=%d,mode=%d,imei=%s,acc=%d,hall=%d,ld=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,times=%d,gb_a=%d,gb_s=%d,lj=%d,cg=%d,%s:%d,size=%d",g_flash.flag,g_flash.mode,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
 		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen,g_flash.search_times,g_flash.gb_alarm,g_flash.gb_speed,g_flash.lunjing,g_flash.cigang,g_flash.net.domain, g_flash.net.port, sizeof(flash_struct));
 		
 	if(g_flash.flag !=1)

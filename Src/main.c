@@ -121,8 +121,6 @@ static void MX_IWDG_Init(void);
 static void MX_RTC_Init(void);
 void StartDefaultTask(void const * argument);
 void StartTask02(void const * argument);
-extern void MODULE_RST(void);
-extern void module_init(void);
 
 /* USER CODE BEGIN 0 */
 void delay_us(uint32_t n_10us);
@@ -624,7 +622,7 @@ void StartDefaultTask(void const * argument)
 		}
 		else if(g_flash.mode==1)	//测试模式
 		{
-	//		test_process();
+			test_process();
 	    	}
 		osDelay(1);
 	}
@@ -747,7 +745,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		mileage_bak = mileage_count;
 		shake_bak = shake_count;
 
-		Logln(D_INFO,"Feed WatchDog");
+//		Logln(D_INFO,"Feed WatchDog");
 		HAL_IWDG_Refresh(&hiwdg);//5s内必须喂看门狗，不然系统会复位
 
 	}

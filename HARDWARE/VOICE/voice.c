@@ -26,7 +26,7 @@ void voice_play(uint8_t plusenum, int8_t times)
 {
 //	uint8_t i;
 
-	Logln(D_INFO,"pluse=%d,times=%d",plusenum,times);
+//	Logln(D_INFO,"pluse=%d,times=%d",plusenum,times);
 	voice_pluse = plusenum;
 	voice_times = times;
 }

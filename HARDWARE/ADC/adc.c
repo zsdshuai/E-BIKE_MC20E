@@ -13,7 +13,7 @@ uint16_t get_bat_vol(void)
    	}
 	 ave_vol = ADvol / 64;
 	 bat_vol = (ave_vol*3.3*34)/4095;   		//得出电池电压值
-	 batvol_10mv = (uint32_t)(bat_vol*100)+50; //电压放大100倍	//加0.5v补偿二极管压降误差
+	 batvol_10mv = (uint32_t)(bat_vol*100);	//+50; //电压放大100倍	//加0.5v补偿二极管压降误差
 
          return batvol_10mv;                   
 }

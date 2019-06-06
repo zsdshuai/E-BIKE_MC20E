@@ -35,6 +35,7 @@ uint8_t bt_cmd_flag=0;	//蓝牙业务命令标志
 uint8_t bt_cmd_data[20];
 uint8_t bt_cmd_len;
 uint16_t connect_times;
+extern uint8_t first_pwr;
 cell_location_struct cell_loc;
 
 
@@ -1213,7 +1214,13 @@ void at_process(void)
 			at_connect_service();
 		}
 		connect_times++;
-		if(connect_times > 2000)
+		if(first_pwr && connect_times>200)
+		{
+			first_pwr = 0;
+			Logln(D_INFO, "First reconnect %d times, restart ME",connect_times/40);
+			net_work_state=EN_INIT_STATE;
+		}
+		else if(connect_times > 2000)
 		{
 			Logln(D_INFO, "reconnect %d times, restart ME",connect_times/40);
 			net_work_state=EN_INIT_STATE;

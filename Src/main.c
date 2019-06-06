@@ -98,6 +98,7 @@ uint8_t flag_delay3s, flag_delay1s, flag_sendlock;
 uint32_t adc_val[64];
 uint16_t batvol;
 uint64_t rotate_bak, mileage_bak, shake_bak;
+uint8_t first_pwr;
 
 extern uint8_t login_protect_timeout;
 extern uint8_t flag_alarm;
@@ -610,6 +611,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
+  	first_pwr = 1;
   	InitCircleQueue(&at_send_Queue);	                           //初始化队列
 	
 	/* Infinite loop */
@@ -642,21 +644,23 @@ void StartTask02(void const * argument)
 	HAL_Delay(2000);
 	flag_alarm = 0;	//延时一会再启动震动告警
 
-	/* Infinite loop */
   for(;;)
   {
-        tangze_lock_bike();
-        tangze_unlock_bike();
-        battery_lock();
-        uart2_process();
-        motorlock_process();
-        shake_process();
-//	key_check_process();
-	gsm_led_process();
-	gb_speed_process();
+  	if(g_flash.mode==0)	//正常模式
+	{
+	        tangze_lock_bike();
+	        tangze_unlock_bike();
+	        battery_lock();
+	        uart2_process();
+	        motorlock_process();
+	        shake_process();
+	//	key_check_process();
+		gsm_led_process();
+		gb_speed_process();
+  	}
         osDelay(1);
   }
-  /* USER CODE END StartTask02 */
+
 }
 
 /**

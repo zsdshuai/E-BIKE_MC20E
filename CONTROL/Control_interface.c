@@ -281,20 +281,15 @@ bool parse_control_cmd(uint8_t* buf, uint16_t len)
 
 	if(!flag)
 	{
-		if(head = (char*)strstr(buf,"imei:"))
+		if(head = (char*)strstr(buf,"5150924"))
 		{
-			head += strlen("imei:");
-			tail = (char*)strstr(head,"#");
-			if(head&&tail)
-			{
-				memset(g_flash.imei,0,sizeof(g_flash.imei));
-				memcpy(g_flash.imei,head,tail-head);
-				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
-				Logln(D_INFO,"write imei=%s----OK",g_flash.imei);
-				flag = true;
-				HAL_Delay(1000);
-				reset_system();
-			}
+			memset(g_flash.imei,0,sizeof(g_flash.imei));
+			memcpy(g_flash.imei,head,15);
+			write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+			Logln(D_INFO,"write imei=%s----OK",g_flash.imei);
+			flag = true;
+			HAL_Delay(1000);
+			reset_system();
 		}
 		else if(strstr(buf,"format flash"))
 		{

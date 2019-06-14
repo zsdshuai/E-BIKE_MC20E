@@ -434,20 +434,20 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	return ret;
 }
 
-void Send_AT_Command_Timeout(AT_CMD cmd, uint8_t timeout)
+bool Send_AT_Command_Timeout(AT_CMD cmd, uint8_t timeout)
 {
 	while(1)
 	{
 		if(Send_AT_Command(cmd))
 		{
-			break;
+			return true;
 		}
 		else
 		{
 			timeout--;
 			
 			if(timeout==0)
-				break;
+				return false;
 		}
 	}
 }

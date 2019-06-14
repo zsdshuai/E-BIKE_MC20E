@@ -6,6 +6,7 @@ typedef void (*testFun)(void);
 typedef enum
 {
 	TEST_INIT=0,
+	TEST_CPIN,
 	TEST_HALL,		
 	TEST_DIANMEN,
 	TEST_BATLOCK,

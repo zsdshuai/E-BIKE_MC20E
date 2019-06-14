@@ -23,6 +23,7 @@ void test_init(void)
 {
 	MODULE_RST();
 
+	gsm_led_on;
 	g_key_state = read_key_det;
 	HAL_Delay(2000);
 	Send_AT_Command_Timeout(AT_ATE0, 1); 
@@ -30,6 +31,15 @@ void test_init(void)
 
 	g_test_table[TEST_INIT].result=1;
 }
+
+void test_cpin(void)
+{
+	if(Send_AT_Command_Timeout(AT_CPIN,2))
+		g_test_table[TEST_CPIN].result = 1;
+	else
+		g_test_table[TEST_CPIN].result = 0;
+}
+
 void test_dianmen(void)
 {
 	voice_play(VOICE_UNLOCK,1);
@@ -191,17 +201,23 @@ void test_again_gps(void)
 }
 void test_gsm(void)
 {
-	Send_AT_Command_Timeout(AT_CREG, 20);
+	bool ret;
+	
+	ret = Send_AT_Command_Timeout(AT_CREG, 10);
+	Send_AT_Command_Timeout(AT_CSQ,1);
+
+	if(convert_csq(dev_info.csq)>=40 && ret)
+		g_test_table[TEST_GSM].result=1;
+	else
+		g_test_table[TEST_GSM].result=0;
 }
-void test_off_gsm(void)
-{
-	g_test_table[TEST_GSM].result=1;
-}
+
 
 
 zt_factory_test_struct g_test_table[]=
 {
 	{TEST_INIT, test_init, NULL, "Init", 0},
+	{TEST_CPIN, test_cpin, NULL,"SIM CARD",0},		
 	{TEST_HALL, test_hall, test_off_hall,"licheng",0},		
 	{TEST_DIANMEN, test_dianmen, test_off_dianmen,"dianmen",0},
 	{TEST_BATLOCK, test_bat_led, test_off_bat_led,"dianchi led",0},
@@ -214,7 +230,7 @@ zt_factory_test_struct g_test_table[]=
 	{TEST_ADC, test_adc, NULL,"dianyuan",0},
 	{TEST_KEY, test_key, NULL,"KEY",0},
 	{TEST_BT, test_bt, NULL,"lanya",0},
-	{TEST_GSM,test_gsm, test_off_gsm,"GSM",0},
+	{TEST_GSM,test_gsm, NULL,"GSM",0},
 	{TEST_GPS, test_gps, test_again_gps,"GPS",0},
 	
 	{TEST_MAX, NULL, NULL,"",0}

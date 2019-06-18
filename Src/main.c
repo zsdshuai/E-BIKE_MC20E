@@ -651,13 +651,14 @@ void StartTask02(void const * argument)
 	        tangze_lock_bike();
 	        tangze_unlock_bike();
 	        battery_lock();
-	        uart2_process();
 	        motorlock_process();
 	        shake_process();
 	//	key_check_process();
 		gsm_led_process();
 		gb_speed_process();
   	}
+	uart2_process();
+
         osDelay(1);
   }
 

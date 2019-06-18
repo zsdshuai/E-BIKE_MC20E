@@ -26,7 +26,7 @@ void test_init(void)
 	gsm_led_on;
 	g_key_state = read_key_det;
 	HAL_Delay(2000);
-	Send_AT_Command_Timeout(AT_ATE0, 1); 
+	Send_AT_Command_Timeout(AT_ATE0, 5); 
 	Send_AT_Command_Timeout(AT_QGPS_ON, 1);
 
 	g_test_table[TEST_INIT].result=1;

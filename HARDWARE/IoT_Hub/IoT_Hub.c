@@ -994,7 +994,6 @@ unsigned short split_diff_type(char* buf, unsigned short size)
 
 void parse_package_type(void)
 {
-	unsigned short i;
 	unsigned short size=0,offset=0;
 	char tmp[512];
 	char* buf = module_recv_buffer;

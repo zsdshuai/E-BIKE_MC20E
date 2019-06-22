@@ -406,7 +406,7 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 {
 	int len;
 	uint8_t end = 0x1a;	
-	char buf[128]={0};
+	char buf[512]={0};
 	
 	int8_t i=GetATIndex(cmd), ret=0;
 
@@ -420,7 +420,7 @@ uint8_t Send_AT_Command(AT_CMD cmd)
 	
 	HAL_Delay(at_pack[i].timeout);
 	
-	len = get_uart_data(buf, 128);
+	len = get_uart_data(buf, 512);
 	Logln(D_INFO, "rcv %d,%s", len,buf);
 
 	if(strstr(buf,at_pack[i].cmd_ret))
@@ -550,6 +550,8 @@ int get_uart_data(char*buf, int count)
 			module_recv_write_index = 0;
 			return ulen;
 		}
+		else
+			return 0;
 	}
 	else
 	{

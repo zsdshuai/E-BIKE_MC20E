@@ -1,0 +1,20 @@
+---- parse_control_cmd Matches (20 in 5 files) ----
+Control_interface.c (control):bool parse_control_cmd(uint8_t* buf, uint16_t len)
+Control_interface.h (control):bool parse_control_cmd(uint8_t* buf, uint16_t len);
+Electric_cars_iot.build_log.htm (mdk-arm\electric_cars_iot):  			if(parse_control_cmd(usart2_recv_buffer,usart2_recv_buffer_index))
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<BR>[Called By]<UL><LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<BR><BR>[Stack]<UL><LI>Max Depth = 360<LI>Call Chain = StartTask02 &rArr; uart2_process &rArr; parse_control_cmd &rArr; modify_service_address &rArr; write_flash &rArr; HAL_I2C_Mem_Write &rArr; I2C_RequestMemoryWrite &rArr; I2C_WaitOnTXISFlagUntilTimeout &rArr; I2C_IsAcknowledgeFailed
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<BR>[Called By]<UL><LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<BR>[Called By]<UL><LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<P><STRONG><a name="[178]"></a>parse_control_cmd</STRONG> (Thumb, 260 bytes, Stack size 96 bytes, control_interface.o(i.parse_control_cmd))
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<BR><BR>[Stack]<UL><LI>Max Depth = 344<LI>Call Chain = parse_control_cmd &rArr; modify_service_address &rArr; write_flash &rArr; HAL_I2C_Mem_Write &rArr; I2C_RequestMemoryWrite &rArr; I2C_WaitOnTXISFlagUntilTimeout &rArr; I2C_IsAcknowledgeFailed
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<BR><BR>[Stack]<UL><LI>Max Depth = 360<LI>Call Chain = uart2_process &rArr; parse_control_cmd &rArr; modify_service_address &rArr; write_flash &rArr; HAL_I2C_Mem_Write &rArr; I2C_RequestMemoryWrite &rArr; I2C_WaitOnTXISFlagUntilTimeout &rArr; I2C_IsAcknowledgeFailed
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<BR>[Calls]<UL><LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Electric_cars_iot.htm (mdk-arm\electric_cars_iot):<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;parse_control_cmd
+Usart.c (hardware\usart):			if(parse_control_cmd(usart2_recv_buffer,usart2_recv_buffer_index))

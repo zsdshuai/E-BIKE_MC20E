@@ -1,0 +1,426 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: μVision V5.24.2.0
+Copyright (C) 2017 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: z zt, Microsoft, LIC=1WSII-T350N-IMF9B-2LFM7-XTR5Y-2I3VF
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Professional  Version: 5.24.1
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 5 (build 528)
+Assembler:       Armasm.exe V5.06 update 5 (build 528)
+Linker/Locator:  ArmLink.exe V5.06 update 5 (build 528)
+Library Manager: ArmAr.exe V5.06 update 5 (build 528)
+Hex Converter:   FromElf.exe V5.06 update 5 (build 528)
+CPU DLL:         SARMCM3.DLL V5.24.1
+Dialog DLL:      DARMCM1.DLL V1.18.0.0
+Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V3.0.1.0
+Dialog DLL:      TARMCM1.DLL V1.13.0.0
+ 
+<h2>Project:</h2>
+E:\work\STM32\electric_cars_iot20181121\electric_cars_iot\MDK-ARM\electric_cars_iot.uvprojx
+Project File Date:  05/30/2019
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 5 (build 528)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Rebuild target 'electric_cars_iot'
+assembling startup_stm32f030xc.s...
+compiling freertos.c...
+compiling croutine.c...
+compiling tasks.c...
+compiling event_groups.c...
+compiling heap_4.c...
+compiling stm32f0xx_hal_timebase_TIM.c...
+compiling stm32f0xx_hal_msp.c...
+compiling port.c...
+compiling stm32f0xx_it.c...
+compiling list.c...
+compiling main.c...
+../Src/main.c(627): warning:  #223-D: function "test_process" declared implicitly
+  			test_process();
+../Src/main.c: 1 warning, 0 errors
+compiling queue.c...
+compiling timers.c...
+compiling cmsis_os.c...
+compiling stm32f0xx_hal_pwr.c...
+compiling stm32f0xx_hal_rcc.c...
+compiling stm32f0xx_hal_gpio.c...
+compiling stm32f0xx_hal_adc_ex.c...
+compiling stm32f0xx_hal_rcc_ex.c...
+compiling stm32f0xx_hal_tim_ex.c...
+compiling stm32f0xx_hal_adc.c...
+compiling stm32f0xx_hal_flash_ex.c...
+compiling stm32f0xx_hal_uart_ex.c...
+compiling stm32f0xx_hal.c...
+compiling stm32f0xx_hal_flash.c...
+compiling stm32f0xx_hal_uart.c...
+compiling stm32f0xx_hal_tim.c...
+compiling stm32f0xx_hal_i2c.c...
+compiling stm32f0xx_hal_dma.c...
+compiling stm32f0xx_hal_pwr_ex.c...
+compiling stm32f0xx_hal_iwdg.c...
+compiling stm32f0xx_hal_cortex.c...
+compiling stm32f0xx_hal_i2c_ex.c...
+compiling stm32f0xx_hal_rtc_ex.c...
+compiling stm32f0xx_hal_rtc.c...
+compiling usart.c...
+..\HARDWARE\USART\usart.c(75): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  			if(parse_control_cmd(usart2_recv_buffer,usart2_recv_buffer_index))
+..\HARDWARE\USART\usart.c: 1 warning, 0 errors
+compiling GPIO.c...
+compiling adc.c...
+compiling flash.c...
+..\HARDWARE\flash\flash.c(131): warning:  #177-D: variable "i"  was declared but never referenced
+  	uint16_t i;
+..\HARDWARE\flash\flash.c(132): warning:  #550-D: variable "ret"  was set but never used
+  	uint8_t ret;
+..\HARDWARE\flash\flash.c: 2 warnings, 0 errors
+compiling queen.c...
+compiling voice.c...
+compiling exti.c...
+compiling eprom.c...
+..\HARDWARE\EPROM\eprom.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\HARDWARE\EPROM\eprom.c: 1 warning, 0 errors
+compiling bluetooth.c...
+..\HARDWARE\BLUETOOTH\bluetooth.c(16): warning:  #223-D: function "GetATIndex" declared implicitly
+  	int8_t i=GetATIndex(AT_QBTGATSIND);
+..\HARDWARE\BLUETOOTH\bluetooth.c(25): warning:  #223-D: function "Send_AT_Command_ext" declared implicitly
+  	Send_AT_Command_ext(AT_QBTGATSIND);
+..\HARDWARE\BLUETOOTH\bluetooth.c: 2 warnings, 0 errors
+compiling IoT_Hub.c...
+..\HARDWARE\IoT_Hub\IoT_Hub.c(42): warning:  #188-D: enumerated type mixed with another type
+  RxMsgTypeDefExt at_curr_node={0};
+..\HARDWARE\IoT_Hub\IoT_Hub.c(59): warning:  #69-D: integer conversion resulted in truncation
+  	{AT_ATS0,"ATS0=3",300,NULL},
+..\HARDWARE\IoT_Hub\IoT_Hub.c(62): warning:  #144-D: a value of type "void (*)(char *, int)" cannot be used to initialize an entity of type "parseFun"
+  	{AT_CSQ,"AT+CSQ","OK",300,parse_csq_cmd},
+..\HARDWARE\IoT_Hub\IoT_Hub.c(63): warning:  #144-D: a value of type "void (*)(char *, int)" cannot be used to initialize an entity of type "parseFun"
+  	{AT_GSN,"AT+GSN","OK",300,parse_imei_cmd},
+..\HARDWARE\IoT_Hub\IoT_Hub.c(64): warning:  #144-D: a value of type "void (*)(char *, int)" cannot be used to initialize an entity of type "parseFun"
+  	{AT_CIMI,"AT+CIMI","OK",300,parse_imsi_cmd},
+..\HARDWARE\IoT_Hub\IoT_Hub.c(70): warning:  #144-D: a value of type "void (*)(char *, int)" cannot be used to initialize an entity of type "parseFun"
+  	{AT_QCELLLOC,"AT+QCELLLOC=1","OK",1000,parse_cell_location_cmd},
+..\HARDWARE\IoT_Hub\IoT_Hub.c(83): warning:  #144-D: a value of type "void (*)(char *, int)" cannot be used to initialize an entity of type "parseFun"
+  	{AT_QGPS_GSV,"AT+QGNSSRD=\"NMEA/GSV\"","OK",500,parse_gnss_cmd},	
+..\HARDWARE\IoT_Hub\IoT_Hub.c(95): warning:  #144-D: a value of type "void (*)(char *, int)" cannot be used to initialize an entity of type "parseFun"
+  	{AT_BT_ADDR,"AT+QBTLEADDR?","OK",300,parse_bt_addr_cmd},
+..\HARDWARE\IoT_Hub\IoT_Hub.c(97): warning:  #144-D: a value of type "void (*)(char *, int)" cannot be used to initialize an entity of type "parseFun"
+  	{AT_BT_Q_NAME,"AT+QBTNAME?","OK",300,parse_bt_name_cmd},
+..\HARDWARE\IoT_Hub\IoT_Hub.c(245): warning:  #1293-D: assignment in condition
+  	if(tmp=strstr(buf, "+QGREFLOC:"))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(254): warning:  #1293-D: assignment in condition
+  	if(tmp=strstr(buf, "+QCELLLOC: "))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(270): warning:  #1293-D: assignment in condition
+  	if((tmp1=strstr(pnmea+1,"GPRMC"))||(tmp2=strstr(pnmea+1,"GNRMC")))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(270): warning:  #1293-D: assignment in condition
+  	if((tmp1=strstr(pnmea+1,"GPRMC"))||(tmp2=strstr(pnmea+1,"GNRMC")))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(299): warning:  #1293-D: assignment in condition
+  	else if((tmp1=strstr(pnmea+1,"GPGGA"))||(tmp2=strstr(pnmea+1,"GNGGA")))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(299): warning:  #1293-D: assignment in condition
+  	else if((tmp1=strstr(pnmea+1,"GPGGA"))||(tmp2=strstr(pnmea+1,"GNGGA")))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(310): warning:  #1293-D: assignment in condition
+  	else if(tmp1 = strstr(pnmea+1,"GPGSV"))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(339): warning:  #1293-D: assignment in condition
+  	else if((tmp1=strstr(pnmea+1,"GPGSA"))||(tmp2=strstr(pnmea+1,"GNGSA")))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(339): warning:  #1293-D: assignment in condition
+  	else if((tmp1=strstr(pnmea+1,"GPGSA"))||(tmp2=strstr(pnmea+1,"GNGSA")))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(418): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  	uart1_send(at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt));
+..\HARDWARE\IoT_Hub\IoT_Hub.c(423): warning:  #223-D: function "get_uart_data" declared implicitly
+  	len = get_uart_data(buf, 512);
+..\HARDWARE\IoT_Hub\IoT_Hub.c(408): warning:  #177-D: variable "end"  was declared but never referenced
+  	uint8_t end = 0x1a;	
+..\HARDWARE\IoT_Hub\IoT_Hub.c(466): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  	uart1_send(at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt));
+..\HARDWARE\IoT_Hub\IoT_Hub.c(457): warning:  #177-D: variable "ret"  was declared but never referenced
+  	uint16_t ret,timeout=0;
+..\HARDWARE\IoT_Hub\IoT_Hub.c(457): warning:  #177-D: variable "timeout"  was declared but never referenced
+  	uint16_t ret,timeout=0;
+..\HARDWARE\IoT_Hub\IoT_Hub.c(614): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	if(strlen(g_flash.imei)>0)
+..\HARDWARE\IoT_Hub\IoT_Hub.c(616): warning:  #120-D: return value type does not match the function type
+  		return g_flash.imei;
+..\HARDWARE\IoT_Hub\IoT_Hub.c(647): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  	uart1_send(at_pack[i].cmd_txt, strlen(at_pack[i].cmd_txt));
+..\HARDWARE\IoT_Hub\IoT_Hub.c(686): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *restrict"
+  	strncpy(imei6, g_flash.imei+9,6);
+..\HARDWARE\IoT_Hub\IoT_Hub.c(698): warning:  #1293-D: assignment in condition
+  	if(tmp=strstr(buf,"+QBTGATSCON:"))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(713): warning:  #1293-D: assignment in condition
+  	else if(tmp=strstr(buf,"+QBTGATWREQ:"))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(732): warning:  #1293-D: assignment in condition
+  	else if(tmp=strstr(buf,"+QBTGATRREQ:"))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(737): warning:  #1293-D: assignment in condition
+  	else if(tmp=strstr(buf,"+QBTGATSRSP:"))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(820): warning:  #1293-D: assignment in condition
+  	if(tmp1 = strstr(buf,"CMS ERROR:"))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(829): warning:  #1293-D: assignment in condition
+  	else if(tmp1 = strstr(buf,"CME ERROR:"))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(867): warning:  #1293-D: assignment in condition
+  	else if(tmp1 = strstr(buf,"CSQ:"))
+..\HARDWARE\IoT_Hub\IoT_Hub.c(878): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  			uart1_send(send_buffer, send_len);
+..\HARDWARE\IoT_Hub\IoT_Hub.c(1050): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "unsigned char *"
+  		protocol_parse(gprs_buf, gprs_size);
+..\HARDWARE\IoT_Hub\IoT_Hub.c(1053): warning:  #940-D: missing return statement at end of non-void function "at_parse_recv" 
+  }
+..\HARDWARE\IoT_Hub\IoT_Hub.c(1183): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "int8_t *"
+  		if(!parse_bt_cmd(bt_cmd_data, bt_cmd_len))
+..\HARDWARE\IoT_Hub\IoT_Hub.c: 39 warnings, 0 errors
+compiling stmflash.c...
+..\HARDWARE\STMFLASH\stmflash.c(71): warning:  #223-D: function "FLASH_PageErase" declared implicitly
+  			FLASH_PageErase(secpos*STM_SECTOR_SIZE+STM32_FLASH_BASE);	//擦除这个扇区
+..\HARDWARE\STMFLASH\stmflash.c: 1 warning, 0 errors
+compiling factory_test.c...
+..\CONTROL\factory_test.c(29): warning:  #223-D: function "Send_AT_Command_Timeout" declared implicitly
+  	Send_AT_Command_Timeout(AT_ATE0, 5); 
+..\CONTROL\factory_test.c(37): warning:  #223-D: function "Send_AT_Command_Timeout" declared implicitly
+  	if(Send_AT_Command_Timeout(AT_CPIN,2))
+..\CONTROL\factory_test.c(107): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	sprintf(buf,"end zhendong=%d\r\n",deta_shake);
+..\CONTROL\factory_test.c(108): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	uart2_send(buf,strlen(buf));
+..\CONTROL\factory_test.c(103): warning:  #177-D: variable "x"  was declared but never referenced
+  	uint8_t x=0,y=0,z=0;
+..\CONTROL\factory_test.c(103): warning:  #177-D: variable "y"  was declared but never referenced
+  	uint8_t x=0,y=0,z=0;
+..\CONTROL\factory_test.c(103): warning:  #177-D: variable "z"  was declared but never referenced
+  	uint8_t x=0,y=0,z=0;
+..\CONTROL\factory_test.c(118): warning:  #223-D: function "get_bat_vol" declared implicitly
+  	uint16_t adc = get_bat_vol();
+..\CONTROL\factory_test.c(120): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	sprintf(buf, "adc=%d\r\n",adc);
+..\CONTROL\factory_test.c(121): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	uart2_send(buf,strlen(buf));
+..\CONTROL\factory_test.c(146): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	sprintf(buf, "test hall =%d\r\n", deta_hall);
+..\CONTROL\factory_test.c(147): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	uart2_send(buf,strlen(buf));
+..\CONTROL\factory_test.c(160): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	sprintf(buf, "test lundong=%d\r\n", deta_lundong);
+..\CONTROL\factory_test.c(162): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	uart2_send(buf, strlen(buf));
+..\CONTROL\factory_test.c(171): warning:  #223-D: function "Send_AT_Command_Timeout" declared implicitly
+  	Send_AT_Command_Timeout(AT_BT_ON, 3);
+..\CONTROL\factory_test.c(180): warning:  #223-D: function "Send_AT_Command_Timeout" declared implicitly
+  	Send_AT_Command_Timeout(AT_QGPS_GSV, 1);
+..\CONTROL\factory_test.c(186): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	sprintf(buf, "sat_uesd=%d,sat_view=%d\r\n",gps_info.sat_uesd,gps_info.sat_view);
+..\CONTROL\factory_test.c(188): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	uart2_send(buf,strlen(buf));
+..\CONTROL\factory_test.c(206): warning:  #223-D: function "Send_AT_Command_Timeout" declared implicitly
+  	ret = Send_AT_Command_Timeout(AT_CREG, 10);
+..\CONTROL\factory_test.c(248): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	sprintf(buf,"BT name:%s\r\nIMEI:%s\r\nVER:%s\r\n",dev_info.name,g_flash.imei,
+EV_VER);
+..\CONTROL\factory_test.c(250): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	uart2_send(buf,strlen(buf));
+..\CONTROL\factory_test.c(253): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	strcpy(buf,"result:");
+..\CONTROL\factory_test.c(258): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  			sprintf(tmp,"%d,",i);
+..\CONTROL\factory_test.c(259): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  			strcat(buf,tmp);
+..\CONTROL\factory_test.c(259): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *restrict"
+  			strcat(buf,tmp);
+..\CONTROL\factory_test.c(264): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  		strcat(buf,"PASS\r\n");
+..\CONTROL\factory_test.c(266): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  		strcat(buf,"(NG)\r\n");
+..\CONTROL\factory_test.c(268): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	uart2_send(buf,strlen(buf));
+..\CONTROL\factory_test.c(280): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	sprintf(buf,"%d.%s\r\n",g_test_index,g_test_table[g_test_index].name);
+..\CONTROL\factory_test.c(281): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	uart2_send(buf,strlen(buf));
+..\CONTROL\factory_test.c(297): warning:  #223-D: function "write_flash" declared implicitly
+  		write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\factory_test.c: 31 warnings, 0 errors
+compiling protocol.c...
+..\PROTOCAL\protocol.c(91): warning:  #186-D: pointless comparison of unsigned integer with zero
+  		if(high>=0 && high<=9)
+..\PROTOCAL\protocol.c(96): warning:  #186-D: pointless comparison of unsigned integer with zero
+  		if(low>=0 && low<=9)
+..\PROTOCAL\protocol.c(116): warning:  #223-D: function "tolower" declared implicitly
+          if (tolower(s[i]) > '9')  
+..\PROTOCAL\protocol.c(268): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  	*crc = get_crc16(buf+4, crc_len);
+..\PROTOCAL\protocol.c(301): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  	send_package(EN_GT_PT_LOGIN,(char*)&login_package,sizeof(login_pkg_struct));
+..\PROTOCAL\protocol.c(421): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  				send_package(EN_GT_PT_ALARM,(char*)&alarm_pkg,package_len);
+..\PROTOCAL\protocol.c(560): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  			send_package(EN_GT_PT_GPS,(char*)&gps_pkg,sizeof(gps_pkg_struct));
+..\PROTOCAL\protocol.c(569): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  	send_package(EN_GT_PT_LBS,(char*)&lbs_pkg,sizeof(lbs_pkg_struct));
+..\PROTOCAL\protocol.c(578): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	strcpy(data_pkg.value,
+EV_VER);
+..\PROTOCAL\protocol.c(581): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  	send_package(EN_GT_PT_DEV_DATA, (char*)&data_pkg, data_pkg.value_len+2);
+..\PROTOCAL\protocol.c(591): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	strcpy(data_pkg.value,get_imsi());
+..\PROTOCAL\protocol.c(595): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  	send_package(EN_GT_PT_DEV_DATA, (char*)&data_pkg, data_pkg.value_len+2);
+..\PROTOCAL\protocol.c(603): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  	strcpy(data_pkg.value,dev_info.addr);
+..\PROTOCAL\protocol.c(607): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  	send_package(EN_GT_PT_DEV_DATA, (char*)&data_pkg, data_pkg.value_len+2);
+..\PROTOCAL\protocol.c(618): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  	send_package(EN_GT_PT_CONTROL, (char*)&ebike_pkg, package_len);
+..\PROTOCAL\protocol.c(788): warning:  #223-D: function "send_gps_rmc_cmd" declared implicitly
+  				send_gps_rmc_cmd();
+..\PROTOCAL\protocol.c(791): warning:  #223-D: function "send_gps_gga_cmd" declared implicitly
+  				send_gps_gga_cmd();
+..\PROTOCAL\protocol.c(818): warning:  #223-D: function "Send_AT_Command_ext" declared implicitly
+  				Send_AT_Command_ext(AT_CSQ, 1);
+..\PROTOCAL\protocol.c(869): warning:  #223-D: function "parse_imsi_package" declared implicitly
+  			parse_imsi_package(data->value,data->value_len);
+..\PROTOCAL\protocol.c(988): warning:  #513-D: a value of type "unsigned char *" cannot be assigned to an entity of type "char *"
+  			head = pBuf+i;
+..\PROTOCAL\protocol.c(993): warning:  #513-D: a value of type "unsigned char *" cannot be assigned to an entity of type "char *"
+  			tail = pBuf+i+2;//结尾
+..\PROTOCAL\protocol.c: 21 warnings, 0 errors
+compiling system_stm32f0xx.c...
+compiling Control_app.c...
+..\CONTROL\Control_app.c(39): warning:  #186-D: pointless comparison of unsigned integer with zero
+  	else if(csq>=0 && csq<=30)
+..\CONTROL\Control_app.c(101): warning:  #223-D: function "write_flash" declared implicitly
+  			write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_app.c(113): warning:  #223-D: function "write_flash" declared implicitly
+  	write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_app.c(158): warning:  #223-D: function "write_flash" declared implicitly
+  				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_app.c(401): warning:  #223-D: function "write_flash" declared implicitly
+  		write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_app.c(455): warning:  #223-D: function "write_flash" declared implicitly
+  		write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_app.c(524): warning:  #223-D: function "read_flash" declared implicitly
+  	read_flash(CONFIG_ADDR,(uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_app.c(532): warning:  #223-D: function "write_flash" declared implicitly
+  		write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_app.c: 8 warnings, 0 errors
+compiling bt_app.c...
+..\BLUETOOTH\bt_app.c(172): warning:  #223-D: function "write_flash" declared implicitly
+  	write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\BLUETOOTH\bt_app.c(199): warning:  #223-D: function "convert_gps_data_for_protocol" declared implicitly
+  	convert_gps_data_for_protocol(&gps_info,&gps_tracker_gps);
+..\BLUETOOTH\bt_app.c(322): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+  			bt_prepare_send_data(cmd, 4, param);
+..\BLUETOOTH\bt_app.c(215): warning:  #177-D: variable "timestamp2"  was declared but never referenced
+  	uint32_t timestamp2 = buf[len-8]+buf[len-7]*0x100+buf[len-6]*0x10000+buf[len-5]*0x1000000;
+..\BLUETOOTH\bt_app.c(356): warning:  #513-D: a value of type "int8_t *" cannot be assigned to an entity of type "uint8_t *"
+  			head = buf+i;
+..\BLUETOOTH\bt_app.c(361): warning:  #513-D: a value of type "int8_t *" cannot be assigned to an entity of type "uint8_t *"
+  			tail = buf+i+2;
+..\BLUETOOTH\bt_app.c: 6 warnings, 0 errors
+compiling Control_interface.c...
+..\CONTROL\Control_interface.c(111): warning:  #188-D: enumerated type mixed with another type
+  			controller.actual.tiaosu = buf[8];
+..\CONTROL\Control_interface.c(112): warning:  #188-D: enumerated type mixed with another type
+  			controller.actual.qianya = buf[9];
+..\CONTROL\Control_interface.c(113): warning:  #188-D: enumerated type mixed with another type
+  			controller.actual.zhuli = buf[10];
+..\CONTROL\Control_interface.c(114): warning:  #188-D: enumerated type mixed with another type
+  			controller.actual.dy = buf[11];
+..\CONTROL\Control_interface.c(115): warning:  #188-D: enumerated type mixed with another type
+  			controller.actual.xf = buf[12];
+..\CONTROL\Control_interface.c(161): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	tail = (uint8_t*)strstr(head,".");
+..\CONTROL\Control_interface.c(164): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	*ip1 = atoi(tmp);
+..\CONTROL\Control_interface.c(167): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	tail = (uint8_t*)strstr(head,".");
+..\CONTROL\Control_interface.c(170): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	*ip2 = atoi(tmp);
+..\CONTROL\Control_interface.c(173): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	tail = (uint8_t*)strstr(head,".");
+..\CONTROL\Control_interface.c(176): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	*ip3 = atoi(tmp);
+..\CONTROL\Control_interface.c(179): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	tail = (uint8_t*)strstr(head,",");
+..\CONTROL\Control_interface.c(182): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	*ip4 = atoi(tmp);
+..\CONTROL\Control_interface.c(194): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	head = (uint8_t*)strstr(buf,"type:");
+..\CONTROL\Control_interface.c(195): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  	tail = (uint8_t*)strstr(buf,"#");
+..\CONTROL\Control_interface.c(199): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  		tail = (uint8_t*)strstr(head,",");
+..\CONTROL\Control_interface.c(201): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  		type = atoi(tmp);
+..\CONTROL\Control_interface.c(204): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  			head = (uint8_t*)strstr(buf,"domain:");
+..\CONTROL\Control_interface.c(208): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  				tail = (uint8_t*)strstr(head,",");
+..\CONTROL\Control_interface.c(212): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  				head = (uint8_t*)strstr(buf,"port:");
+..\CONTROL\Control_interface.c(214): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  				tail = (uint8_t*)strstr(head,"#");
+..\CONTROL\Control_interface.c(217): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  				g_flash.net.port = atoi(tmp);
+..\CONTROL\Control_interface.c(221): warning:  #223-D: function "write_flash" declared implicitly
+  				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_interface.c(229): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  			head = (uint8_t*)strstr(buf,"ip:");
+..\CONTROL\Control_interface.c(233): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  				tail = (uint8_t*)strstr(head,",");
+..\CONTROL\Control_interface.c(237): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  				head = (uint8_t*)strstr(buf,"port:");
+..\CONTROL\Control_interface.c(239): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  				tail = (uint8_t*)strstr(head,"#");
+..\CONTROL\Control_interface.c(242): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  				g_flash.net.port = atoi(tmp);
+..\CONTROL\Control_interface.c(245): warning:  #223-D: function "write_flash" declared implicitly
+  				write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_interface.c(284): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  		if(head = (char*)strstr(buf,"5150924"))
+..\CONTROL\Control_interface.c(284): warning:  #513-D: a value of type "char *" cannot be assigned to an entity of type "uint8_t *"
+  		if(head = (char*)strstr(buf,"5150924"))
+..\CONTROL\Control_interface.c(284): warning:  #1293-D: assignment in condition
+  		if(head = (char*)strstr(buf,"5150924"))
+..\CONTROL\Control_interface.c(288): warning:  #223-D: function "write_flash" declared implicitly
+  			write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_interface.c(294): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  		else if(strstr(buf,"format flash"))
+..\CONTROL\Control_interface.c(297): warning:  #223-D: function "write_flash" declared implicitly
+  			write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_interface.c(301): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "const char *"
+  		else if(strstr(buf,"factory test"))
+..\CONTROL\Control_interface.c(304): warning:  #223-D: function "write_flash" declared implicitly
+  			write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
+..\CONTROL\Control_interface.c: 37 warnings, 0 errors
+linking...
+Program Size: Code=42672 RO-data=684 RW-data=6168 ZI-data=21664  
+FromELF: creating hex file...
+"electric_cars_iot\electric_cars_iot.axf" - 0 Error(s), 150 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.5.3.0.pack
+                ARM.CMSIS.5.3.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 5.1.1
+
+Package Vendor: Keil
+                http://www.keil.com/pack/Keil.STM32F0xx_DFP.2.0.0.pack
+                Keil.STM32F0xx_DFP.2.0.0
+                STMicroelectronics STM32F0 Series Device Support, Drivers and Examples
+
+<h2>Collection of Component include folders:</h2>
+  .\RTE\_electric_cars_iot
+  C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\CMSIS\Include
+  C:\Keil_v5\ARM\PACK\Keil\STM32F0xx_DFP\2.0.0\Drivers\CMSIS\Device\ST\STM32F0xx\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:5.1.1
+Build Time Elapsed:  00:00:15
+</pre>
+</body>
+</html>

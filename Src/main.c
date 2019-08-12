@@ -656,6 +656,9 @@ void StartTask02(void const * argument)
 	//	key_check_process();
 		gsm_led_process();
 		gb_speed_process();
+	#ifdef __WAIMAI__	
+		zuche_valid_process();
+	#endif
   	}
 	uart2_process();
 

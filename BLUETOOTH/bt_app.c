@@ -26,23 +26,23 @@ extern RTC_HandleTypeDef hrtc;
 
 uint32_t GetTimeStamp(void)
 {
-	  struct tm info;
-	  uint32_t sec;
-	  RTC_DateTypeDef sdatestructure;
-    RTC_TimeTypeDef stimestructure;
-	  
-	  HAL_RTC_GetTime(&hrtc, &stimestructure, RTC_FORMAT_BIN);
-		HAL_RTC_GetDate(&hrtc, &sdatestructure, RTC_FORMAT_BIN);
-	 	
-	  info.tm_year = 100 + sdatestructure.Year;
-	  info.tm_mon = sdatestructure.Month - 1;
-	  info.tm_mday = sdatestructure.Date;
-		info.tm_hour = stimestructure.Hours - 8;  //北京时间-8为UTC时间
-		info.tm_min = stimestructure.Minutes;
-		info.tm_sec = stimestructure.Seconds;
-	  sec = mktime(&info);   //sec就是秒数
-    
-		return sec;
+	struct tm info;
+	uint32_t sec;
+	RTC_DateTypeDef sdatestructure;
+	RTC_TimeTypeDef stimestructure;
+
+	HAL_RTC_GetTime(&hrtc, &stimestructure, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &sdatestructure, RTC_FORMAT_BIN);
+
+	info.tm_year = 100 + sdatestructure.Year;
+	info.tm_mon = sdatestructure.Month - 1;
+	info.tm_mday = sdatestructure.Date;
+	info.tm_hour = stimestructure.Hours - 8;  //北京时间-8为UTC时间
+	info.tm_min = stimestructure.Minutes;
+	info.tm_sec = stimestructure.Seconds;
+	sec = mktime(&info);   //sec就是秒数
+
+	return sec;
 }
 
 /*蓝牙发送接口*/

@@ -23,5 +23,6 @@ typedef struct
 }bt_giveback_struct;
 
 #pragma pack ()
+extern uint32_t GetTimeStamp(void);
 
 #endif

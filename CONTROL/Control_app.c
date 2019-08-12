@@ -14,8 +14,15 @@
 #include "queen.h"
 //#include "flash.h"
 
+#ifdef __WAIMAI__
+uint32_t zuche_stamptime=0;
+
+#define DOMAIN "device.liabar.com"	
+#define PORT 9001
+#else
 #define DOMAIN "devzuche.liabar.com"	//"zcwebx.liabar.cn"
 #define PORT 9000
+#endif
 
 flash_struct g_flash;
 
@@ -284,6 +291,19 @@ void parse_network_cmd(ebike_cmd_struct *cmd)
 					Logln(D_INFO, "High Speed Motor");
 				}
 				break;
+		#ifdef __WAIMAI__
+			case ZUCHE_VALID_CMD:
+				{
+					char param[4];
+					
+					memcpy(param,cmd->para,4);
+					zuche_stamptime = param[3]*0x1000000+param[2]*0x10000+param[1]*0x100+param[0];
+					g_flash.timestamp = zuche_stamptime;
+					Logln(D_INFO,"租车有效期%d,%d %d %d %d",zuche_stamptime,cmd->para[0],cmd->para[1],cmd->para[2],cmd->para[3]);
+					write_flash(CONFIG_ADDR, (uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));				
+					break;
+				}	
+		#endif	
 			case SEARCH_TIMES_CMD:
 				{
 					if(cmd->para[0]>0)
@@ -486,6 +506,39 @@ void shake_process(void)
         	}
         }
 }
+
+#ifdef __WAIMAI__
+bool judge_zuche_valid(void)
+{
+	uint32_t stamp=GetTimeStamp();
+	Logln(D_INFO,"stamp=%d,zuche_stamptime=%d",stamp,zuche_stamptime);
+	
+	if(stamp<zuche_stamptime)
+		return true;
+	else
+		return false;
+}
+void zuche_valid_process(void)
+{
+	static uint16_t index=0;
+
+	if(index >1000)
+	{
+		Logln(D_INFO,"zuche_valid_process...................");
+		if(!judge_zuche_valid() && g_flash.acc!=0)
+		{
+			Logln(D_INFO,"zuche Time limit, Lock bike");
+			lock_bike();		
+		}
+		index = 0;
+	}
+	else
+	{
+		index++;
+	}
+}
+#endif
+
 void key_check_process(void)
 {
 	uint8_t value = read_key_det;
@@ -523,8 +576,8 @@ void init_flash(void)
 {
 	read_flash(CONFIG_ADDR,(uint8_t*)&g_flash,(uint16_t)sizeof(flash_struct));
 	HAL_Delay(1);
-	Logln(D_INFO,"flag=%d,mode=%d,imei=%s,acc=%d,hall=%d,ld=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,times=%d,gb_a=%d,gb_s=%d,lj=%d,cg=%d,%s:%d,size=%d",g_flash.flag,g_flash.mode,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
-		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen,g_flash.search_times,g_flash.gb_alarm,g_flash.gb_speed,g_flash.lunjing,g_flash.cigang,g_flash.net.domain, g_flash.net.port, sizeof(flash_struct));
+	Logln(D_INFO,"flag=%d,mode=%d,imei=%s,acc=%d,hall=%d,ld=%d,motot=%d,ld_a=%d,zd_a=%d,zd_se=%d,times=%d,gb_a=%d,gb_s=%d,lj=%d,cg=%d,%s:%d,vol=%d,size=%d",g_flash.flag,g_flash.mode,g_flash.imei,g_flash.acc,g_flash.hall,g_flash.lundong,
+		g_flash.motor,g_flash.ld_alarm,g_flash.zd_alarm,g_flash.zd_sen,g_flash.search_times,g_flash.gb_alarm,g_flash.gb_speed,g_flash.lunjing,g_flash.cigang,g_flash.net.domain, g_flash.net.port, g_flash.adc_vol,sizeof(flash_struct));
 		
 	if(g_flash.flag !=1)
 	{
@@ -545,6 +598,7 @@ void init_flash(void)
 		g_flash.gb_speed = 15;
 		g_flash.cigang = 46;
 		g_flash.lunjing = 14;
+		g_flash.adc_param = 3.3*34;
 		memset(g_flash.imei,0,sizeof(g_flash.imei));
 		strcpy(g_flash.net.domain, DOMAIN);
 		g_flash.net.port = PORT;
@@ -557,6 +611,18 @@ void init_flash(void)
 	{
 		open_electric_door();
 	}
+
+	if(g_flash.adc_param != 0)
+	{
+		adc_param = g_flash.adc_param;
+	}
+	else
+		adc_param = 3.3*34;
+
+#ifdef __WAIMAI__
+	zuche_stamptime = g_flash.timestamp;
+#endif
+	Logln(D_INFO,"%f,%f", g_flash.adc_param,adc_param);
 	
 	mileage_count = g_flash.hall;
 	rotate_count = g_flash.lundong;
